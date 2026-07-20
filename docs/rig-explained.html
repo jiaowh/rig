@@ -1,0 +1,2191 @@
+<title>RIG, explained from scratch — inverse recipe generation</title>
+
+<style>
+  /* ============================================================
+     TOKENS — palette drawn from the subject: a substrate heater
+     glowing at ~1400 K inside a dark MBE vacuum chamber, and the
+     violet-grey of a silicon wafer. Neutrals carry a violet bias
+     so they read as chosen rather than inherited mid-grey.
+     ============================================================ */
+  :root {
+    --bg:        #E9E7EC;
+    --surface:   #F6F5F8;
+    --surface-2: #DFDCE4;
+    --ink:       #191720;
+    --muted:     #6B6675;
+    --rule:      #D2CEDA;
+    --glow:      #B85C18;   /* incandescent amber — the accent */
+    --glow-soft: #D9762B;
+    --spec:      #22697A;   /* metrology / the spec window */
+    --spec-soft: #2C8BA0;
+    --ok:        #2F7355;
+    --bad:       #9E3E34;
+    --grid:      rgba(25,23,32,0.07);
+    --shadow:    0 1px 2px rgba(25,23,32,.06), 0 8px 24px rgba(25,23,32,.06);
+
+    --serif: Georgia, "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua", serif;
+    --mono: ui-monospace, "Cascadia Code", "SF Mono", SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg:        #131218;
+      --surface:   #1C1A23;
+      --surface-2: #262330;
+      --ink:       #E8E5EE;
+      --muted:     #9B95A8;
+      --rule:      #322E3C;
+      --glow:      #E8913F;
+      --glow-soft: #C9752F;
+      --spec:      #5FBDD2;
+      --spec-soft: #3E93A8;
+      --ok:        #58B189;
+      --bad:       #D4685A;
+      --grid:      rgba(232,229,238,0.08);
+      --shadow:    0 1px 2px rgba(0,0,0,.4), 0 8px 24px rgba(0,0,0,.32);
+    }
+  }
+  /* the viewer's toggle must win over the media query, in BOTH directions */
+  :root[data-theme="dark"] {
+    --bg:#131218; --surface:#1C1A23; --surface-2:#262330; --ink:#E8E5EE;
+    --muted:#9B95A8; --rule:#322E3C; --glow:#E8913F; --glow-soft:#C9752F;
+    --spec:#5FBDD2; --spec-soft:#3E93A8; --ok:#58B189; --bad:#D4685A;
+    --grid:rgba(232,229,238,0.08);
+    --shadow:0 1px 2px rgba(0,0,0,.4), 0 8px 24px rgba(0,0,0,.32);
+  }
+  :root[data-theme="light"] {
+    --bg:#E9E7EC; --surface:#F6F5F8; --surface-2:#DFDCE4; --ink:#191720;
+    --muted:#6B6675; --rule:#D2CEDA; --glow:#B85C18; --glow-soft:#D9762B;
+    --spec:#22697A; --spec-soft:#2C8BA0; --ok:#2F7355; --bad:#9E3E34;
+    --grid:rgba(25,23,32,0.07);
+    --shadow:0 1px 2px rgba(25,23,32,.06), 0 8px 24px rgba(25,23,32,.06);
+  }
+
+  /* ============================================================ LAYOUT */
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--serif);
+    font-size: 18px;
+    line-height: 1.62;
+    -webkit-font-smoothing: antialiased;
+  }
+  .page { max-width: 1180px; margin: 0 auto; padding: 0 24px 120px; }
+
+  /* the prose column: everything is this width unless it opts out */
+  .col { max-width: 40rem; margin-inline: auto; }
+  .wide { max-width: 1080px; margin-inline: auto; }
+
+  p, ul, ol { margin: 0 0 1.05em; }
+  .col > p:last-child { margin-bottom: 0; }
+
+  a { color: var(--glow); text-underline-offset: 3px; text-decoration-thickness: 1px; }
+  a:hover { color: var(--ink); }
+  :focus-visible { outline: 2px solid var(--glow); outline-offset: 3px; border-radius: 3px; }
+
+  h1, h2, h3, h4 { text-wrap: balance; margin: 0; font-weight: 700; }
+
+  /* ============================================================ HERO */
+  .hero { padding: 88px 0 56px; border-bottom: 1px solid var(--rule); margin-bottom: 56px; }
+  .eyebrow {
+    font-family: var(--mono); font-size: .72rem; letter-spacing: .16em;
+    text-transform: uppercase; color: var(--muted); margin: 0 0 22px;
+  }
+  h1 {
+    font-size: clamp(2.4rem, 6.2vw, 4rem);
+    line-height: 1.02; letter-spacing: -.022em; margin-bottom: .5em;
+  }
+  h1 em { font-style: italic; color: var(--glow); }
+  .standfirst { font-size: 1.24rem; line-height: 1.5; color: var(--muted); max-width: 34rem; }
+  .hero-meta {
+    display: flex; flex-wrap: wrap; gap: 8px 10px; margin-top: 32px;
+    font-family: var(--mono); font-size: .7rem; letter-spacing: .06em;
+  }
+  .tag {
+    border: 1px solid var(--rule); border-radius: 999px; padding: 5px 11px;
+    color: var(--muted); background: var(--surface);
+  }
+  .tag.hot { border-color: var(--glow); color: var(--glow); }
+
+  /* ============================================================ SECTIONS */
+  section { margin-bottom: 84px; scroll-margin-top: 20px; }
+  .stage-head { margin-bottom: 28px; }
+  .stage-num {
+    font-family: var(--mono); font-size: .72rem; letter-spacing: .18em;
+    color: var(--glow); display: block; margin-bottom: 10px;
+  }
+  h2 { font-size: clamp(1.7rem, 3.4vw, 2.35rem); line-height: 1.12; letter-spacing: -.016em; }
+  h3 { font-size: 1.3rem; margin: 2.2em 0 .6em; letter-spacing: -.01em; }
+  h4 { font-size: 1.02rem; margin: 1.8em 0 .4em; }
+  .lede { font-size: 1.1rem; color: var(--muted); margin-top: .7em; }
+
+  /* ============================================================ TOC */
+  .toc { border: 1px solid var(--rule); border-radius: 10px; background: var(--surface); padding: 22px 26px; }
+  .toc h4 { margin: 0 0 12px; font-family: var(--mono); font-size: .7rem; letter-spacing: .16em; text-transform: uppercase; color: var(--muted); font-weight: 400; }
+  .toc ol { margin: 0; padding: 0; list-style: none; display: grid; gap: 7px; }
+  .toc a { display: flex; gap: 12px; text-decoration: none; color: var(--ink); font-size: .96rem; }
+  .toc a:hover { color: var(--glow); }
+  .toc .n { font-family: var(--mono); font-size: .74rem; color: var(--muted); padding-top: .28em; min-width: 2.1em; }
+
+  /* ============================================================ MATH */
+  .eq {
+    font-family: var(--mono); font-size: .88rem; line-height: 1.85;
+    background: var(--surface); border: 1px solid var(--rule);
+    border-left: 3px solid var(--glow);
+    border-radius: 0 8px 8px 0; padding: 16px 18px; margin: 1.4em 0;
+    overflow-x: auto; white-space: pre;
+  }
+  .eq .cm { color: var(--muted); }
+  code {
+    font-family: var(--mono); font-size: .86em;
+    background: var(--surface-2); padding: .1em .38em; border-radius: 4px;
+  }
+  .where { font-size: .95rem; color: var(--muted); }
+  .where dl { display: grid; grid-template-columns: auto 1fr; gap: 6px 16px; margin: .8em 0 0; }
+  .where dt { font-family: var(--mono); font-size: .82rem; color: var(--ink); }
+  .where dd { margin: 0; }
+
+  /* ============================================================ CALLOUTS */
+  .note {
+    border: 1px solid var(--rule); border-radius: 10px; background: var(--surface);
+    padding: 18px 20px; margin: 1.6em 0; font-size: .97rem;
+  }
+  .note .label {
+    font-family: var(--mono); font-size: .68rem; letter-spacing: .14em; text-transform: uppercase;
+    color: var(--muted); display: block; margin-bottom: 8px;
+  }
+  .note.key { border-left: 3px solid var(--spec); }
+  .note.key .label { color: var(--spec); }
+  .note.warn { border-left: 3px solid var(--bad); }
+  .note.warn .label { color: var(--bad); }
+  .note p:last-child { margin-bottom: 0; }
+
+  /* ============================================================ FIGURES */
+  figure { margin: 40px 0; }
+  .fig {
+    border: 1px solid var(--rule); border-radius: 12px; background: var(--surface);
+    box-shadow: var(--shadow); overflow: hidden;
+  }
+  .fig-head { padding: 16px 20px 0; }
+  .fig-title { font-family: var(--mono); font-size: .74rem; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+  .fig-body { padding: 12px 20px 20px; }
+  canvas { display: block; width: 100%; height: auto; touch-action: none; }
+  figcaption { font-size: .9rem; color: var(--muted); margin-top: 12px; max-width: 46rem; }
+
+  .controls {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+    gap: 14px 22px; padding: 16px 20px; border-top: 1px solid var(--rule);
+    background: var(--surface-2);
+  }
+  .ctl label {
+    font-family: var(--mono); font-size: .7rem; letter-spacing: .06em; color: var(--muted);
+    display: flex; justify-content: space-between; gap: 10px; margin-bottom: 6px;
+  }
+  .ctl label b { color: var(--ink); font-weight: 700; font-variant-numeric: tabular-nums; }
+  input[type=range] { width: 100%; accent-color: var(--glow); cursor: pointer; }
+
+  .btn {
+    font-family: var(--mono); font-size: .74rem; letter-spacing: .05em;
+    border: 1px solid var(--rule); background: var(--surface); color: var(--ink);
+    padding: 7px 13px; border-radius: 6px; cursor: pointer;
+  }
+  .btn:hover { border-color: var(--glow); color: var(--glow); }
+  .btn-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+
+  /* readouts */
+  .readout {
+    display: flex; flex-wrap: wrap; gap: 10px; padding: 14px 20px;
+    border-top: 1px solid var(--rule); font-family: var(--mono); font-size: .78rem;
+  }
+  .stat {
+    flex: 1 1 130px; background: var(--surface); border: 1px solid var(--rule);
+    border-radius: 8px; padding: 9px 12px;
+  }
+  .stat .k { font-size: .64rem; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); display: block; }
+  .stat .v { font-size: 1.05rem; font-variant-numeric: tabular-nums; display: block; margin-top: 3px; }
+  .verdict { border-radius: 999px; padding: 5px 14px; font-family: var(--mono); font-size: .74rem; letter-spacing: .08em; display: inline-block; }
+  .verdict.yes { background: color-mix(in srgb, var(--ok) 16%, transparent); color: var(--ok); border: 1px solid var(--ok); }
+  .verdict.no  { background: color-mix(in srgb, var(--bad) 16%, transparent); color: var(--bad); border: 1px solid var(--bad); }
+
+  .legend { display: flex; flex-wrap: wrap; gap: 6px 18px; font-family: var(--mono); font-size: .7rem; color: var(--muted); margin-top: 10px; }
+  .legend i { display: inline-block; width: 15px; height: 3px; margin-right: 7px; vertical-align: middle; border-radius: 2px; }
+
+  /* ============================================================ TABLES */
+  .tw { overflow-x: auto; margin: 1.6em 0; border: 1px solid var(--rule); border-radius: 10px; }
+  table { border-collapse: collapse; width: 100%; font-size: .9rem; background: var(--surface); }
+  th, td { text-align: left; padding: 10px 14px; border-bottom: 1px solid var(--rule); vertical-align: top; }
+  th { font-family: var(--mono); font-size: .68rem; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); font-weight: 400; }
+  tr:last-child td { border-bottom: none; }
+  td.num { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+
+  .mermaid { display: flex; justify-content: center; padding: 24px 12px; overflow-x: auto; }
+
+  hr.rule { border: 0; border-top: 1px solid var(--rule); margin: 72px 0; }
+
+  footer { border-top: 1px solid var(--rule); padding-top: 28px; color: var(--muted); font-size: .88rem; }
+
+  @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+  @media (max-width: 640px) {
+    body { font-size: 17px; }
+    .hero { padding: 56px 0 40px; }
+  }
+</style>
+
+<div class="page">
+
+  <header class="hero">
+    <div class="col">
+      <p class="eyebrow">RIG · Recipe Inverse Generator · explained from scratch</p>
+      <h1>You know what you want the wafer to look like. <em>What settings get you there?</em></h1>
+      <p class="standfirst">
+        Every model in machine learning runs forwards: settings in, result out. Manufacturing needs
+        the opposite. This is how a program answers the backwards question — and, just as importantly,
+        how it knows when to refuse to answer.
+      </p>
+      <div class="hero-meta">
+        <span class="tag hot">Audited 2026-07-17 · re-audited 07-19</span>
+        <span class="tag">533 tests passing</span>
+        <span class="tag">21 defects fixed</span>
+        <span class="tag">Stress-tested to 20 knobs</span>
+        <span class="tag hot">M0: Empa HiPIMS — real-data gate, 6/6 with drift path</span>
+        <span class="tag">Verdict: machinery sound, goal not yet proven</span>
+      </div>
+    </div>
+  </header>
+
+  <div class="col">
+    <nav class="toc">
+      <h4>What's here</h4>
+      <ol>
+        <li><a href="#problem"><span class="n">00</span><span>The backwards problem, and why it's hard</span></a></li>
+        <li><a href="#words"><span class="n">01</span><span>The five words you need</span></a></li>
+        <li><a href="#forward"><span class="n">02</span><span>Stage one — learning the process</span></a></li>
+        <li><a href="#uncertainty"><span class="n">03</span><span>Two kinds of not-knowing</span></a></li>
+        <li><a href="#conformal"><span class="n">04</span><span>Making the error bars honest</span></a></li>
+        <li><a href="#inverse"><span class="n">05</span><span>Stage two — the pessimistic inverse</span></a></li>
+        <li><a href="#infeasible"><span class="n">06</span><span>Saying "impossible" properly</span></a></li>
+        <li><a href="#constraints"><span class="n">07</span><span>Never proposing an illegal recipe</span></a></li>
+        <li><a href="#loop"><span class="n">08</span><span>Stage three — choosing the next experiment</span></a></li>
+        <li><a href="#flow"><span class="n">09</span><span>Stage four — the instant answer</span></a></li>
+        <li><a href="#truth"><span class="n">10</span><span>Does it actually work?</span></a></li>
+        <li><a href="#versus"><span class="n">11</span><span>How this compares to the published alternative</span></a></li>
+        <li><a href="#data"><span class="n">12</span><span>The data — what it runs on, and what's now in hand</span></a></li>
+        <li><a href="#glossary"><span class="n">13</span><span>Glossary</span></a></li>
+      </ol>
+    </nav>
+  </div>
+
+  <hr class="rule">
+
+  <!-- ============================================================ 00 -->
+  <section id="problem">
+    <div class="col stage-head">
+      <span class="stage-num">00 — the problem</span>
+      <h2>The backwards problem</h2>
+      <p class="lede">Physics runs one way. Manufacturing needs it to run the other way.</p>
+    </div>
+
+    <div class="col">
+      <p>
+        Suppose you grow a thin crystal film in a machine. You choose a <strong>recipe</strong>: heat the
+        substrate to 1,340 K, run the growth for long enough to deposit 800 nanometres. The machine runs.
+        Hours later, metrology tells you what you got: the film is 2.1% non-uniform across the wafer, it
+        bowed 4 µm on cooldown, the centre hit 1,318 K.
+      </p>
+      <p>
+        That direction — <em>settings → results</em> — is the <strong>forward</strong> direction. It's what
+        physics simulators do, and it's what a neural network naturally learns.
+      </p>
+      <p>
+        But nobody in a fab actually wants that. A process engineer starts from the other end. They have a
+        specification: <em>non-uniformity must be under 1.5%, bow under 5 µm, thickness 800 nm ± 20.</em>
+        Their question is the backwards one:
+      </p>
+      <div class="note key">
+        <span class="label">The question this program answers</span>
+        <p>
+          <strong>Given the outcome I need, what recipe should I run?</strong> And — because being wrong
+          costs a real wafer, a real chamber-hour, and real money — <strong>how confident should I be,
+          and when should you tell me it can't be done at all?</strong>
+        </p>
+      </div>
+      <p>
+        Running the backwards question is called <strong>inverse design</strong>, and it is not merely
+        "the forward model in reverse". It is harder in four specific ways, and every design decision
+        in this program is a response to one of them.
+      </p>
+
+      <h3>Why you can't just invert the function</h3>
+      <p><strong>1. Many recipes give the same answer (non-injectivity).</strong>
+        A cooler substrate for longer and a hotter one for less time can land on the identical thickness.
+        So "the" inverse doesn't exist — there is a <em>set</em> of answers, called the
+        <strong>pre-image</strong>. A program returning one recipe is hiding the truth from you.
+        A useful program returns several genuinely different ones, so you can pick on cost, or robustness,
+        or whatever it doesn't know about.
+      </p>
+      <p><strong>2. Some answers are lies the model tells itself.</strong>
+        This is the big one. If you ask an optimiser to find settings the model <em>predicts</em> will hit
+        your target, it will happily walk into a region where no data was ever collected, where the model is
+        confidently, catastrophically wrong, and hand you that. It looks perfect on paper. It destroys a
+        wafer. This failure mode has a name — <strong>reward hacking</strong> the surrogate — and defending
+        against it is most of the work.
+      </p>
+      <p><strong>3. The process is noisy.</strong> Run the same recipe twice, get two different wafers.
+        So a recipe that lands <em>exactly</em> on the spec limit is a coin-flip, not an answer. You need
+        room to spare.
+      </p>
+      <p><strong>4. The knobs drift.</strong> You dial 1,340 K; the tool delivers 1,341.8 K. A recipe that
+        only works at exactly the dialled value isn't a recipe, it's a fluke.
+      </p>
+      <p>
+        Hold onto those four. The rest of this document is, in order, the machinery that answers each one.
+      </p>
+    </div>
+
+    <figure class="wide">
+      <div class="fig">
+        <div class="fig-head"><span class="fig-title">Figure 0 · forward is a function, backward is a set</span></div>
+        <div class="fig-body">
+          <canvas id="c-intro" width="900" height="360"></canvas>
+          <div class="legend">
+            <span><i style="background:var(--glow)"></i>what the process does</span>
+            <span><i style="background:var(--spec)"></i>the outcome you asked for</span>
+            <span><i style="background:var(--ok)"></i>recipes that deliver it</span>
+          </div>
+        </div>
+        <div class="controls">
+          <div class="ctl">
+            <label>Target outcome <b id="v-intro-t">7.0</b></label>
+            <input type="range" id="s-intro-t" min="1.5" max="9.5" step="0.05" value="7.0">
+          </div>
+          <div class="ctl">
+            <label>Tolerance ± <b id="v-intro-tol">0.40</b></label>
+            <input type="range" id="s-intro-tol" min="0.1" max="1.5" step="0.05" value="0.4">
+          </div>
+        </div>
+        <div class="readout">
+          <div class="stat"><span class="k">pre-image</span><span class="v" id="v-intro-n">—</span></div>
+          <div class="stat"><span class="k">reading</span><span class="v" id="v-intro-msg" style="font-size:.8rem">—</span></div>
+        </div>
+      </div>
+      <figcaption>
+        Drag the target. The curve is a process response. Read it <em>downwards</em> and it's an ordinary
+        function — one recipe, one outcome. Read it <em>sideways</em> from a target band and you get the
+        inverse: sometimes several disconnected islands of valid recipes, sometimes none at all. That
+        asymmetry is the whole problem in one picture.
+      </figcaption>
+    </figure>
+  </section>
+
+  <hr class="rule">
+
+  <!-- ============================================================ 01 -->
+  <section id="words">
+    <div class="col stage-head">
+      <span class="stage-num">01 — vocabulary</span>
+      <h2>The five words you need</h2>
+      <p class="lede">Everything below is built from these. They're worth two minutes.</p>
+    </div>
+    <div class="col">
+      <div class="tw">
+        <table>
+          <thead><tr><th>Word</th><th>What it means</th><th>Concretely, in this program</th></tr></thead>
+          <tbody>
+            <tr>
+              <td><strong>Recipe</strong></td>
+              <td>The settings you control. Written <code>x</code>.</td>
+              <td>Substrate temperature 1150–1500 K; film thickness 0.2–5 µm. These are the only things the inverse is allowed to search over.</td>
+            </tr>
+            <tr>
+              <td><strong>Outcome</strong></td>
+              <td>What you measure afterwards. Written <code>y</code>.</td>
+              <td>Non-uniformity %, centre temperature, bow in µm, thickness grown. Several numbers at once, not one.</td>
+            </tr>
+            <tr>
+              <td><strong>Spec box</strong></td>
+              <td>The acceptable region of outcomes. Written <code>Z*</code>.</td>
+              <td>A <em>box</em>, never a point: "bow between 0 and 5 µm". A point target is rejected outright — no recipe can hold a safety margin around a single exact value.</td>
+            </tr>
+            <tr>
+              <td><strong>Forward model</strong></td>
+              <td>A learned stand-in for the machine that predicts <code>y</code> from <code>x</code> <em>with error bars</em>.</td>
+              <td>Returns four things every time — see below. Never a bare number.</td>
+            </tr>
+            <tr>
+              <td><strong>Inverse solver</strong></td>
+              <td>Takes a spec box, returns recipes — or refuses.</td>
+              <td>Returns a ranked, deliberately <em>diverse</em> set, each with a confidence and a feasibility flag; or an explicit <code>INFEASIBLE</code> verdict with a diagnosis.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p>
+        One structural point that matters more than it looks. Every prediction in this system is this
+        object, and nothing is allowed to return anything less:
+      </p>
+      <div class="eq">PredictiveDistribution(
+    mean            <span class="cm">— the best guess</span>
+    aleatoric_sigma <span class="cm">— irreducible noise: the process itself is random</span>
+    epistemic_sigma <span class="cm">— the model's own ignorance: fixable with data</span>
+    conformal_set   <span class="cm">— an interval with a *guaranteed* hit rate</span>
+)</div>
+      <p>
+        Keeping those two sigmas apart is not pedantry — it's the hinge the entire program turns on.
+        Section 03 explains why.
+      </p>
+    </div>
+  </section>
+
+  <hr class="rule">
+
+  <!-- ============================================================ 02 -->
+  <section id="forward">
+    <div class="col stage-head">
+      <span class="stage-num">02 — stage one</span>
+      <h2>Learning the process from very little data</h2>
+      <p class="lede">In a fab, every training example costs a wafer. You will not get a million of them. You might get forty.</p>
+    </div>
+
+    <div class="col">
+      <p>
+        This constraint kills the obvious answer. A deep network trained on forty points will overfit,
+        and — worse for our purposes — it won't <em>know</em> that it's ignorant away from those points.
+        So the default engine here is a <strong>Gaussian process</strong> (GP), which is the right tool
+        for exactly this regime: it fits smooth functions from a handful of points, and it reports
+        honestly-growing uncertainty as you move away from data.
+      </p>
+
+      <h3>The idea behind a Gaussian process</h3>
+      <p>
+        Instead of fitting one curve, a GP represents <em>every</em> curve that could plausibly explain
+        your data, weighted by plausibility. Predicting at a new recipe means asking: across all those
+        plausible curves, what's the average value here, and how much do they disagree?
+      </p>
+      <p>
+        Where you have data, the curves are pinned together and they agree — low uncertainty. Far from
+        data, they fan apart — high uncertainty. That fanning is the thing we'll later exploit.
+      </p>
+      <p>
+        What holds it together is the <strong>kernel</strong>, a function saying how similar two recipes
+        are. This program uses <strong>Matérn-5/2</strong>:
+      </p>
+      <div class="eq">k(x, x′) = σf² · (1 + √5·r/ℓ + 5r²/(3ℓ²)) · exp(−√5·r/ℓ)
+
+<span class="cm">where r = |x − x′|, the distance between two recipes</span></div>
+      <div class="where">
+        <dl>
+          <dt>ℓ</dt><dd><strong>lengthscale</strong> — how far you must move before the outcome changes appreciably. Small ℓ = twitchy process.</dd>
+          <dt>σf²</dt><dd><strong>signal variance</strong> — how much the outcome varies overall.</dd>
+          <dt>ARD</dt><dd>Each knob gets <em>its own</em> ℓ ("automatic relevance determination"). A knob with a huge lengthscale barely matters — the model learns which knobs are irrelevant, and tells you.</dd>
+        </dl>
+      </div>
+      <p>
+        Why Matérn-5/2 and not the more famous squared-exponential? The latter assumes the process is
+        infinitely smooth — cartoonishly so. Matérn-5/2 assumes twice-differentiable: bendy but able to
+        have kinks. Real processes have kinks. This is a deliberate, conservative choice.
+      </p>
+
+      <h3>The actual prediction equations</h3>
+      <p>
+        Given training recipes <code>X</code> and measured outcomes <code>y</code>, the prediction at a new
+        recipe <code>x*</code> is closed-form — no gradient descent, no training loop:
+      </p>
+      <div class="eq">K   = k(X, X) + σn²·I          <span class="cm">similarity of training points to each other, + noise</span>
+k*  = k(X, x*)                 <span class="cm">similarity of the new point to each training point</span>
+
+μ(x*)  = k*ᵀ · K⁻¹ · y                    <span class="cm">→ the mean</span>
+σ²(x*) = k(x*,x*) − k*ᵀ · K⁻¹ · k*        <span class="cm">→ the epistemic variance</span></div>
+      <p>
+        Read the mean as a weighted average of outcomes you've already measured, weighted by how similar
+        their recipes are to the one you're asking about. Read the variance as: <em>start at total prior
+        ignorance, subtract whatever the training data explains.</em> Near data, the subtraction is large
+        and uncertainty collapses. Far away, it subtracts nothing and you're left with full ignorance.
+        That's the entire mechanism, and it's why a GP can't fool itself the way a network can.
+      </p>
+      <p>
+        The hyperparameters (ℓ, σf², σn²) are fitted by maximising the marginal likelihood — and this
+        program's implementation was checked against finite differences during the audit: analytic
+        gradients match to 3×10⁻⁹.
+      </p>
+    </div>
+  </section>
+
+  <hr class="rule">
+
+  <!-- ============================================================ 03 -->
+  <section id="uncertainty">
+    <div class="col stage-head">
+      <span class="stage-num">03 — the hinge</span>
+      <h2>Two kinds of not-knowing</h2>
+      <p class="lede">Conflate these and the program is worthless. Separate them and everything else follows.</p>
+    </div>
+
+    <div class="col">
+      <p>Suppose the model says <em>2.0% non-uniformity, give or take 0.4</em>. There are two utterly different reasons for that 0.4.</p>
+
+      <div class="note">
+        <span class="label">Aleatoric — the dice</span>
+        <p>
+          The process is genuinely random. Same recipe, different wafer, different answer: thermal
+          fluctuation, flux jitter, metrology noise. <strong>More data will not reduce this.</strong>
+          It's a property of the world. From <em>alea</em>, Latin for dice.
+        </p>
+      </div>
+      <div class="note">
+        <span class="label">Epistemic — the ignorance</span>
+        <p>
+          The model hasn't seen this part of the space. <strong>More data removes this entirely.</strong>
+          It's a property of your knowledge, not the world. From <em>episteme</em>, Greek for knowledge.
+        </p>
+      </div>
+
+      <p>Why the distinction earns its keep — it answers two different questions:</p>
+      <ul>
+        <li><strong>High epistemic</strong> → "go run an experiment here, you'd learn something." This drives which experiment to run next (§08).</li>
+        <li><strong>High aleatoric</strong> → "an experiment here teaches you nothing new; this region is just noisy. Leave margin or avoid it."</li>
+      </ul>
+      <p>
+        A model reporting one lumped error bar cannot tell you which situation you're in — so it can
+        neither choose experiments intelligently nor be appropriately paranoid. That's why the canonical
+        prediction object above keeps them in separate fields, and why that's enforced by a test.
+      </p>
+      <p>
+        Play with it below. Watch the two bands behave completely differently as you add data.
+      </p>
+    </div>
+
+    <figure class="wide">
+      <div class="fig">
+        <div class="fig-head"><span class="fig-title">Figure 1 · a real Gaussian process — click the plot to add a measurement</span></div>
+        <div class="fig-body">
+          <canvas id="c-gp" width="900" height="380"></canvas>
+          <div class="legend">
+            <span><i style="background:var(--muted)"></i>truth (hidden from the model)</span>
+            <span><i style="background:var(--glow)"></i>model mean μ(x)</span>
+            <span><i style="background:var(--spec);opacity:.45"></i>epistemic — ignorance</span>
+            <span><i style="background:var(--glow);opacity:.3"></i>aleatoric — noise</span>
+          </div>
+        </div>
+        <div class="controls">
+          <div class="ctl">
+            <label>Lengthscale ℓ <b id="v-gp-ls">1.10</b></label>
+            <input type="range" id="s-gp-ls" min="0.35" max="3.0" step="0.05" value="1.1">
+          </div>
+          <div class="ctl">
+            <label>Process noise σ_ale <b id="v-gp-noise">0.30</b></label>
+            <input type="range" id="s-gp-noise" min="0.05" max="1.2" step="0.05" value="0.3">
+          </div>
+          <div class="ctl" style="align-self:end">
+            <div class="btn-row">
+              <button class="btn" id="b-gp-reset">Reset to 5 runs</button>
+              <button class="btn" id="b-gp-fill">Run a full sweep</button>
+            </div>
+          </div>
+        </div>
+        <div class="readout">
+          <div class="stat"><span class="k">measurements</span><span class="v" id="v-gp-n">5</span></div>
+          <div class="stat"><span class="k">mean epistemic σ</span><span class="v" id="v-gp-epi">—</span></div>
+          <div class="stat"><span class="k">mean aleatoric σ</span><span class="v" id="v-gp-ale">—</span></div>
+        </div>
+      </div>
+      <figcaption>
+        This is a genuine GP — Matérn-5/2 kernel, exact Cholesky posterior — running live in your browser,
+        the same maths as the program's <code>GPForwardModel</code>. <strong>The point to notice:</strong>
+        clicking new measurements collapses the blue epistemic band toward zero, while the amber aleatoric
+        band never budges. No amount of data removes the dice. That's not a modelling artefact; that's the
+        distinction being real.
+      </figcaption>
+    </figure>
+  </section>
+
+  <hr class="rule">
+
+  <!-- ============================================================ 04 -->
+  <section id="conformal">
+    <div class="col stage-head">
+      <span class="stage-num">04 — calibration</span>
+      <h2>Making the error bars honest</h2>
+      <p class="lede">A model's "90% interval" is a claim. Conformal prediction turns it into a guarantee.</p>
+    </div>
+    <div class="col">
+      <p>
+        The GP's error bars rest on assumptions — Gaussian noise, correct kernel, well-fitted
+        hyperparameters. When those are wrong, the bars are wrong, usually too narrow, and a "90%"
+        interval quietly covers 70% of the time. In a fab, that discrepancy is scrapped product.
+      </p>
+      <p>
+        <strong>Conformal prediction</strong> fixes this with a trick that is almost embarrassingly simple
+        and comes with a real mathematical guarantee that <em>does not care whether your model is any good</em>.
+      </p>
+
+      <h3>How it works, in four steps</h3>
+      <ol>
+        <li>Hold out some runs the model never trained on — the <strong>calibration set</strong>.</li>
+        <li>On each, measure how wrong the model was, scaled by how wrong it <em>said</em> it might be:
+          <code>score = |y − μ(x)| / σ(x)</code>.</li>
+        <li>Sort those scores. Take the one at the ⌈(1−α)(n+1)⌉-th position — for 90% coverage, roughly the 90th percentile. Call it <code>q̂</code>.</li>
+        <li>Every future interval is <code>μ(x) ± q̂·σ(x)</code>.</li>
+      </ol>
+      <p>
+        If the model was overconfident, the observed scores are large, <code>q̂</code> comes out big, and
+        every future band gets stretched until it actually covers. The guarantee holds under one
+        assumption — that future runs look statistically like the calibration runs
+        (<em>exchangeability</em>) — and needs nothing else. Not Gaussianity. Not a correct kernel.
+        Not even a competent model.
+      </p>
+
+      <div class="note key">
+        <span class="label">The detail everyone gets wrong</span>
+        <p>
+          That <code>⌈(1−α)(n+1)⌉</code> is not a rounding nicety. When it exceeds <code>n</code> — too
+          few calibration points to justify the claim — the honest answer is an <strong>infinitely wide
+          interval</strong>, and this program returns exactly that rather than a comfortable-looking
+          finite band it cannot back. With 8 points you cannot make a 90% claim; the code says so out
+          loud. (Audited against exact rational arithmetic across α ∈ {0.01…0.5} × n ∈ [1, 2000]: zero
+          off-by-ones.)
+        </p>
+      </div>
+
+      <p>
+        The scorecard for this is <strong>PICP</strong> — Prediction Interval Coverage Probability — the
+        fraction of held-out runs that actually landed inside their band. Aim 90%, measure 90%. On the
+        real sputtering dataset this program scores <strong>0.929</strong> against a 0.90 target.
+        (§10 has an important caveat about <em>how</em> that coverage is bought.)
+      </p>
+    </div>
+
+    <figure class="wide">
+      <div class="fig">
+        <div class="fig-head"><span class="fig-title">Figure 2 · coverage you can count</span></div>
+        <div class="fig-body">
+          <canvas id="c-conf" width="900" height="240"></canvas>
+          <div class="legend">
+            <span><i style="background:var(--ok)"></i>covered — truth inside the band</span>
+            <span><i style="background:var(--bad)"></i>missed</span>
+          </div>
+        </div>
+        <div class="controls">
+          <div class="ctl">
+            <label>Target coverage 1−α <b id="v-conf-a">90%</b></label>
+            <input type="range" id="s-conf-a" min="50" max="99" step="1" value="90">
+          </div>
+          <div class="ctl">
+            <label>Model overconfidence <b id="v-conf-o">1.0×</b></label>
+            <input type="range" id="s-conf-o" min="1" max="4" step="0.1" value="1">
+          </div>
+          <div class="ctl" style="align-self:end">
+            <div class="btn-row"><button class="btn" id="b-conf-re">Draw new runs</button></div>
+          </div>
+        </div>
+        <div class="readout">
+          <div class="stat"><span class="k">nominal</span><span class="v" id="v-conf-nom">90.0%</span></div>
+          <div class="stat"><span class="k">raw model PICP</span><span class="v" id="v-conf-raw">—</span></div>
+          <div class="stat"><span class="k">conformal PICP</span><span class="v" id="v-conf-cal">—</span></div>
+          <div class="stat"><span class="k">stretch q̂</span><span class="v" id="v-conf-q">—</span></div>
+        </div>
+      </div>
+      <figcaption>
+        Turn up <strong>overconfidence</strong> to simulate a model whose error bars are too narrow — a
+        badly misspecified kernel, say. The raw PICP collapses well below nominal: the model is lying.
+        The conformal PICP stays pinned near the target anyway, because <code>q̂</code> grows to absorb
+        exactly the amount the model was wrong by. That is the guarantee doing its job: it doesn't make
+        the model better, it makes the model's <em>claims</em> true.
+      </figcaption>
+    </figure>
+  </section>
+
+  <hr class="rule">
+
+  <!-- ============================================================ 05 -->
+  <section id="inverse">
+    <div class="col stage-head">
+      <span class="stage-num">05 — stage two</span>
+      <h2>The pessimistic inverse</h2>
+      <p class="lede">This is the heart of the program. Everything before it was preparation.</p>
+    </div>
+
+    <div class="col">
+      <p>
+        Here's the naïve approach, and why it's dangerous. You want the outcome in <code>[L, U]</code>.
+        So you search for a recipe where the model's predicted mean lands in <code>[L, U]</code>. Done.
+      </p>
+      <p>And it will hand you a catastrophe, for three compounding reasons:</p>
+      <ul>
+        <li>The mean is just a guess. If it's on the edge of the box, real noise pushes you out half the time.</li>
+        <li>The model might be badly wrong here — and the optimiser is <em>actively drawn</em> to those regions, because that's where the model makes its most flattering predictions. It hunts for its own blind spots.</li>
+        <li>The tool won't deliver exactly what you dialled anyway.</li>
+      </ul>
+      <p>
+        So this program inverts the logic. Rather than asking <em>"where does the model predict success?"</em>,
+        it asks:
+      </p>
+      <div class="note key">
+        <span class="label">The actual objective (§8.1)</span>
+        <p>
+          <strong>Where would we still land in spec even if everything that could plausibly be against us,
+          is?</strong> Assume the model is wrong in the worst direction it admits it could be. Assume the
+          tool drifts the worst way within tolerance. Then demand room to spare on top. A recipe only
+          survives if it's <em>still</em> in spec after all of that.
+        </p>
+      </div>
+
+      <h3>Building the margin, one hostile assumption at a time</h3>
+      <p>Start with the model's prediction at recipe <code>x</code> for output <code>j</code>: mean <code>μⱼ</code>, epistemic <code>σ_epi,ⱼ</code>, aleatoric <code>σ_ale,ⱼ</code>. Now displace the mean by everything that could hurt:</p>
+      <div class="eq">sⱼ(x) = z_epi · σ_epi,ⱼ(x)      <span class="cm">① the model might be wrong — shove μ toward the wall</span>
+      + Σᵢ |Jⱼᵢ(x)| · Δᵢ        <span class="cm">② the knobs drift — worst case over the tolerance box</span></div>
+      <p>
+        Term ② deserves a second. <code>Jⱼᵢ = ∂μⱼ/∂xᵢ</code> is the <strong>Jacobian</strong> — how hard
+        output <code>j</code> reacts to knob <code>i</code>. Multiply by that knob's tolerance <code>Δᵢ</code>
+        and you get the worst shift it can cause. Absolute value, because we assume it drifts the bad way.
+        Sum over knobs, because they can all conspire at once. Mathematically this is the exact first-order
+        worst case over a box of drift — and it means <strong>a recipe sitting on a knife-edge slope gets
+        penalised automatically</strong>. Sensitivity <em>is</em> risk, and this term prices it.
+      </p>
+      <p>Now measure the remaining room to each wall, in units of process noise:</p>
+      <div class="eq">u_hiⱼ = (Uⱼ − μⱼ − sⱼ) / σ_ale,ⱼ    <span class="cm">standardized room below the ceiling</span>
+u_loⱼ = (μⱼ − Lⱼ − sⱼ) / σ_ale,ⱼ    <span class="cm">standardized room above the floor</span>
+
+FEASIBLE  ⟺  minⱼ min(u_hiⱼ, u_loⱼ) ≥ κ</div>
+      <div class="where">
+        <dl>
+          <dt>κ</dt><dd>How many noise-widths of spare room you demand. Default <strong>2.0</strong>. This is ③ — the answer to the dice.</dd>
+          <dt>z_epi</dt><dd>How paranoid about model error. Default <strong>2.0</strong>.</dd>
+          <dt>Δ</dt><dd>Knob tolerance, default <strong>2%</strong> of each range.</dd>
+          <dt>minⱼ</dt><dd>Over <em>every</em> constrained output — one failure is failure. No averaging away a violation.</dd>
+        </dl>
+      </div>
+      <p>
+        Dividing by <code>σ_ale</code> is what makes κ meaningful. It says: <em>express the remaining room
+        in units of how much this process randomly wobbles.</em> Somewhere noisy, you need a physically
+        wider gap to clear the same κ. Betting where the process is unpredictable gets penalised
+        automatically, without a special rule.
+      </p>
+      <div class="note">
+        <span class="label">A subtlety worth flagging</span>
+        <p>
+          Epistemic uncertainty enters <strong>exactly once</strong>, in <code>s</code>. An earlier version
+          of the specification also subtracted a separate <code>κ·σ_epi</code> term — double-counting the
+          same fear and making the solver so timid it declared everything impossible. The code carries a
+          comment specifically forbidding the double-count. Conservatism has to be deliberate, not
+          accidentally stacked.
+        </p>
+      </div>
+
+      <h3>The anti-reward-hacking gate</h3>
+      <p>
+        One hole remains, and it's the nastiest. What if the model's epistemic uncertainty is
+        <em>spuriously small</em> in a far-away region it never saw — a blind spot it doesn't know is a
+        blind spot? Then <code>s</code> is small, the margin looks luxurious, and the pessimism was
+        pessimism about nothing.
+      </p>
+      <p>
+        So there's a second, independent test: <strong>support score</strong>. It asks "does this recipe
+        even <em>look like</em> the runs we've done?" — computed as a negative Mahalanobis distance from
+        the training cloud (0 at the centre, increasingly negative as you leave). Any candidate below the
+        floor — by default the 5th percentile of the training data's own scores — is <strong>rejected
+        outright</strong>, no matter how good its margin looks.
+      </p>
+      <p>
+        And this gate <strong>fails closed</strong>: the solver's constructor <em>refuses to be built</em>
+        without either a support floor or the training data to derive one. You cannot forget to turn on
+        the safety, and you cannot switch it off. That's a deliberate design choice, and the audit found
+        it genuinely load-bearing — on the real sputtering data it was the only thing preventing a
+        units bug from returning nonsense.
+      </p>
+
+      <h3>Now watch it work</h3>
+      <p>
+        Below is that entire calculation, live. The GP is real. The margin maths is the formula above,
+        term for term. Green regions on the recipe axis are recipes the solver would certify.
+      </p>
+    </div>
+
+    <figure class="wide">
+      <div class="fig">
+        <div class="fig-head"><span class="fig-title">Figure 3 · the pessimistic margin — the program's core, running live</span></div>
+        <div class="fig-body">
+          <canvas id="c-marg" width="900" height="420"></canvas>
+          <div class="legend">
+            <span><i style="background:var(--spec);opacity:.3"></i>spec box [L, U]</span>
+            <span><i style="background:var(--glow)"></i>model mean μ(x)</span>
+            <span><i style="background:var(--bad);opacity:.5"></i>worst-case credited interval</span>
+            <span><i style="background:var(--ok);opacity:.5"></i>certified recipes</span>
+          </div>
+        </div>
+        <div class="controls">
+          <div class="ctl">
+            <label>κ — noise margin <b id="v-m-k">2.0</b></label>
+            <input type="range" id="s-m-k" min="0" max="4" step="0.1" value="2.0">
+          </div>
+          <div class="ctl">
+            <label>z_epi — model paranoia <b id="v-m-z">2.0</b></label>
+            <input type="range" id="s-m-z" min="0" max="4" step="0.1" value="2.0">
+          </div>
+          <div class="ctl">
+            <label>Δ — knob drift <b id="v-m-d">2%</b></label>
+            <input type="range" id="s-m-d" min="0" max="15" step="0.5" value="2">
+          </div>
+          <div class="ctl">
+            <label>Spec centre <b id="v-m-c">6.5</b></label>
+            <input type="range" id="s-m-c" min="2" max="9" step="0.05" value="6.5">
+          </div>
+          <div class="ctl">
+            <label>Spec half-width <b id="v-m-w">1.60</b></label>
+            <input type="range" id="s-m-w" min="0.3" max="3.5" step="0.05" value="1.6">
+          </div>
+          <div class="ctl" style="align-self:end">
+            <div class="btn-row">
+              <button class="btn" id="b-m-add">Add 6 runs near the target</button>
+              <button class="btn" id="b-m-reset">Reset data</button>
+            </div>
+          </div>
+        </div>
+        <div class="readout">
+          <div class="stat"><span class="k">verdict</span><span class="v" id="v-m-verdict">—</span></div>
+          <div class="stat"><span class="k">certified islands</span><span class="v" id="v-m-islands">—</span></div>
+          <div class="stat"><span class="k">best margin (σ)</span><span class="v" id="v-m-best">—</span></div>
+          <div class="stat"><span class="k">certified fraction</span><span class="v" id="v-m-frac">—</span></div>
+        </div>
+      </div>
+      <figcaption>
+        <strong>Four things to try, each demonstrating a different design decision:</strong>
+        <br>① Push <b>κ</b> to 4 — the certified set starves and dies. Demanding more safety than the
+        process can deliver yields <code>INFEASIBLE</code>. That's the honest answer, not a bug.
+        <br>② Push <b>Δ</b> (drift) up — notice the <em>steep</em> parts of the curve die first, while
+        flat regions survive. The Jacobian term is pricing sensitivity as risk.
+        <br>③ Narrow the <b>spec half-width</b> toward 0.3 — everything dies. A near-point target is
+        unsatisfiable, which is why the real code <em>rejects</em> a zero-width box outright rather than
+        quietly reporting infeasible.
+        <br>④ The important one: set κ=3 until it goes infeasible, then hit <b>Add 6 runs</b>. Certified
+        recipes appear from nowhere. <em>Nothing about the process changed — only what we knew about it.</em>
+        Epistemic uncertainty was the binding constraint, and data dissolved it. That observation is
+        precisely what the active-learning loop in §08 automates.
+      </figcaption>
+    </figure>
+
+    <div class="col">
+      <h3>Returning a set, not an answer</h3>
+      <p>
+        Look at Figure 3 again: the certified region is often several disconnected islands. That's
+        non-injectivity — problem ①. Handing back one recipe would silently discard genuine alternatives
+        that might be cheaper or more robust in ways the model can't see.
+      </p>
+      <p>
+        So the solver returns a <strong>diverse</strong> set, chosen by <strong>farthest-point selection</strong>:
+        anchor on the highest-confidence recipe, then repeatedly add whichever survivor is <em>farthest</em>
+        from everything picked so far. That deliberately reaches across to other islands instead of
+        returning four neighbours from one. And if the pre-image really is a single point, it returns
+        one candidate and stops — it never pads the list with near-duplicates to look thorough.
+      </p>
+      <p>Each returned candidate carries a confidence, computed as the probability of landing in spec under the worst-case mean:</p>
+      <div class="eq">confidence = Πⱼ ( Φ(u_hiⱼ) + Φ(u_loⱼ) − 1 )     <span class="cm">Φ = normal CDF</span></div>
+      <p>
+        The product treats outputs as independent — an approximation the code documents rather than hides
+        (a proper joint-residual-covariance version is scheduled work). Being explicit about which
+        corners are cut is a recurring habit in this codebase, and a good sign.
+      </p>
+    </div>
+  </section>
+
+  <hr class="rule">
+
+  <!-- ============================================================ 06 -->
+  <section id="infeasible">
+    <div class="col stage-head">
+      <span class="stage-num">06 — refusal</span>
+      <h2>Saying "impossible" properly</h2>
+      <p class="lede">The most valuable output of an inverse solver is often a well-explained no.</p>
+    </div>
+    <div class="col">
+      <p>
+        A system that always returns <em>something</em> is a system that lies when the honest answer is
+        "your target is unreachable". So <code>INFEASIBLE</code> here is a
+        <strong>first-class result type</strong>, not an exception and never a clipped best-effort point:
+      </p>
+      <div class="eq">Infeasible(
+    nearest_achievable    <span class="cm">the closest we CAN get</span>
+    distance_to_feasible  <span class="cm">how far short, in σ</span>
+    reason                <span class="cm">*why* — and this is the useful part</span>
+)</div>
+      <p>
+        The <em>why</em> matters because "impossible" has four completely different causes demanding four
+        completely different responses. Telling them apart needs a trick: the pessimistic search
+        deliberately <em>avoids</em> high-uncertainty regions, so it never even visits the point that
+        would be feasible if the model were confident. The solver therefore runs a second,
+        <strong>epistemic-free probe</strong> — the same search with model-paranoia switched off — purely
+        to diagnose. Comparing the two searches gives the verdict:
+      </p>
+      <div class="tw">
+        <table>
+          <thead><tr><th>Diagnosis</th><th>What it means</th><th>What you should do</th></tr></thead>
+          <tbody>
+            <tr><td><strong>Off-manifold</strong></td><td>Every candidate failed the support gate — the target lives where you've never operated.</td><td>Expand the explored region first. You're asking about terra incognita.</td></tr>
+            <tr><td><strong>Epistemic-limited</strong></td><td>Feasible <em>if</em> the model were confident. Ignorance is the only thing blocking you.</td><td><strong>Collect runs.</strong> The target is real; you just haven't earned it yet.</td></tr>
+            <tr><td><strong>Partly epistemic</strong></td><td>Mean lands in the box, but the box is narrower than the noise band.</td><td>Data will help some, but you'll also need to relax the spec.</td></tr>
+            <tr><td><strong>Hard conflict</strong></td><td>The mean can't reach the box at all, even optimistically.</td><td>No amount of data fixes this. Change the target, or change the process.</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>
+        That probe does one more job: if it stumbles on an on-support, genuinely-feasible recipe that the
+        main search missed, it <strong>promotes</strong> it. The rule is absolute — never return
+        <code>INFEASIBLE</code> when a feasible recipe exists.
+      </p>
+      <div class="note warn">
+        <span class="label">Found in this audit</span>
+        <p>
+          That rule had a hole. When the optional full-model re-validation is switched on, the solver
+          tested only the handful of <em>diverse</em> picks — and if those failed, abstained immediately,
+          while dozens of other certified candidates sat unexamined in the pool. Since the diverse picks
+          are chosen by <em>spread</em>, not by merit, their failure says nothing about the rest. That's a
+          false "impossible", the exact failure this section forbids. It now sweeps the remainder before
+          abstaining. (It was latent — that path is off by default — but it was wrong.)
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <hr class="rule">
+
+  <!-- ============================================================ 07 -->
+  <section id="constraints">
+    <div class="col stage-head">
+      <span class="stage-num">07 — legality</span>
+      <h2>Never proposing an illegal recipe</h2>
+      <p class="lede">A neat trick that makes an entire category of bug impossible.</p>
+    </div>
+    <div class="col">
+      <p>
+        The heater runs 1150–1500 K. An optimiser exploring freely will absolutely try 1600 K. The usual
+        fix is to clip — but clipping creates flat spots that confuse the optimiser, and it silently
+        piles candidates onto the boundary.
+      </p>
+      <p>
+        Instead: <strong>change coordinates so illegal values don't exist.</strong> The optimiser works in
+        an unconstrained variable <code>u</code> ranging over all real numbers, and every <code>u</code> is
+        mapped into the legal box:
+      </p>
+      <div class="eq">x = lo + (hi − lo) · sigmoid(u)        <span class="cm">sigmoid squashes ℝ into (0,1)</span>
+
+<span class="cm">u = −∞ → x = lo     u = 0 → x = midpoint     u = +∞ → x = hi</span></div>
+      <p>
+        The optimiser can propose <em>any</em> number, however wild, and the recipe that comes out is
+        always legal. Not "checked and rejected" — <em>incapable</em> of being illegal. The constraint
+        stops being a rule to enforce and becomes a property of the coordinate system.
+      </p>
+      <p>
+        Compositions get the same treatment. Alloy fractions must be non-negative and sum to exactly 1 —
+        a fiddly constraint. Under <code>x = softmax([u, 0])</code> both hold automatically for any
+        <code>u</code>, and the inverse <code>uᵢ = log(xᵢ/x_K)</code> makes it a true bijection.
+      </p>
+    </div>
+    <figure class="wide">
+      <div class="fig">
+        <div class="fig-head"><span class="fig-title">Figure 4 · the whole real line, folded into a legal box</span></div>
+        <div class="fig-body">
+          <canvas id="c-tf" width="900" height="250"></canvas>
+        </div>
+        <div class="controls">
+          <div class="ctl">
+            <label>Optimiser proposes u = <b id="v-tf-u">0.0</b></label>
+            <input type="range" id="s-tf-u" min="-8" max="8" step="0.1" value="0">
+          </div>
+          <div class="ctl" style="align-self:end">
+            <div class="stat" style="flex:1"><span class="k">resulting recipe</span><span class="v" id="v-tf-x">1325.0 K</span></div>
+          </div>
+        </div>
+      </div>
+      <figcaption>
+        Drag <code>u</code> to either extreme. The recipe approaches the bounds and never crosses them —
+        even at u = ±8. There is no value you could type that produces an illegal temperature.
+        <strong>The catch, which the audit caught:</strong> this squashing means a step in <code>u</code>
+        is <em>not</em> a step of the same size in <code>x</code> — near the edges, a huge move in
+        <code>u</code> barely moves <code>x</code>. Any probability density carried through this map must
+        be corrected for that stretching, by a factor <code>|du/dx|</code>. The program's flow-based
+        generator (§09) was reporting densities <em>without</em> that correction. See §10.
+      </figcaption>
+    </figure>
+  </section>
+
+  <hr class="rule">
+
+  <!-- ============================================================ 08 -->
+  <section id="loop">
+    <div class="col stage-head">
+      <span class="stage-num">08 — stage three</span>
+      <h2>Choosing the next experiment</h2>
+      <p class="lede">You have budget for forty runs. Which forty?</p>
+    </div>
+    <div class="col">
+      <p>
+        Recall the moment in Figure 3 where adding six runs rescued an infeasible target. That's the
+        whole thesis of the active-learning loop: <em>the model tells you what it doesn't know, and you
+        go buy exactly that knowledge.</em> Automating it needs a rule for scoring a candidate
+        experiment before you run it.
+      </p>
+
+      <h3>Two ways to value an experiment</h3>
+      <p>
+        <strong>BALD</strong> asks: how much would running here reduce my ignorance <em>about the process
+        in general?</em> It's the epistemic-to-aleatoric ratio — high where the model is unsure but the
+        process isn't inherently noisy. It refuses to be lured into noisy regions where you'd learn
+        nothing:
+      </p>
+      <div class="eq">BALD(x) = ½ · log(1 + σ_epi²(x) / σ_ale²(x))     <span class="cm">in nats</span></div>
+      <p>
+        <strong>EPIG</strong> asks a sharper question: how much would running here reduce my ignorance
+        <em>about the recipes I actually care about?</em> It uses the GP's ability to say how correlated
+        two locations are. Learning at <code>x</code> teaches you about your target <code>x*</code>
+        exactly insofar as they're correlated — so EPIG will send you somewhere convenient that
+        happens to be informative about somewhere expensive.
+      </p>
+      <p>Blend them, and divide by cost:</p>
+      <div class="eq">α(x) = [ λ · EPIG(x) + (1 − λ) · BALD(x) ] / cost(x)^β</div>
+      <p>
+        Both terms are in <em>nats</em> — genuine information units — which is what makes adding them
+        legitimate rather than mixing incompatible scales. Cost divides rather than subtracts, so the
+        score reads as <em>information per unit money</em>.
+      </p>
+      <p>
+        Then two schedules anneal over the campaign. <strong>λ: 0.2 → 0.9</strong> — start by exploring
+        broadly, finish by aiming hard at the goal. <strong>β: 1 → 0</strong> — start cost-conscious,
+        finish willing to pay for the run that closes it out. Early cheap experiments buy the map; late
+        expensive ones buy the destination.
+      </p>
+
+      <pre class="mermaid">
+flowchart TD
+  A["Space-filling seed design<br/>(Sobol over expert ranges)"] --> B["Fit forward model<br/>GP + conformal calibration"]
+  B --> C["Run the pessimistic inverse<br/>on the target spec"]
+  C --> D{"Certified<br/>recipe?"}
+  D -->|"yes"| E["EXPLOIT<br/>run the best recipe<br/>on the real machine"]
+  D -->|"no — INFEASIBLE"| F["use nearest_achievable<br/>+ the diagnosis"]
+  E --> G["EXPLORE<br/>q−1 diverse runs picked by<br/>[λ·EPIG + (1−λ)·BALD] / cost^β"]
+  F --> G
+  G --> H{"Target hit,<br/>budget gone,<br/>or stalled?"}
+  H -->|"no"| B
+  H -->|"yes"| I["Stop — report<br/>cost-to-target"]
+      </pre>
+
+      <p>
+        Each batch spends one run <em>exploiting</em> (the inverse's best guess — which also tests whether
+        you're done) and the rest <em>exploring</em>, chosen to be diverse so you don't buy the same
+        information four times. The model is refit from scratch each round, and the loop stops on target
+        hit, budget exhaustion, or stall.
+      </p>
+      <div class="note warn">
+        <span class="label">Found in this audit</span>
+        <p>
+          EPIG was silently switched off on one path. The multi-tool model's joint-covariance function
+          disagreed with its own prediction function for an <em>unseen</em> tool — the two described
+          different probability distributions. EPIG mixes quantities from both, so the inconsistency
+          broke the underlying inequality and the information gain collapsed to
+          <strong>~0 nats where it should have read 19</strong>. The blend degenerated to pure BALD
+          precisely as λ annealed toward EPIG's dominance, and precisely on the new-chamber path the
+          function was written for. It was never wrong — just silently absent. Now fixed and pinned by
+          the identity <code>EPIG(x; {x}) ≡ BALD(x)</code>, which must hold for any self-consistent model.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <hr class="rule">
+
+  <!-- ============================================================ 09 -->
+  <section id="flow">
+    <div class="col stage-head">
+      <span class="stage-num">09 — stage four</span>
+      <h2>The instant answer</h2>
+      <p class="lede">Optimisation takes seconds. Sometimes you need microseconds.</p>
+    </div>
+    <div class="col">
+      <p>
+        Everything so far solves one target by running a fresh optimisation. Good answers, but you pay
+        each time. The <strong>amortized generator</strong> pays once, up front, then answers instantly —
+        the difference between solving an equation and looking one up.
+      </p>
+      <p>
+        The tool is a <strong>normalizing flow</strong>. The idea: start with pure Gaussian noise and push
+        it through a learned, invertible warp until it takes the shape of your target distribution.
+        Because every step is invertible, you can both <em>sample</em> from it and compute exact
+        <em>densities</em>. Trained conditionally on the spec box, it learns
+        <em>"show me recipes for this target"</em> directly.
+      </p>
+      <p>Two design choices do a lot of work:</p>
+      <ul>
+        <li>It's trained in the unconstrained <code>u</code>-space of §07 — so <strong>every sample it
+          ever draws is a legal recipe by construction.</strong> A flow can't be taught to respect a box;
+          it doesn't need to be.</li>
+        <li>Several flows are ensembled. Where they disagree, that's epistemic uncertainty showing up in
+          the proposals themselves.</li>
+      </ul>
+      <p>
+        The two halves then combine — the flow proposes cheaply, the §05 solver refines and certifies.
+        The measured result: the same quality as a cold 32-start search for <strong>28% of the
+        compute</strong>.
+      </p>
+
+      <h3>The gate that guards it</h3>
+      <p>
+        A generator that produces confident nonsense is worse than none. So it can't ship without passing
+        <strong>Simulation-Based Calibration</strong>. The logic is elegant: if the posterior is truly
+        calibrated, then for a randomly drawn true recipe, its <em>rank</em> among the posterior's samples
+        should be uniform. Test the flow against itself many times and check that uniformity. A calibrated
+        flow passes; an undertrained one is caught.
+      </p>
+      <div class="note warn">
+        <span class="label">The recurring lesson — three bugs, one root cause</span>
+        <p>
+          <strong>The gate must certify the law that actually ships.</strong> A previous session found the
+          gate drawing all its samples from one ensemble member while the product shipped a mixture — so
+          it certified a narrower object than it sold. This audit found the mirror image: for small
+          request sizes, the shipped sampler quietly handed the remainder to low-numbered members
+          (asking for 3 samples from 5 flows, members 4 and 5 could <em>never</em> be drawn). The gate
+          tested an even mixture; the product shipped a skewed one — and the default proposal count sat
+          exactly on the skewed case. Same root cause, two sessions apart. It's now a binding written rule.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <hr class="rule">
+
+  <!-- ============================================================ 10 -->
+  <section id="truth">
+    <div class="col stage-head">
+      <span class="stage-num">10 — the honest part</span>
+      <h2>Does it actually work?</h2>
+      <p class="lede">Short answer: the machinery is sound and largely proven. The goal is not.</p>
+    </div>
+    <div class="col">
+      <p>
+        A document that explained the design and stopped there would be marketing. Here's what an audit —
+        four adversarial reviewers, every finding reproduced before being believed — actually established.
+      </p>
+
+      <h3>What is genuinely demonstrated</h3>
+      <ul>
+        <li><strong>It runs, end to end, and reproduces exactly.</strong> 533 tests pass (382 at the original audit, grown with every fix since). The published results regenerate byte-for-byte.</li>
+        <li><strong>It beats a serious competitor, fairly.</strong> Against warm-started Bayesian optimisation on a simulated machine, it reaches spec roughly twice as cheaply. The audit specifically checked for rigging and found none: both methods get a bit-identical warm start, the same budget accounting, and are scored on the <em>simulator's</em> output rather than either model's opinion. This is the strongest part of the program.</li>
+        <li><strong>It abstains instead of lying.</strong> On real measured data, tightening the tolerance makes it say INFEASIBLE rather than invent something.</li>
+        <li><strong>On real data, when it answers, it's right.</strong> 19 of 19 recipes checked against the nearest real measured run landed in tolerance.</li>
+      </ul>
+
+      <h3>What is not — and this is the part that matters</h3>
+      <div class="note warn">
+        <span class="label">The verdict</span>
+        <p>
+          <strong>No evidence exists that this predicts recipes from outcomes in semiconductor
+          manufacturing.</strong> Every quantitative claim is either (a) in-silico, against a simulator,
+          or (b) on a public 2-knob sputtering dataset that is a dense 15×15 lookup grid — invertible by
+          nearest-neighbour, so it can't distinguish a learned inverse from a table lookup. The missing
+          real recipe→outcome dataset isn't a scheduling item. <em>It is the entire scientific claim.</em>
+          (The dimensionality half of this gap has since been closed on synthetic data — see below —
+          but that is machinery evidence, not process evidence. Four real candidate datasets have
+          since been downloaded and verified, a venue was chosen, and the first real-data gate
+          run — 5 of 6 campaigns passing, one honest failure — now exists: section&nbsp;12.)
+        </p>
+      </div>
+      <p>Three caveats the audit surfaced that were nowhere documented:</p>
+      <div class="tw">
+        <table>
+          <thead><tr><th>Finding</th><th>What it means</th></tr></thead>
+          <tbody>
+            <tr>
+              <td><strong>Everything was 2-dimensional</strong><br><em style="color:var(--ok)">— since closed</em></td>
+              <td>
+                Every published result — the MBE recipe, the sputtering grid, the acceptance test —
+                used <strong>exactly 2 input knobs</strong>, and "it works in any dimension" was an
+                untested claim about the axis where inverse problems are hardest. It has now been
+                <strong>measured</strong>: see the next section.
+              </td>
+            </tr>
+            <tr>
+              <td><strong>The headline PICP is bought</strong></td>
+              <td>That honest-looking 0.929 coverage comes with fitted noise <strong>10.5× larger than the dataset's own measured error</strong>. The model is absorbing its own misfit into "noise" and widening bands until they cover. The coverage is real; it just isn't free.</td>
+            </tr>
+            <tr>
+              <td><strong>The tolerance is generous</strong></td>
+              <td>The real-data inverse succeeds at ±6 — but ±6 is 15% of the output range, and 56% of all runs already sit inside that band. At ±2 it returns INFEASIBLE on all 25 queries. Honest, but it only fires where the answer was nearly free.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>How many knobs can it actually handle?</h3>
+      <p>
+        That 2-D ceiling was the biggest hole, so it got tested rather than argued about. The
+        catch in testing an inverse is that it's easy to cheat by accident: ask the model for a
+        recipe, then check the recipe <em>with the same model</em>, and it will congratulate
+        itself. So this scores against <strong>ground truth</strong> — solve, then evaluate the
+        <em>true</em> function at the returned recipe. The true function is never consulted
+        during the search.
+      </p>
+      <div class="tw">
+        <table>
+          <thead><tr><th>Input knobs</th><th>Training runs</th><th>Verdict</th><th>Recipes that really hit spec</th><th>Solve time</th></tr></thead>
+          <tbody>
+            <tr><td class="num">2</td><td class="num">24</td><td>FEASIBLE</td><td class="num">1 / 1</td><td class="num">2.6 s</td></tr>
+            <tr><td class="num">4</td><td class="num">48</td><td>FEASIBLE</td><td class="num">3 / 3</td><td class="num">7.6 s</td></tr>
+            <tr><td class="num">8</td><td class="num">96</td><td>FEASIBLE</td><td class="num">3 / 3</td><td class="num">30.9 s</td></tr>
+            <tr><td class="num">15</td><td class="num">180</td><td>FEASIBLE</td><td class="num">3 / 3</td><td class="num">70.9 s</td></tr>
+            <tr><td class="num">20</td><td class="num">240</td><td><em>INFEASIBLE</em> — "collect runs"</td><td class="num">—</td><td class="num">150.8 s</td></tr>
+            <tr><td class="num">20</td><td class="num"><strong>480</strong></td><td>FEASIBLE</td><td class="num">1 / 1</td><td class="num">97.1 s</td></tr>
+            <tr><td class="num">20</td><td class="num">800</td><td>FEASIBLE</td><td class="num" style="color:var(--bad)"><strong>2 / 3</strong> — one certified recipe misses</td><td class="num">335.0 s</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="note key">
+        <span class="label">The best result on this page</span>
+        <p>
+          At 20 knobs with 240 runs the solver refused — diagnosis (§06):
+          <strong>epistemic-limited, "the target is reachable, you just haven't earned it yet
+          — collect runs."</strong> So we collected runs. Doubling the data flipped it to
+          FEASIBLE with a genuine ground-truth hit.
+        </p>
+        <p>
+          Is that just a starved search dressed up as a diagnosis? No — the control settles it.
+          Giving it <strong>4× the search budget on the same 240 runs left it INFEASIBLE</strong>,
+          same diagnosis. More searching didn't help; more data did. It correctly worked out
+          that 240 points in a 20-dimensional box is too sparse to promise anything, said
+          <em>which</em> of the four causes applied, named the fix — and the fix worked. That's
+          the §06 taxonomy earning its keep on a problem ten times larger than anything it
+          had seen.
+        </p>
+      </div>
+      <div class="note warn">
+        <span class="label">One recipe missed — and that is the most important line here</span>
+        <p>
+          At 800 runs, one of three certified recipes <strong>misses the spec box on the true
+          function.</strong> The solver said yes and was wrong. That's a <em>false success</em>,
+          and it is much worse than a false refusal: a refusal wastes your afternoon, a false
+          success spends a wafer on a promise the program couldn't keep. It is the single thing
+          §05 exists to prevent.
+        </p>
+        <p>
+          It's real and it's repeatable — running the identical code with the identical seed
+          returns the identical miss, every time. It is also <em>marginal</em>: the recipe lands
+          1.046 away from target against a tolerance of ±0.8, so it crept about 31% outside the
+          box rather than flying off into nonsense.
+        </p>
+        <p>
+          <strong>The unsettling part is how fragile it is.</strong> Refit the GP's
+          hyperparameters with two random restarts instead of three — a detail with no bearing
+          on the specification you asked for — and the miss disappears entirely. A safety
+          guarantee that flips depending on which local optimum a fitting routine happened to
+          land in <em>is not a guarantee</em>. That's worse news than a rare-but-robust failure,
+          because it means at 20 knobs there is no buffer left: the margin is riding right on
+          the edge for some fits and not others.
+        </p>
+        <p>
+          The mechanism is structural, not a typo. The feasibility test in §05 reads the model's
+          <strong>raw</strong> σ values. The conformal interval from §04 — the one carrying the
+          real coverage guarantee — <em>is not part of the decision</em>. So the κ margin is only
+          ever as honest as the GP's own opinion of its error, and at 20 knobs that opinion is
+          measurably too rosy: one candidate's true error came in at <strong>3.12× its own
+          claimed σ</strong>, roughly a 1-in-500 event under a bell curve, in nine draws.
+          <strong>The pessimism inherits any miscalibration underneath it.</strong> And the
+          defence built for exactly this — the §13.2 re-validation gate — <strong>is off by
+          default.</strong>
+        </p>
+      </div>
+      <p>Testing it also exposed two genuine dimensional weaknesses:</p>
+      <ul>
+        <li>
+          <strong>The restart budget was frozen at 48 regardless of dimension.</strong> The
+          solver tries many starting points and polishes each; 48 scattered starts blanket a
+          2-D box and are nearly meaningless in 20-D. That's not just slow — a starved search
+          produces a <strong>false INFEASIBLE</strong>: it fails to <em>find</em> a recipe and
+          reports that none <em>exists</em>. Precisely the confusion §06 exists to prevent. It
+          now scales with dimension (and still equals exactly 48 at 2-D, so no existing result
+          moved).
+        </li>
+        <li>
+          <strong>Cost grows roughly with the square of the dimension — and it's the gradient's
+          fault, not the model's.</strong> The optimiser was never given a formula for its own
+          slope, so SciPy estimates it by nudging each knob and re-measuring: <em>d+1</em>
+          evaluations per step. Fixable by deriving the gradient analytically, which needs a
+          second derivative of the GP mean. That's real work and it's honestly logged as owed,
+          not quietly ignored.
+        </li>
+      </ul>
+      <p>
+        Honest limits: this is a smooth synthetic process, which is friendly to the GP; giving
+        it <code>12 × knobs</code> runs is a choice, not a law of nature, and no real campaign
+        will hand you 240 runs for a 20-knob process. It proves the machinery composes at
+        realistic width. It does not replace real data.
+      </p>
+
+      <h3>What the audit fixed</h3>
+      <p>Ten defects, each reproduced first and each now guarded by a test verified to fail against the bug:</p>
+      <div class="tw">
+        <table>
+          <thead><tr><th>Severity</th><th>Defect</th></tr></thead>
+          <tbody>
+            <tr><td class="num">P0</td><td><strong>Nothing ran at all.</strong> The project folder had been renamed but the package install still pointed at the vanished path. Every import failed; the suite died at collection.</td></tr>
+            <tr><td class="num">P1</td><td><strong>The verification command always passed.</strong> The documented architecture check returned success even against a deliberately broken contract — it read a constant. Every past "clean, exit 0" claim was evidence-free. (The architecture itself does hold.)</td></tr>
+            <tr><td class="num">P1</td><td><strong>EPIG collapsed to zero</strong> on the new-chamber path (§08).</td></tr>
+            <tr><td class="num">P1</td><td><strong>A units bug</strong> in the real-data example: bounds in mTorr, data in Pascals. The solver searched a pressure range whose <em>lower</em> bound sat above the data's maximum, and the point commented "guaranteed on-support" was a 2.3× extrapolation. Only the fail-closed support gate (§05) kept the output sane — the safety net caught a real fall.</td></tr>
+            <tr><td class="num">P2</td><td><strong>The flow reported wrong densities</strong> — missing the <code>|du/dx|</code> correction from §07. They integrated to 3.36 instead of 1, and re-ordered the posterior: 3,274 of 160,000 recipe pairs compared backwards.</td></tr>
+            <tr><td class="num">P2</td><td><strong>The sampler returned identical draws</strong> on every call — a frozen seed. Any averaging over repeated samples was silently averaging over copies. A test was pinning this in place.</td></tr>
+            <tr><td class="num">P2</td><td><strong>Skewed sampling mixture</strong> at small sample counts (§09).</td></tr>
+            <tr><td class="num">P2</td><td><strong>A search-bound setting was silently ignored</strong>, which also let the inverse search a slightly wider space than its BO competitor — a small fairness leak in the headline comparison.</td></tr>
+            <tr><td class="num">P2</td><td><strong>False INFEASIBLE</strong> in re-validation (§06).</td></tr>
+            <tr><td class="num">P2</td><td><strong>15% of tests skipped silently in CI</strong>, including the entire deep-learning tier — a green badge covering ~74% of the suite.</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="note key">
+        <span class="label">The pattern worth taking away</span>
+        <p>
+          Look at what those defects have in common. Almost none is a wrong formula — the margin maths at
+          the core survived a determined attack unscathed. They're <strong>consistency failures</strong>:
+          two parts of the system quietly describing different things. The gate certifying one law while
+          the product shipped another. Bounds in one unit meeting data in another. A covariance disagreeing
+          with its own variance. A test pinning a bug in place because it was written to match the code
+          rather than the intent.
+        </p>
+        <p>
+          And the single most valuable finding wasn't a bug in the program at all — it was that the
+          <em>command used to verify the program</em> had been reporting success unconditionally for
+          weeks. Before trusting any check, make it fail on purpose. A test you haven't seen fail is a
+          test you haven't seen work.
+        </p>
+      </div>
+
+      <p>
+        The fair summary: this is a <strong>credible, honestly-scoped machinery prototype at 2-D toy
+        scale</strong> — not evidence that inverse recipe generation works for semiconductor
+        manufacturing. The gap between those two sentences is real data plus dimensionality. To the
+        codebase's genuine credit, it was already admitting the first. It now admits the second.
+      </p>
+    </div>
+  </section>
+
+  <hr class="rule">
+
+  <!-- ============================================================ 11 -->
+  <section id="versus">
+    <div class="col stage-head">
+      <span class="stage-num">11 — the comparison</span>
+      <h2>How this compares to the published alternative</h2>
+      <p class="lede">A Berkeley/Lam Research team published a different answer to the same
+      problem. Here is where their approach genuinely beats ours, and where the physics of a
+      real fab is on our side — argued from their own numbers, not ours.</p>
+    </div>
+    <div class="col">
+      <p>
+        The paper is <em>“Few-Shot Test-Time Optimization Without Retraining for Semiconductor
+        Recipe Generation and Beyond”</em> (Gu et&nbsp;al., arXiv:2505.16060, May&nbsp;2025), and its
+        method is called <strong>Model Feedback Learning (MFL)</strong>. The idea is elegant: train a
+        tiny <em>reverse</em> neural network that maps a desired outcome straight back to a recipe,
+        first against a fast emulator (Loop&nbsp;A), then fine-tune it against the machine itself
+        (Loop&nbsp;B). Five machine iterations later it lands a recipe in spec — versus ~20 for a
+        Bayesian-optimization-plus-human workflow and ~84 for a senior engineer. Those are real
+        strengths, and two of them we simply concede below.
+      </p>
+
+      <h3>Same goal, opposite bets</h3>
+      <p>
+        Both systems answer “what inputs produce this outcome?”. They disagree on what an
+        <em>answer</em> is.
+      </p>
+      <div class="tw">
+        <table>
+          <thead><tr><th></th><th>MFL</th><th>RIG (this system)</th></tr></thead>
+          <tbody>
+            <tr><td>The target is…</td><td>a <strong>point</strong> — minimize distance to one number</td><td>a <strong>region</strong> — land inside the spec box, with margin</td></tr>
+            <tr><td>The answer is…</td><td>always a recipe (it cannot decline)</td><td>a certified recipe, <em>or</em> INFEASIBLE with a diagnosis</td></tr>
+            <tr><td>Uncertainty is…</td><td>absent — no noise model anywhere in the loss</td><td>the whole machinery: two σ’s, conformal bands, κ margins</td></tr>
+            <tr><td>Sensitivity ‖∂f/∂x‖ is used to…</td><td>lower the <em>learning rate</em> during training</td><td>shrink the <em>certified margin</em> of the returned recipe</td></tr>
+            <tr><td>Asking the machine costs…</td><td>values <em>and gradients</em> ∂M/∂x (their Eq.&nbsp;4)</td><td>values only — runs in, RunRecords out</td></tr>
+            <tr><td>A new target costs…</td><td>a forward pass (7&nbsp;kB reverse model)</td><td>a fresh optimization run — minutes, not milliseconds</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>The margin problem — in their own Table&nbsp;1</h3>
+      <p>
+        MFL regresses to a point, and a point target has no concept of <em>how close to the cliff
+        edge</em> it is. Their own headline result shows why that matters. The etch-depth spec floor
+        is <strong>2250&nbsp;nm</strong> (below it, the wafer is out of spec). Their stated point
+        target is <strong>2260</strong> — just 10&nbsp;nm above that floor. Their method landed at
+        <strong>2255.55</strong>:
+      </p>
+
+      <div style="margin:1.2rem 0 .4rem; font-variant-numeric:tabular-nums">
+        <div style="position:relative; height:64px; border-radius:6px; overflow:hidden;
+                    background:linear-gradient(90deg, rgba(220,60,60,.18) 0%, rgba(220,60,60,.18) 25%, rgba(60,160,90,.14) 25%, rgba(60,160,90,.14) 100%)">
+          <div style="position:absolute; left:25%; top:0; bottom:0; width:2px; background:rgba(220,60,60,.85)"></div>
+          <div style="position:absolute; left:52.75%; top:0; bottom:0; width:2px; background:currentColor"></div>
+          <div style="position:absolute; left:75%; top:0; bottom:0; width:2px; background:rgba(120,120,120,.6)"></div>
+          <div style="position:absolute; left:25%; width:27.75%; bottom:6px; height:8px; background:rgba(220,60,60,.35)"></div>
+          <div style="position:absolute; left:52.75%; width:22.25%; bottom:6px; height:8px; background:rgba(120,120,120,.3)"></div>
+          <div style="position:absolute; left:25%; top:4px; font-size:.72rem; transform:translateX(-50%)">spec floor 2250</div>
+          <div style="position:absolute; left:52.75%; top:22px; font-size:.72rem; transform:translateX(-50%)"><strong>landed 2255.55</strong></div>
+          <div style="position:absolute; left:75%; top:4px; font-size:.72rem; transform:translateX(-50%)">their target 2260</div>
+        </div>
+        <div style="display:flex; justify-content:space-between; font-size:.72rem; opacity:.75; margin-top:4px">
+          <span>← out of spec</span>
+          <span>remaining safety margin: <strong>5.55&nbsp;nm</strong> &nbsp;|&nbsp; their own convergence error: <strong>4.45&nbsp;nm</strong></span>
+          <span>in spec →</span>
+        </div>
+      </div>
+
+      <div class="note key">
+        <span class="label">The method’s demonstrated error is 80% of its entire safety margin</span>
+        <p>
+          MFL missed its own point target by 4.45&nbsp;nm — and only 5.55&nbsp;nm of margin remained
+          to the hard floor. One more unit of the error it <em>already demonstrably has</em>, and the
+          recipe is out of spec. Nothing in an MSE-to-a-point loss can see this coming, because
+          “distance to the target” and “distance to the cliff” are different numbers, and MFL only
+          measures the first. RIG’s §8 decision rule <em>is</em> the second number:
+          <code>FEASIBLE ⟺ min<sub>j</sub> margin<sub>j</sub> ≥ κ·σ</code>. A recipe this close to
+          the floor, with any honest noise estimate, does not get certified here — it gets refused,
+          with the reason named.
+        </p>
+      </div>
+
+      <h3>The gradient problem — what “5 iterations” costs on a real machine</h3>
+      <p>
+        MFL’s machine-tuning loop (Loop&nbsp;B) forms its gradient by, in the paper’s own words,
+        “replacing the emulator&nbsp;E with the true machine&nbsp;M” in their Eq.&nbsp;4 — an
+        expression that contains <strong>∂M/∂x, the machine’s Jacobian</strong>. In their
+        experiments M is a neural network, so the Jacobian is one free autograd call. A plasma
+        etcher does not have autograd. On real hardware the only way to get ∂M/∂x is finite
+        differences: with their own 11 input knobs, that is <strong>at least 12 wafer runs per
+        gradient step</strong>, so “5 iterations” becomes ≈60 machine runs — and the paper’s
+        headline comparison (5 vs. 20 vs. 84, baselines quoted from a different system’s study)
+        quietly inverts. RIG is built to never need the machine’s gradient: every derivative it uses
+        comes from its own surrogate, and the machine is only ever asked for <em>values</em>.
+      </p>
+
+      <h3>What MFL is genuinely better at</h3>
+      <div class="note">
+        <span class="label">Concessions first — this is not a takedown</span>
+        <p>
+          <strong>Amortization.</strong> One trained 7&nbsp;kB reverse model answers <em>new</em>
+          targets in a forward pass. RIG’s certified answer is an optimization run per query —
+          minutes, not milliseconds. (RIG’s amortized generator — stage&nbsp;09 above — is the
+          counterpart, and unlike MFL it ships with a calibration gate that can refuse a
+          miscalibrated generator; but its acceptance run so far is on a toy problem, as
+          section&nbsp;10 already told you.)
+          <strong>Simplicity.</strong> Two small networks and two training loops; RIG carries a GP,
+          conformal layers, a constrained solver, and gates. <strong>The two-loop idea itself.</strong>
+          Pre-train on a cheap emulator, fine-tune on the expensive machine — that is a good,
+          reusable design, and their ablation shows it earns its keep.
+        </p>
+      </div>
+
+      <h3>The head-to-head — pre-registered, steelmanned, and scored</h3>
+      <p>
+        We ran the comparison on RIG’s simulated MBE machine: 20 pre-registered targets (10
+        clearly feasible, 5 feasible-but-hard near the reachable boundary, 5 provably infeasible
+        — labels verified by an independent 20,000-point search), identical seed data for both
+        methods, everything scored against the machine’s noise-free ground truth. The predictions
+        were <strong>frozen before any comparison code existed</strong>, including two where RIG
+        was predicted to <em>lose</em>. The MFL arm was adversarially “steelmanned” first: an
+        independent reviewer verified the implementation faithful to the paper (its training
+        gradient matches the analytic form to 8×10⁻¹⁷) and confirmed no cheap tuning change makes
+        it stronger — so a RIG win can’t be blamed on a weak opponent.
+      </p>
+      <div class="tw">
+        <table>
+          <thead><tr><th></th><th>RIG</th><th>MFL</th></tr></thead>
+          <tbody>
+            <tr><td>Certified-miss rate <em>(of recipes presented as good, how many were bad?)</em></td><td><strong>0.00</strong></td><td>0.50</td></tr>
+            <tr><td>Median safety margin of presented recipes</td><td><strong>+10.5σ</strong></td><td>−1.45σ <em>(median recipe is out of spec)</em></td></tr>
+            <tr><td>Yield under process noise (median)</td><td><strong>100%</strong></td><td>50%</td></tr>
+            <tr><td>Machine runs consumed</td><td><strong>60</strong></td><td>4,060 (12,060 counting gradient probes)</td></tr>
+            <tr><td>False abstentions <em>(feasible targets wrongly refused)</em></td><td>33% — <strong>RIG’s honest loss</strong></td><td><strong>0%</strong></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="note key">
+        <span class="label">The pre-registration caught the author being wrong — in both directions</span>
+        <p>
+          The frozen predictions scored 3-for-5. The certified-miss and edge-hugging predictions
+          held (0.00 vs 0.50; +10.5σ vs −1.45σ). The predicted <em>loss</em> on false abstention
+          also held: RIG refused <strong>all five</strong> feasible-but-hard targets — the full,
+          honestly-paid price of pessimism. But the prediction that MFL would win on machine-run
+          count was <strong>refuted in the opposite direction</strong>: RIG used 60 runs to MFL’s
+          4,060, because RIG’s surrogate answers inverse queries without touching the machine at
+          all — the GP <em>is</em> the amortization. The structure of the result is a perfect
+          split: both methods nail all 10 easy targets; at the boundary and beyond, RIG refuses
+          while MFL confidently presents 10 recipes and misses all 10.
+        </p>
+      </div>
+      <h3>The referee’s footnote that applies to both</h3>
+      <div class="note warn">
+        <span class="label">Neither method has touched a real machine</span>
+        <p>
+          Their §5, verbatim: “the experiments are conducted in simulation.” Their “machine” is an
+          MLP trained on Gaussian-sampled synthetic data — so their headline result is a neural net
+          inverting another neural net. And every number in the table above is in-silico too — it
+          compares the two methods on <em>RIG’s</em> simulator, not their plasma-etch task, and
+          section&nbsp;10 exists precisely to keep that caveat loud. The first of these two systems
+          to produce a certified result on <em>real tool data</em> wins the argument that actually
+          matters — and section&nbsp;12 inventories the real data now sitting on disk, waiting for
+          exactly that.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <hr class="rule">
+
+  <!-- ============================================================ 12 -->
+  <section id="data">
+    <div class="col stage-head">
+      <span class="stage-num">12 — the data</span>
+      <h2>What it runs on today — and the real data now in hand</h2>
+      <p class="lede">Every number on this page traces to one of two sources, and neither is the
+      real thing. Four genuine candidate datasets have now been downloaded, checksummed, and
+      verified claim-by-claim against their actual files. Here is the full inventory — catches
+      included, because every one of the four came back with at least one.</p>
+    </div>
+
+    <div class="col">
+      <h3>The two sources behind every current result</h3>
+      <p>
+        <strong>1. A physics simulator, wrapped in deliberate pathologies.</strong> All M1/M2/M3
+        results, the 20-knob stress test of section&nbsp;10, and the head-to-head of
+        section&nbsp;11 run against an in-silico machine: an external MBE physics simulator
+        (<code>mbe_sim</code>, a sibling repository) wrapped in <code>InSilicoMachine</code>,
+        which injects the unpleasant parts of a real tool — drift, first-wafer offsets, chamber
+        seasoning. Nothing is stored; data is regenerated from seeds on demand, and every run is
+        stamped <code>provenance&nbsp;=&nbsp;physics_sim</code>. The data contract bars that
+        stamp from every headline claim, by design, so simulation can never masquerade as
+        evidence.
+      </p>
+      <p>
+        <strong>2. One small real file, used as a machinery proof only.</strong>
+        <code>examples/real_data/sputtering/Zr_grid.csv</code> — 209 measured runs of zirconium
+        magnetron sputtering (source power × chamber pressure → deposition rates) from a public
+        self-driving-lab study,
+        <a href="https://github.com/jarlsanna/gps-for-magnetron-sputtering">jarlsanna/gps-for-magnetron-sputtering</a>.
+        It proved the real-data code path works end-to-end (section&nbsp;10's “19 of 19 in
+        tolerance”), but it can never be more than that: the repository states no license, so
+        the file stays on-prem and uncited; and it is a dense 15×15 grid, invertible by
+        nearest-neighbour — it cannot distinguish a learned inverse from a table lookup.
+      </p>
+      <div class="note key">
+        <span class="label">The rule this section exists to serve</span>
+        <p>
+          Headline metrics are only ever computed on <code>real_tool</code> data. For most of
+          this program's life there was none — which is why section&nbsp;10's verdict says the
+          missing dataset <em>is</em> the scientific claim. That changed on 2026-07-19: the
+          process owner picked a venue, and the first real-data gate run exists (end of this
+          section).
+        </p>
+      </div>
+
+      <h3>Four real datasets, downloaded and verified</h3>
+      <p>
+        A structured hunt rated 25 public candidates; the four strongest were pulled to local
+        disk (~382&nbsp;MB under <code>data/m0-candidates/</code>, each checksummed, with
+        <code>MANIFEST.md</code> recording what was verified against the files themselves rather
+        than trusted from a web page). All four are genuine <em>measured</em> data from real
+        apparatus — the first such candidates this program has held.
+      </p>
+      <div class="tw">
+        <table>
+          <thead><tr><th>Dataset</th><th>What it is</th><th>Verified</th><th>License</th><th>The catch</th></tr></thead>
+          <tbody>
+            <tr>
+              <td><strong>Empa bipolar HiPIMS</strong><br><a href="https://zenodo.org/records/18495402">Zenodo 10.5281/zenodo.18495402</a></td>
+              <td>Real magnetron sputter tool; Bayesian-optimization campaigns over pulse parameters → deposition rate. Al and Ti targets, three power tiers.</td>
+              <td><strong>n = 3,150</strong> conditions, counted row-by-row from the 396&nbsp;MB archive (MD5 matches Zenodo's record)</td>
+              <td>CC-BY-4.0, verified on the record</td>
+              <td>The “6-D space” is really two 5-knob subspaces plus categorical selects; run <em>order</em> exists but wall-clock timestamps don't; BO-sampled, so coverage clusters near optima</td>
+            </tr>
+            <tr>
+              <td><strong>Ada SDL 2022_09</strong><br><a href="https://github.com/berlinguette/ada">github.com/berlinguette/ada</a></td>
+              <td>Self-driving lab spray-combusting Pd films; 7 knobs (requested <em>and</em> realized) → conductivity, thickness, resistivity.</td>
+              <td><strong>n = 177</strong> usable rows across 5 campaigns (SHA256 matches the repo's LFS pointer); full per-stage wall-clock timestamps</td>
+              <td>README claims data&nbsp;=&nbsp;CC-BY-4.0 but links to license files that <strong>404</strong>; the only license actually present is MIT</td>
+              <td>Small n; the license claim rests on a dead link — needs author confirmation before anything citable</td>
+            </tr>
+            <tr>
+              <td><strong>Ada SDL 2021_01</strong><br><a href="https://github.com/berlinguette/ada">github.com/berlinguette/ada</a></td>
+              <td>Combustion-synthesis Pareto-front campaigns; 4 knobs → 5 outcomes.</td>
+              <td><strong>n = 253</strong> rows, exactly matching the paper, across 4 replicate campaigns</td>
+              <td>Same dead-link caveat; this folder ships its own MIT file</td>
+              <td>Ordinal sample numbers only — no per-row timestamps at the processed level; 4 knobs is a modest space</td>
+            </tr>
+            <tr>
+              <td><strong>NREL HTEM-DB</strong><br><a href="https://htem.nlr.gov">htem.nlr.gov</a> · <a href="https://data.openei.org/submissions/8168">OpenEI listing</a></td>
+              <td>Combinatorial co-sputtering library database; deposition recipes → composition maps.</td>
+              <td>Live index of <strong>1,891 libraries</strong> + a 440-entry recipe→XRF pull across 10 sputtering libraries</td>
+              <td>CC-BY-4.0, confirmed on the canonical listing</td>
+              <td>Recipes vary per <em>library</em>, not per row — each library is one recipe with 44 positional replicates; only the XRF outcome endpoint currently works; see the note below</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="note warn">
+        <span class="label">The web rotted underneath us — in one day</span>
+        <p>
+          The candidate survey, written 2026-07-18, cited <code>nrel.gov</code>. By the time the
+          download ran on 2026-07-19, <strong><code>nrel.gov</code> did not resolve at all</strong> —
+          confirmed from two independent networks; the DNS zone is simply undelegated. The live
+          successor is <code>htem.nlr.gov</code>, under a GitHub organisation renamed
+          “NatLabRockies”, and the migrated database currently exposes roughly <strong>40% of the
+          documented library count</strong>, with the official example code's per-sample endpoint
+          broken for every ID tried. The lesson is general: every claim in the table above was
+          re-verified against the actual bytes on disk, because a citation that was true
+          yesterday wasn't today.
+        </p>
+      </div>
+
+      <h3>Why not just use all four?</h3>
+      <p>
+        Because M0 is a <em>per-process gate</em>, not a data-volume target. These are four
+        disjoint physical processes — HiPIMS deposition, spray-combusted films, combustion
+        synthesis, combinatorial co-sputtering — with no overlapping knobs or outcomes, so there
+        is no single forward model to pool them into. Each one demands its own process spec,
+        adapter configuration, split design, calibration gate, and inverse study: “use all four”
+        means four complete parallel studies, and four separately-carried flaws, before knowing
+        which story holds. One strong certified result on one real process beats four fragments.
+      </p>
+      <p>
+        The plurality still has a job — as <strong>replications</strong> once the lead venue
+        works: the 2021_01 campaigns are a natural leave-one-campaign-out drift testbed, 2022_09
+        a second-process generalization check once its license is confirmed, and HTEM a
+        large-scale support/abstention demo if its API stabilizes.
+      </p>
+      <div class="note key">
+        <span class="label">The decision — made, and the first run that followed it</span>
+        <p>
+          None of the four meets the full M0 bar — real tool <em>and</em> ample n <em>and</em>
+          timestamps <em>and</em> a clean license, all at once — so choosing which compromise to
+          accept was a judgment call for the process owner. On 2026-07-19 they made it:
+          <strong>Empa HiPIMS is the M0 venue.</strong> The same day, the full pipeline ran on
+          it — generic ingest, GP forward model, conformal calibration, the coverage gate on a
+          genuine run-order temporal split, and the pessimistic inverse — across all six
+          campaigns (3,150 real runs), twice, deterministically.
+        </p>
+        <p>
+          The result, unsmoothed: with the <em>static</em> calibrator, <strong>five of six
+          campaigns pass the coverage gate on both splits; one (Ti at 200&nbsp;W) fails both</strong>
+          — the temporal failure in the under-coverage direction that drift theory predicts for
+          BO-sampled data. That failure is the honest part, and it has a designated fix: the
+          <strong>adaptive drift-tracking calibrator</strong> (online conformal inference), which
+          adjusts its interval width run-by-run as coverage slips. Wiring it in — with default
+          settings, identical across every campaign, no tuning to chase the pass —
+          <strong>repairs Ti-200&nbsp;W on both splits and leaves all six passing</strong>: it
+          widens the bands where the static path under-covered and tightens them where it
+          over-covered, both in the direction the theory predicts. (Guarded against the obvious
+          cheat: an adaptive interval can "cover" by going infinitely wide, so every pass was
+          re-checked with those degenerate steps deleted — it survives.) The failure was a
+          calibrator-choice artifact, not a dead end.
+        </p>
+        <p>
+          Two findings that stand regardless. The support screen passed 8 of 12 cross-campaign
+          checks, and the 4 failures taught the sharpest lesson on the page: the model is
+          <em>provably blind to a shift in a variable that is not a knob</em> — an Al-trained
+          model will confidently predict Al-like rates for Ti recipes. And the pessimistic
+          inverse did on real data exactly what sections&nbsp;5–6 promise: refused an over-tight
+          band with a quantified diagnosis, refused an impossible one (−10.8σ, "more data will
+          not move it in"), and returned <strong>three feasible recipes whose nearest
+          actually-measured runs all landed inside the target band</strong>.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <hr class="rule">
+
+  <!-- ============================================================ 13 -->
+  <section id="glossary">
+    <div class="col stage-head">
+      <span class="stage-num">13 — reference</span>
+      <h2>Glossary</h2>
+    </div>
+    <div class="col">
+      <div class="tw">
+        <table>
+          <thead><tr><th>Term</th><th>Plain meaning</th></tr></thead>
+          <tbody>
+            <tr><td><strong>Aleatoric</strong></td><td>Randomness in the world. Data won't fix it.</td></tr>
+            <tr><td><strong>Epistemic</strong></td><td>Ignorance in the model. Data fixes it.</td></tr>
+            <tr><td><strong>ARD</strong></td><td>Giving each knob its own lengthscale, so the model learns which knobs matter.</td></tr>
+            <tr><td><strong>BALD</strong></td><td>Score for "how much would I learn here?"</td></tr>
+            <tr><td><strong>Conformal</strong></td><td>Stretching intervals using held-out errors until their stated coverage is true.</td></tr>
+            <tr><td><strong>EPIG</strong></td><td>Score for "how much would I learn <em>about the thing I care about</em>?"</td></tr>
+            <tr><td><strong>Jacobian</strong></td><td>Sensitivity: how much output moves when a knob moves.</td></tr>
+            <tr><td><strong>Mahalanobis</strong></td><td>Distance from a data cloud, accounting for its shape. Used to detect "we've never been here".</td></tr>
+            <tr><td><strong>Matérn-5/2</strong></td><td>A kernel assuming the process is bendy but can have kinks. Realistic.</td></tr>
+            <tr><td><strong>Nats</strong></td><td>Units of information. Lets EPIG and BALD be added legitimately.</td></tr>
+            <tr><td><strong>Non-injectivity</strong></td><td>Many recipes give the same outcome, so "the" inverse doesn't exist.</td></tr>
+            <tr><td><strong>Normalizing flow</strong></td><td>An invertible warp turning noise into a target distribution. Samples and densities both.</td></tr>
+            <tr><td><strong>PICP</strong></td><td>The fraction of runs that actually landed inside their interval. The coverage scorecard.</td></tr>
+            <tr><td><strong>Pre-image</strong></td><td>The full set of recipes achieving a target.</td></tr>
+            <tr><td><strong>RMST</strong></td><td>Average cost to reach spec. Smaller is better. The M2 comparison's yardstick.</td></tr>
+            <tr><td><strong>SBC</strong></td><td>Testing a posterior's calibration by checking that true-value ranks come out uniform.</td></tr>
+            <tr><td><strong>Sobol</strong></td><td>A space-filling design that covers a space more evenly than random points.</td></tr>
+            <tr><td><strong>Support score</strong></td><td>"Does this recipe look like anything we've actually run?" The anti-reward-hacking gate.</td></tr>
+            <tr><td><strong>κ (kappa)</strong></td><td>How many noise-widths of spare room a recipe must hold. Default 2.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <footer class="col">
+    <p>
+      RIG — Recipe Inverse Generator. Figures 1 and 3 run a real Matérn-5/2 Gaussian process with an exact
+      Cholesky posterior, computing the §8 margin live in your browser — the same mathematics as the
+      program's solver, at 1-D toy scale. Audit findings as of 2026-07-17, re-audited 2026-07-19;
+      data inventory as of 2026-07-19 (<code>data/m0-candidates/MANIFEST.md</code>); see
+      <code>docs/BUILD_LOG.md</code> for the reproduction of every finding.
+    </p>
+  </footer>
+</div>
+
+<script>
+(() => {
+  "use strict";
+
+  // ============================================================ FAILURE ISOLATION
+  // Every figure used to live in one shared IIFE, so a single throw blanked all five
+  // at once and left the canvases as tall empty boxes. Same blast-radius mistake the
+  // audit kept finding in the program itself. Each figure now runs in its own try,
+  // and a failure is SHOWN rather than swallowed into a silent blank rectangle.
+  function fail(cv, name, err) {
+    if (!cv) return;
+    const box = document.createElement('div');
+    box.style.cssText = 'font:12px ui-monospace,monospace;color:var(--bad);border:1px solid var(--bad);'
+      + 'border-radius:8px;padding:12px 14px;white-space:pre-wrap;word-break:break-word';
+    box.textContent = name + ' failed to draw:\n' + (err && err.stack ? err.stack : String(err));
+    cv.replaceWith(box);
+  }
+  function figure(id, name, build) {
+    const cv = document.getElementById(id);
+    try {
+      if (!cv) throw new Error('canvas #' + id + ' not found');
+      build(cv);
+    } catch (e) { fail(cv, name, e); }
+  }
+
+  // ============================================================ THEME
+  const css = (n) => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+  const C = () => ({
+    ink: css('--ink'), muted: css('--muted'), glow: css('--glow'), spec: css('--spec'),
+    ok: css('--ok'), bad: css('--bad'), rule: css('--rule'), grid: css('--grid'),
+    surface: css('--surface')
+  });
+
+  // ============================================================ CANVAS
+  // The authored height="" is only trustworthy until the first paint: cv.height is an
+  // IDL attribute that reflects back into the content attribute, so after one setup()
+  // it reads back the dpr-scaled BACKING STORE, not the CSS height. Re-reading it would
+  // multiply by dpr on every ResizeObserver pass until the canvas exceeds the browser's
+  // max size and silently renders as a broken image. Latch the design height once.
+  const DESIGN_H = new WeakMap();
+  function setup(cv) {
+    const dpr = window.devicePixelRatio || 1;
+    // clientWidth is 0 if we draw before the frame has been laid out (the artifact
+    // iframe sizes itself via postMessage AFTER load). A 0-width backing store paints
+    // nothing at all, and a canvas that never repaints just sits there blank — which
+    // is indistinguishable from a crash. Fall back to a real width, and let the
+    // ResizeObserver repaint at the true size once layout settles.
+    const w = cv.clientWidth || (cv.parentElement && cv.parentElement.clientWidth) || 900;
+    if (!DESIGN_H.has(cv)) DESIGN_H.set(cv, parseInt(cv.getAttribute('height'), 10) || 360);
+    const h = DESIGN_H.get(cv);
+    cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr);
+    cv.style.height = h + 'px';
+    const g = cv.getContext('2d');
+    g.setTransform(dpr, 0, 0, dpr, 0, 0);
+    g.clearRect(0, 0, w, h);
+    return { g, w, h };
+  }
+  const PAD = { l: 46, r: 16, t: 16, b: 34 };
+  const mkScale = (w, h, xd, yd) => ({
+    X: v => PAD.l + (v - xd[0]) / (xd[1] - xd[0]) * (w - PAD.l - PAD.r),
+    Y: v => h - PAD.b - (v - yd[0]) / (yd[1] - yd[0]) * (h - PAD.t - PAD.b),
+    iX: p => xd[0] + (p - PAD.l) / (w - PAD.l - PAD.r) * (xd[1] - xd[0]),
+    iY: p => yd[0] + (h - PAD.b - p) / (h - PAD.t - PAD.b) * (yd[1] - yd[0])
+  });
+  function axes(g, w, h, s, xd, yd, xlab, ylab) {
+    const c = C();
+    g.strokeStyle = c.grid; g.lineWidth = 1; g.font = '10px ui-monospace, monospace';
+    g.fillStyle = c.muted;
+    for (let i = 0; i <= 5; i++) {
+      const v = yd[0] + (yd[1] - yd[0]) * i / 5, y = Math.round(s.Y(v)) + .5;
+      g.beginPath(); g.moveTo(PAD.l, y); g.lineTo(w - PAD.r, y); g.stroke();
+      g.textAlign = 'right'; g.textBaseline = 'middle';
+      g.fillText(v.toFixed(1), PAD.l - 7, y);
+    }
+    for (let i = 0; i <= 5; i++) {
+      const v = xd[0] + (xd[1] - xd[0]) * i / 5, x = Math.round(s.X(v)) + .5;
+      g.beginPath(); g.moveTo(x, PAD.t); g.lineTo(x, h - PAD.b); g.stroke();
+      g.textAlign = 'center'; g.textBaseline = 'top';
+      g.fillText(v.toFixed(0), x, h - PAD.b + 7);
+    }
+    g.fillStyle = c.muted; g.font = '10px ui-monospace, monospace';
+    g.textAlign = 'center'; g.fillText(xlab, (PAD.l + w - PAD.r) / 2, h - 12);
+    g.save(); g.translate(12, (PAD.t + h - PAD.b) / 2); g.rotate(-Math.PI / 2);
+    g.textAlign = 'center'; g.textBaseline = 'top'; g.fillText(ylab, 0, 0); g.restore();
+  }
+  function line(g, s, xs, ys, color, width, dash) {
+    g.save(); g.beginPath(); g.strokeStyle = color; g.lineWidth = width || 2;
+    if (dash) g.setLineDash(dash);
+    xs.forEach((x, i) => { const px = s.X(x), py = s.Y(ys[i]); i ? g.lineTo(px, py) : g.moveTo(px, py); });
+    g.stroke(); g.restore();
+  }
+  function band(g, s, xs, lo, hi, fill) {
+    g.save(); g.beginPath(); g.fillStyle = fill;
+    xs.forEach((x, i) => { i ? g.lineTo(s.X(x), s.Y(hi[i])) : g.moveTo(s.X(x), s.Y(hi[i])); });
+    for (let i = xs.length - 1; i >= 0; i--) g.lineTo(s.X(xs[i]), s.Y(lo[i]));
+    g.closePath(); g.fill(); g.restore();
+  }
+
+  // ============================================================ GP (Matérn-5/2, exact)
+  const S5 = Math.sqrt(5);
+  function kern(a, b, ls, sf2) {
+    const r = Math.abs(a - b) / ls;
+    return sf2 * (1 + S5 * r + (5 / 3) * r * r) * Math.exp(-S5 * r);
+  }
+  function chol(A) {
+    const n = A.length, L = Array.from({ length: n }, () => new Float64Array(n));
+    for (let i = 0; i < n; i++) for (let j = 0; j <= i; j++) {
+      let s = A[i][j];
+      for (let k = 0; k < j; k++) s -= L[i][k] * L[j][k];
+      if (i === j) L[i][j] = Math.sqrt(Math.max(s, 1e-12));
+      else L[i][j] = s / L[j][j];
+    }
+    return L;
+  }
+  const fsub = (L, b) => { const n = b.length, y = new Float64Array(n);
+    for (let i = 0; i < n; i++) { let s = b[i]; for (let k = 0; k < i; k++) s -= L[i][k] * y[k]; y[i] = s / L[i][i]; } return y; };
+  const bsub = (L, y) => { const n = y.length, x = new Float64Array(n);
+    for (let i = n - 1; i >= 0; i--) { let s = y[i]; for (let k = i + 1; k < n; k++) s -= L[k][i] * x[k]; x[i] = s / L[i][i]; } return x; };
+
+  function fitGP(X, Y, ls, sn, sf2) {
+    const n = X.length;
+    const K = Array.from({ length: n }, (_, i) => Array.from({ length: n },
+      (_, j) => kern(X[i], X[j], ls, sf2) + (i === j ? sn * sn + 1e-8 : 0)));
+    const L = chol(K), al = bsub(L, fsub(L, Float64Array.from(Y)));
+    return {
+      predict(xs) {
+        return xs.map(x => {
+          const ks = Float64Array.from(X, xi => kern(x, xi, ls, sf2));
+          let mu = 0; for (let i = 0; i < n; i++) mu += ks[i] * al[i];
+          const v = fsub(L, ks);
+          let vv = 0; for (let i = 0; i < n; i++) vv += v[i] * v[i];
+          return { mu, epi: Math.sqrt(Math.max(kern(x, x, ls, sf2) - vv, 0)) };
+        });
+      }
+    };
+  }
+  // deterministic pseudo-noise so redraws are stable
+  let seed = 12345;
+  const rnd = () => (seed = (seed * 1103515245 + 12345) & 0x7fffffff) / 0x7fffffff;
+  const gauss = () => { let u = 0, v = 0; while (!u) u = rnd(); while (!v) v = rnd();
+    return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v); };
+
+  // the "true" process — deliberately non-monotone so the pre-image is multimodal
+  const TRUTH = x => 5.6 + 2.4 * Math.sin(0.86 * x) + 0.22 * x;
+  const XD = [0, 10];
+
+  const grid = (n) => Array.from({ length: n }, (_, i) => XD[0] + (XD[1] - XD[0]) * i / (n - 1));
+  const GX = grid(240);
+
+  // ============================================================ FIG 0 — forward vs inverse
+  figure('c-intro', 'Figure 0', (cv) => {
+    const st = { t: 7.0, tol: 0.4 };
+    function draw() {
+      const { g, w, h } = setup(cv), c = C();
+      const yd = [1, 11], s = mkScale(w, h, XD, yd);
+      axes(g, w, h, s, XD, yd, 'recipe  x  (e.g. substrate temperature)', 'outcome  y');
+      const lo = st.t - st.tol, hi = st.t + st.tol;
+      // target band
+      g.fillStyle = c.spec + '2b';
+      g.fillRect(PAD.l, s.Y(hi), w - PAD.l - PAD.r, s.Y(lo) - s.Y(hi));
+      g.strokeStyle = c.spec; g.lineWidth = 1; g.setLineDash([4, 3]);
+      [lo, hi].forEach(v => { g.beginPath(); g.moveTo(PAD.l, s.Y(v)); g.lineTo(w - PAD.r, s.Y(v)); g.stroke(); });
+      g.setLineDash([]);
+      // pre-image intervals
+      const ys = GX.map(TRUTH), inb = ys.map(v => v >= lo && v <= hi);
+      let runs = [], cur = null;
+      inb.forEach((f, i) => { if (f && cur === null) cur = i; if ((!f || i === inb.length - 1) && cur !== null) { runs.push([cur, i]); cur = null; } });
+      runs.forEach(([a, b]) => {
+        g.fillStyle = c.ok + '38';
+        g.fillRect(s.X(GX[a]), PAD.t, Math.max(s.X(GX[b]) - s.X(GX[a]), 2), h - PAD.t - PAD.b);
+        g.fillStyle = c.ok;
+        g.fillRect(s.X(GX[a]), h - PAD.b - 3, Math.max(s.X(GX[b]) - s.X(GX[a]), 2), 3);
+      });
+      line(g, s, GX, ys, c.glow, 2.4);
+      document.getElementById('v-intro-t').textContent = st.t.toFixed(1);
+      document.getElementById('v-intro-tol').textContent = st.tol.toFixed(2);
+      document.getElementById('v-intro-n').textContent = runs.length === 0 ? 'empty' : runs.length + (runs.length === 1 ? ' island' : ' islands');
+      document.getElementById('v-intro-msg').textContent = runs.length === 0
+        ? 'no recipe achieves this' : runs.length === 1 ? 'a single stretch of recipes' : 'several disconnected answers';
+    }
+    document.getElementById('s-intro-t').addEventListener('input', e => { st.t = +e.target.value; draw(); });
+    document.getElementById('s-intro-tol').addEventListener('input', e => { st.tol = +e.target.value; draw(); });
+    new ResizeObserver(draw).observe(cv);
+    draw();
+  });
+
+  // ============================================================ FIG 1 — GP / aleatoric vs epistemic
+  figure('c-gp', 'Figure 1', (cv) => {
+    const BASE = [1.2, 3.1, 4.6, 7.4, 9.1];
+    let st = { ls: 1.1, sn: 0.3, X: [...BASE] };
+    const obs = x => TRUTH(x) + gauss() * 0.22;
+    let Y = st.X.map(obs);
+
+    function draw() {
+      const { g, w, h } = setup(cv), c = C();
+      const yd = [1, 11], s = mkScale(w, h, XD, yd);
+      axes(g, w, h, s, XD, yd, 'recipe  x', 'outcome  y');
+      const gp = fitGP(st.X, Y, st.ls, st.sn, 4.0);
+      const p = gp.predict(GX);
+      const mu = p.map(d => d.mu), epi = p.map(d => d.epi);
+      // aleatoric band (constant width) then epistemic on top
+      band(g, s, GX, mu.map((m, i) => m - 2 * st.sn), mu.map((m, i) => m + 2 * st.sn), c.glow + '2e');
+      band(g, s, GX, mu.map((m, i) => m - 2 * epi[i]), mu.map((m, i) => m + 2 * epi[i]), c.spec + '38');
+      line(g, s, GX, GX.map(TRUTH), c.muted, 1.4, [5, 4]);
+      line(g, s, GX, mu, c.glow, 2.4);
+      st.X.forEach((x, i) => {
+        g.fillStyle = c.ink; g.beginPath(); g.arc(s.X(x), s.Y(Y[i]), 3.6, 0, 7); g.fill();
+        g.strokeStyle = c.surface; g.lineWidth = 1.4; g.stroke();
+      });
+      document.getElementById('v-gp-n').textContent = st.X.length;
+      document.getElementById('v-gp-epi').textContent = (epi.reduce((a, b) => a + b, 0) / epi.length).toFixed(3);
+      document.getElementById('v-gp-ale').textContent = st.sn.toFixed(3);
+      document.getElementById('v-gp-ls').textContent = st.ls.toFixed(2);
+      document.getElementById('v-gp-noise').textContent = st.sn.toFixed(2);
+    }
+    cv.addEventListener('click', e => {
+      const r = cv.getBoundingClientRect(), { w } = { w: cv.clientWidth };
+      const s = mkScale(w, 380, XD, [1, 11]);
+      const x = s.iX(e.clientX - r.left);
+      if (x > XD[0] && x < XD[1]) { st.X.push(x); Y.push(obs(x)); draw(); }
+    });
+    document.getElementById('s-gp-ls').addEventListener('input', e => { st.ls = +e.target.value; draw(); });
+    document.getElementById('s-gp-noise').addEventListener('input', e => { st.sn = +e.target.value; draw(); });
+    document.getElementById('b-gp-reset').addEventListener('click', () => { seed = 12345; st.X = [...BASE]; Y = st.X.map(obs); draw(); });
+    document.getElementById('b-gp-fill').addEventListener('click', () => {
+      for (let i = 0; i < 14; i++) { const x = 0.4 + i * 0.68; st.X.push(x); Y.push(obs(x)); } draw();
+    });
+    new ResizeObserver(draw).observe(cv);
+    draw();
+  });
+
+  // ============================================================ FIG 2 — conformal coverage
+  figure('c-conf', 'Figure 2', (cv) => {
+    const N = 60;
+    let st = { a: 90, over: 1.0, pts: null };
+    function gen() {
+      seed = (Math.floor(Math.random() * 1e6) | 0) + 1;
+      st.pts = Array.from({ length: N }, () => ({ err: gauss(), sig: 0.6 + 0.5 * Math.abs(gauss()) }));
+    }
+    function draw() {
+      const { g, w, h } = setup(cv), c = C();
+      const alpha = 1 - st.a / 100;
+      // model CLAIMS sig/over but truth is sig -> overconfident when over>1
+      const claimed = st.pts.map(p => p.sig / st.over);
+      const resid = st.pts.map(p => p.err * p.sig);
+      // split: first 30 calibrate, last 30 test
+      const nCal = 30;
+      const scores = resid.slice(0, nCal).map((rr, i) => Math.abs(rr) / claimed[i]).sort((a, b) => a - b);
+      const k = Math.ceil((1 - alpha) * (nCal + 1));
+      const q = k > nCal ? Infinity : scores[k - 1];
+      const zq = (pp) => { // Acklam rational approximation to the inverse normal CDF
+        const a = [-3.969683028665376e+01,2.209460984245205e+02,-2.759285104469687e+02,1.383577518672690e+02,-3.066479806614716e+01,2.506628277459239e+00];
+        const b = [-5.447609879822406e+01,1.615858368580409e+02,-1.556989798598866e+02,6.680131188771972e+01,-1.328068155288572e+01];
+        const cc= [-7.784894002430293e-03,-3.223964580411365e-01,-2.400758277161838e+00,-2.549732539343734e+00,4.374664141464968e+00,2.938163982698783e+00];
+        const d = [7.784695709041462e-03,3.224671290700398e-01,2.445134137142996e+00,3.754408661907416e+00];
+        const pl=0.02425; let qq,r2;
+        if(pp<pl){qq=Math.sqrt(-2*Math.log(pp));return (((((cc[0]*qq+cc[1])*qq+cc[2])*qq+cc[3])*qq+cc[4])*qq+cc[5])/((((d[0]*qq+d[1])*qq+d[2])*qq+d[3])*qq+1);}
+        if(pp<=1-pl){qq=pp-0.5;r2=qq*qq;return (((((a[0]*r2+a[1])*r2+a[2])*r2+a[3])*r2+a[4])*r2+a[5])*qq/(((((b[0]*r2+b[1])*r2+b[2])*r2+b[3])*r2+b[4])*r2+1);}
+        qq=Math.sqrt(-2*Math.log(1-pp));return -(((((cc[0]*qq+cc[1])*qq+cc[2])*qq+cc[3])*qq+cc[4])*qq+cc[5])/((((d[0]*qq+d[1])*qq+d[2])*qq+d[3])*qq+1);
+      };
+      const zNom = zq(1 - alpha / 2);
+      let rawHit = 0, calHit = 0, shown = [];
+      for (let i = nCal; i < N; i++) {
+        const half = zNom * claimed[i];
+        const halfC = (q === Infinity ? Infinity : q * claimed[i]);
+        const rr = resid[i];
+        const okRaw = Math.abs(rr) <= half, okCal = Math.abs(rr) <= halfC;
+        rawHit += okRaw; calHit += okCal;
+        shown.push({ rr, half, halfC, okCal });
+      }
+      const m = shown.length;
+      const yd = [-4, 4], s = mkScale(w, h, [0, m], yd);
+      g.strokeStyle = c.grid; g.beginPath();
+      g.moveTo(PAD.l, Math.round(s.Y(0)) + .5); g.lineTo(w - PAD.r, Math.round(s.Y(0)) + .5); g.stroke();
+      shown.forEach((p, i) => {
+        const x = s.X(i + .5);
+        const hc = isFinite(p.halfC) ? p.halfC : 4;
+        g.strokeStyle = c.rule; g.lineWidth = 5; g.beginPath();
+        g.moveTo(x, s.Y(Math.min(hc, 4))); g.lineTo(x, s.Y(Math.max(-hc, -4))); g.stroke();
+        g.strokeStyle = p.okCal ? c.ok : c.bad; g.lineWidth = 5; g.globalAlpha = .28; g.beginPath();
+        g.moveTo(x, s.Y(Math.min(hc, 4))); g.lineTo(x, s.Y(Math.max(-hc, -4))); g.stroke(); g.globalAlpha = 1;
+        g.fillStyle = p.okCal ? c.ok : c.bad;
+        g.beginPath(); g.arc(x, s.Y(Math.max(Math.min(p.rr, 4), -4)), 2.8, 0, 7); g.fill();
+      });
+      g.fillStyle = c.muted; g.font = '10px ui-monospace, monospace'; g.textAlign = 'center';
+      g.fillText('held-out runs  →', (PAD.l + w - PAD.r) / 2, h - 12);
+      document.getElementById('v-conf-a').textContent = st.a + '%';
+      document.getElementById('v-conf-o').textContent = st.over.toFixed(1) + '×';
+      document.getElementById('v-conf-nom').textContent = st.a.toFixed(1) + '%';
+      document.getElementById('v-conf-raw').textContent = (100 * rawHit / m).toFixed(1) + '%';
+      document.getElementById('v-conf-cal').textContent = (100 * calHit / m).toFixed(1) + '%';
+      document.getElementById('v-conf-q').textContent = q === Infinity ? '∞' : q.toFixed(2);
+    }
+    document.getElementById('s-conf-a').addEventListener('input', e => { st.a = +e.target.value; draw(); });
+    document.getElementById('s-conf-o').addEventListener('input', e => { st.over = +e.target.value; draw(); });
+    document.getElementById('b-conf-re').addEventListener('click', () => { gen(); draw(); });
+    gen(); new ResizeObserver(draw).observe(cv); draw();
+  });
+
+  // ============================================================ FIG 3 — the margin (centrepiece)
+  figure('c-marg', 'Figure 3', (cv) => {
+    const BASE = [0.8, 2.6, 5.2, 8.6];
+    let st = { k: 2.0, z: 2.0, d: 2, c: 6.5, w: 1.6, X: [...BASE] };
+    const SN = 0.34;
+    const obs = x => TRUTH(x) + gauss() * 0.2;
+    let Y = st.X.map(obs);
+
+    function draw() {
+      const { g, w, h } = setup(cv), c = C();
+      const yd = [1, 11], s = mkScale(w, h, XD, yd);
+      axes(g, w, h, s, XD, yd, 'recipe  x', 'outcome  y');
+      const L = st.c - st.w, U = st.c + st.w;
+      // spec box
+      g.fillStyle = c.spec + '26';
+      g.fillRect(PAD.l, s.Y(U), w - PAD.l - PAD.r, s.Y(L) - s.Y(U));
+      g.strokeStyle = c.spec; g.lineWidth = 1.2; g.setLineDash([5, 4]);
+      [L, U].forEach(v => { g.beginPath(); g.moveTo(PAD.l, s.Y(v)); g.lineTo(w - PAD.r, s.Y(v)); g.stroke(); });
+      g.setLineDash([]);
+      g.fillStyle = c.spec; g.font = '10px ui-monospace, monospace'; g.textAlign = 'left';
+      g.fillText('U', w - PAD.r + 2 - 10, s.Y(U) - 5); g.fillText('L', w - PAD.r + 2 - 10, s.Y(L) + 11);
+
+      const gp = fitGP(st.X, Y, 1.15, SN, 4.0);
+      const p = gp.predict(GX);
+      const mu = p.map(d => d.mu), epi = p.map(d => d.epi);
+      // Jacobian by finite difference on the GP mean
+      const dx = (XD[1] - XD[0]) / (GX.length - 1);
+      const J = mu.map((_, i) => i === 0 ? (mu[1] - mu[0]) / dx
+        : i === mu.length - 1 ? (mu[i] - mu[i - 1]) / dx : (mu[i + 1] - mu[i - 1]) / (2 * dx));
+      const delta = (st.d / 100) * (XD[1] - XD[0]);
+      // support: distance from training cloud (1-D Mahalanobis proxy) — the §8.2 gate
+      const mX = st.X.reduce((a, b) => a + b, 0) / st.X.length;
+      const sX = Math.sqrt(st.X.reduce((a, b) => a + (b - mX) ** 2, 0) / st.X.length) || 1;
+      const sup = GX.map(x => -Math.abs(x - mX) / sX);
+      const supFloor = -2.0;
+
+      const S = GX.map((_, i) => st.z * epi[i] + Math.abs(J[i]) * delta);
+      const uHi = GX.map((_, i) => (U - mu[i] - S[i]) / SN);
+      const uLo = GX.map((_, i) => (mu[i] - L - S[i]) / SN);
+      const marg = GX.map((_, i) => Math.min(uHi[i], uLo[i]));
+      const feas = GX.map((_, i) => marg[i] >= st.k && sup[i] >= supFloor);
+
+      // credited interval: mu ± (s + kappa*sigma_ale)
+      band(g, s, GX, GX.map((_, i) => mu[i] - S[i] - st.k * SN), GX.map((_, i) => mu[i] + S[i] + st.k * SN), c.bad + '2a');
+      // certified islands
+      let runs = [], cur = null;
+      feas.forEach((f, i) => { if (f && cur === null) cur = i; if ((!f || i === feas.length - 1) && cur !== null) { runs.push([cur, i]); cur = null; } });
+      runs.forEach(([a, b]) => {
+        g.fillStyle = c.ok + '2e';
+        g.fillRect(s.X(GX[a]), PAD.t, Math.max(s.X(GX[b]) - s.X(GX[a]), 2), h - PAD.t - PAD.b);
+        g.fillStyle = c.ok;
+        g.fillRect(s.X(GX[a]), h - PAD.b - 4, Math.max(s.X(GX[b]) - s.X(GX[a]), 2), 4);
+      });
+      line(g, s, GX, GX.map(TRUTH), c.muted, 1.2, [5, 4]);
+      line(g, s, GX, mu, c.glow, 2.4);
+      st.X.forEach((x, i) => {
+        g.fillStyle = c.ink; g.beginPath(); g.arc(s.X(x), s.Y(Y[i]), 3.4, 0, 7); g.fill();
+        g.strokeStyle = c.surface; g.lineWidth = 1.4; g.stroke();
+      });
+
+      const best = marg.reduce((a, b, i) => sup[i] >= supFloor ? Math.max(a, b) : a, -Infinity);
+      const frac = feas.filter(Boolean).length / feas.length;
+      const nF = feas.filter(Boolean).length;
+      const vd = document.getElementById('v-m-verdict');
+      vd.innerHTML = nF > 0
+        ? '<span class="verdict yes">FEASIBLE</span>'
+        : '<span class="verdict no">INFEASIBLE</span>';
+      document.getElementById('v-m-islands').textContent = runs.length;
+      document.getElementById('v-m-best').textContent = isFinite(best) ? best.toFixed(2) : '—';
+      document.getElementById('v-m-frac').textContent = (100 * frac).toFixed(0) + '%';
+      document.getElementById('v-m-k').textContent = st.k.toFixed(1);
+      document.getElementById('v-m-z').textContent = st.z.toFixed(1);
+      document.getElementById('v-m-d').textContent = st.d.toFixed(1) + '%';
+      document.getElementById('v-m-c').textContent = st.c.toFixed(2);
+      document.getElementById('v-m-w').textContent = st.w.toFixed(2);
+    }
+    const bind = (id, key, f) => document.getElementById(id).addEventListener('input', e => { st[key] = +e.target.value; draw(); });
+    bind('s-m-k', 'k'); bind('s-m-z', 'z'); bind('s-m-d', 'd'); bind('s-m-c', 'c'); bind('s-m-w', 'w');
+    document.getElementById('b-m-add').addEventListener('click', () => {
+      // add runs where the mean is nearest the spec centre — what the loop would do
+      const gp = fitGP(st.X, Y, 1.15, SN, 4.0), p = gp.predict(GX);
+      const cand = GX.map((x, i) => ({ x, d: Math.abs(p[i].mu - st.c) })).sort((a, b) => a.d - b.d);
+      let added = 0;
+      for (const cd of cand) {
+        if (added >= 6) break;
+        if (st.X.every(x => Math.abs(x - cd.x) > 0.45)) { st.X.push(cd.x); Y.push(obs(cd.x)); added++; }
+      }
+      draw();
+    });
+    document.getElementById('b-m-reset').addEventListener('click', () => { seed = 999; st.X = [...BASE]; Y = st.X.map(obs); draw(); });
+    new ResizeObserver(draw).observe(cv);
+    draw();
+  });
+
+  // ============================================================ FIG 4 — the transform
+  figure('c-tf', 'Figure 4', (cv) => {
+    const LO = 1150, HI = 1500;
+    let u = 0;
+    const fwd = uu => LO + (HI - LO) / (1 + Math.exp(-Math.max(-40, Math.min(40, uu))));
+    function draw() {
+      const { g, w, h } = setup(cv), c = C();
+      const ud = [-8, 8], yd = [LO - 30, HI + 30];
+      const s = mkScale(w, h, ud, yd);
+      // custom axes
+      g.strokeStyle = c.grid; g.lineWidth = 1; g.font = '10px ui-monospace, monospace'; g.fillStyle = c.muted;
+      [LO, 1250, 1350, HI].forEach(v => {
+        const y = Math.round(s.Y(v)) + .5;
+        g.beginPath(); g.moveTo(PAD.l, y); g.lineTo(w - PAD.r, y); g.stroke();
+        g.textAlign = 'right'; g.textBaseline = 'middle'; g.fillText(v, PAD.l - 7, y);
+      });
+      for (let v = -8; v <= 8; v += 4) {
+        const x = Math.round(s.X(v)) + .5;
+        g.beginPath(); g.moveTo(x, PAD.t); g.lineTo(x, h - PAD.b); g.stroke();
+        g.textAlign = 'center'; g.textBaseline = 'top'; g.fillText(v, x, h - PAD.b + 7);
+      }
+      // legal band
+      g.fillStyle = c.ok + '1e'; g.fillRect(PAD.l, s.Y(HI), w - PAD.l - PAD.r, s.Y(LO) - s.Y(HI));
+      g.strokeStyle = c.ok; g.setLineDash([4, 3]); g.lineWidth = 1;
+      [LO, HI].forEach(v => { g.beginPath(); g.moveTo(PAD.l, s.Y(v)); g.lineTo(w - PAD.r, s.Y(v)); g.stroke(); });
+      g.setLineDash([]);
+      const us = Array.from({ length: 200 }, (_, i) => -8 + 16 * i / 199);
+      line(g, s, us, us.map(fwd), c.glow, 2.4);
+      // marker
+      const x = fwd(u);
+      g.strokeStyle = c.spec; g.lineWidth = 1.4; g.setLineDash([3, 3]);
+      g.beginPath(); g.moveTo(s.X(u), h - PAD.b); g.lineTo(s.X(u), s.Y(x)); g.lineTo(PAD.l, s.Y(x)); g.stroke();
+      g.setLineDash([]);
+      g.fillStyle = c.spec; g.beginPath(); g.arc(s.X(u), s.Y(x), 5, 0, 7); g.fill();
+      g.fillStyle = c.muted; g.font = '10px ui-monospace, monospace'; g.textAlign = 'center';
+      g.fillText('u  — what the optimiser searches (all of ℝ)', (PAD.l + w - PAD.r) / 2, h - 12);
+      g.save(); g.translate(12, (PAD.t + h - PAD.b) / 2); g.rotate(-Math.PI / 2);
+      g.textAlign = 'center'; g.textBaseline = 'top'; g.fillText('T_heater (K) — always legal', 0, 0); g.restore();
+      document.getElementById('v-tf-u').textContent = u.toFixed(1);
+      document.getElementById('v-tf-x').textContent = fwd(u).toFixed(1) + ' K';
+    }
+    document.getElementById('s-tf-u').addEventListener('input', e => { u = +e.target.value; draw(); });
+    new ResizeObserver(draw).observe(cv);
+    draw();
+  });
+
+  // redraw on theme flip
+  const mo = new MutationObserver(() => window.dispatchEvent(new Event('resize')));
+  mo.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => window.dispatchEvent(new Event('resize')));
+})();
+</script>

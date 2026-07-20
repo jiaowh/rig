@@ -1,0 +1,74 @@
+# Process spec for the Empa bipolar-HiPIMS campaign "Ti - 200 W - high PW"
+# (WP-H tabular adapter; data file: csv/ti_200w_high_pw.csv from prepare_empa.py).
+#
+# Provenance: Zenodo record 10.5281/zenodo.18495402 (CC-BY-4.0); Wieczorek et
+#   al., Digital Discovery 2026, DOI 10.1039/D6DD00063K. Real Empa sputter tool
+#   -> ingest with source = "real_tool".
+# Bounds: transcribed VERBATIM from this campaign's own BayBE search space
+#   ("Ti - 200 W - high PW__Campaign.json", NumericalContinuousParameter
+#   bounds) -- each campaign has its OWN Campaign.json; do not reuse across specs.
+#
+# HONEST CAVEATS:
+# - BO-driven sampling (BayBE): rows CLUSTER near high-deposition-rate optima,
+#   they are NOT space-filling over this box. Conformal/i.i.d. assumptions are
+#   approximations on this data.
+# - "Ipk (A)" is peak current, MEASURED but never set ("not controlled in the
+#   Bayesian optimization (only measured)" -- paper). It is an output here.
+# - Column names: the adapter reserves '.' in variable names, so the raw
+#   "pos. *" headers were renamed by dropping the dot (prepare_empa.RENAMES).
+# - Raw "y1" (uncalibrated rate) plus "BatchNr"/"FitNr" are deliberately NOT
+#   declared: the adapter parks them in RunRecord.extra["unmatched_columns"].
+#
+# Units: pint parses "us" as microsecond (SI x1e-6 s) and "angstrom/second"
+# SI-canonicalizes to m/s (x1e-10).
+
+process_id = "empa_hipims_ti_200w_high_pw"
+description = "Empa bipolar HiPIMS, Ti target, 200 W, high-PW campaign (BayBE-sampled): 5 pulse knobs -> calibrated deposition rate + measured peak current. Real measured data; machinery validation only."
+
+# --- inputs: the 5 continuous pulse knobs of THIS campaign ------------------
+
+[inputs."PRR (Hz)"]
+kind = "continuous"
+unit = "Hz"
+lower = 200.0
+upper = 800.0
+
+[inputs."PW (us)"]
+kind = "continuous"
+unit = "us"             # pint: microsecond (1e-6 s)
+lower = 100.0
+upper = 300.0
+
+[inputs."pos Delay (us)"]
+kind = "continuous"
+unit = "us"
+lower = 1.5
+upper = 40.0
+
+[inputs."pos PW (us)"]
+kind = "continuous"
+unit = "us"
+lower = 0.0
+upper = 40.0
+
+[inputs."pos Setpoint (V)"]
+kind = "continuous"
+unit = "V"
+lower = 0.0
+upper = 100.0
+
+# --- outputs ----------------------------------------------------------------
+# dep_rate_A_per_s = y1 * per-campaign calibration factor (read from
+# calibration.txt at prep time), in angstrom/second -> SI m/s (x1e-10).
+
+[outputs.dep_rate_A_per_s]
+unit = "angstrom/second"
+
+[outputs."Ipk (A)"]
+unit = "A"              # measured-not-set peak current (see header)
+
+# --- cost model: left at documented defaults (not used by data prep) ---------
+[cost]
+c_batch = 1000.0
+c_recipe = 1000.0
+batch_size = 4

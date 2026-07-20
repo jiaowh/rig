@@ -1,0 +1,76 @@
+# Annotated example spec: a PECVD-flavored tabular process (WP-H, implementation-plan §15.6 E5).
+#
+# ILLUSTRATIVE STRUCTURE ONLY — variable names, units, and bounds are plausible
+# placeholders for demonstrating the spec format; nothing here is a validated
+# physical recipe. Copy this file and edit every block for your own process.
+
+process_id = "pecvd_sin_demo"
+description = "Illustrative PECVD-style nitride deposition: T/p/RF + precursor blend -> thickness/uniformity/stress."
+
+# ----------------------------------------------------------------------------
+# INPUTS. One block per variable. kind = continuous | categorical | compositional.
+# Continuous values in your CSV are read in the DECLARED unit below and
+# canonicalized to SI on ingest (degC -> K, torr -> Pa, ...).
+# change_cost = "easy" (default, per-run settable) or "hard" (split-plot
+# whole-plot factor: chamber/tool config, conditioning-not-free, implementation-plan §3.1/§8.3).
+# ----------------------------------------------------------------------------
+
+[inputs.temperature]
+kind = "continuous"
+unit = "degC"
+lower = 200.0
+upper = 400.0
+
+[inputs.pressure]
+kind = "continuous"
+unit = "torr"
+lower = 0.5
+upper = 5.0
+
+[inputs.rf_power]
+kind = "continuous"
+unit = "W"
+lower = 50.0
+upper = 500.0
+
+# A GENUINE compositional variable: the precursor blend expressed as sum-to-1
+# fractions. CSV columns must be named "<variable>.<component>":
+#   precursor_blend.silane, precursor_blend.ammonia, precursor_blend.nitrogen
+# and each row must sum to 1 (atol 1e-6).
+#
+# NB (implementation-plan §3.1): independent MFC gas setpoints in sccm are NOT a simplex —
+# their total is not fixed. If your knobs are raw flows, declare each one as
+# its own continuous variable with unit = "sccm" instead. Declaring a
+# compositional block with a flow unit is REJECTED at load.
+[inputs.precursor_blend]
+kind = "compositional"
+components = ["silane", "ammonia", "nitrogen"]
+
+# ----------------------------------------------------------------------------
+# OUTPUTS. modality defaults to "scalar_vector" (the only v0 modality).
+# Optional spec semantics: target / lower_spec / upper_spec, in the declared unit.
+# ----------------------------------------------------------------------------
+
+[outputs.thickness]
+unit = "nm"
+target = 500.0
+lower_spec = 450.0
+upper_spec = 550.0
+
+[outputs.nonuniformity]
+unit = "percent"
+upper_spec = 5.0
+
+[outputs.stress]
+unit = "MPa"
+lower_spec = -200.0
+upper_spec = 200.0
+
+# ----------------------------------------------------------------------------
+# COST model (implementation-plan §3.1/§11): fixed per-batch vs variable per-recipe cost.
+# ----------------------------------------------------------------------------
+
+[cost]
+c_batch = 1000.0
+c_recipe = 1000.0
+batch_size = 4

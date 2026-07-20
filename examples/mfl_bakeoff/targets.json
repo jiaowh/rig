@@ -1,0 +1,582 @@
+{
+  "meta": {
+    "created": "2026-07-19T03:06:04.443882+00:00",
+    "comparator": "Gu et al. 2025, arXiv:2505.16060 (MFL)",
+    "prereg": "docs/prereg-mfl-bakeoff-2026-07-17.md",
+    "controlled_outputs": [
+      "nonuniformity_pct",
+      "T_center",
+      "slip_max_ratio"
+    ],
+    "units": "SI (nonuniformity fraction, T_center K, slip dimensionless)",
+    "slip_upper_spec": 0.2199847592210287,
+    "n_dense": 4096,
+    "dense_seed": 20260717,
+    "machine_config": {
+      "heater_radius": 0.018,
+      "gap": 0.012,
+      "source_offset": 0.1,
+      "source_height": 0.2,
+      "aim_offset": 0.0
+    },
+    "ground_truth": "evaluate_physics nominal (noise-free fast-Arrhenius path)"
+  },
+  "targets": [
+    {
+      "class": "feasible",
+      "spec": {
+        "nonuniformity_pct": [
+          0.7056252019498479,
+          0.7831882271292292
+        ],
+        "T_center": [
+          883.3220114518899,
+          948.3292714363151
+        ],
+        "slip_max_ratio": [
+          null,
+          0.2199847592210287
+        ]
+      },
+      "feasible_truth": true,
+      "witness_recipe": {
+        "T_heater": 1258.4842294454575,
+        "film_thickness": 3.5719148963689806e-06
+      },
+      "witness_outcome": {
+        "nonuniformity_pct": 0.7430556562020475,
+        "T_center": 914.7442061832776,
+        "slip_max_ratio": 0.05997941092827497,
+        "bow_cooldown_um": 0.00012334390146419725,
+        "thickness_grown": 3.5719148963689806e-06
+      },
+      "id": "feasible_00"
+    },
+    {
+      "class": "feasible",
+      "spec": {
+        "nonuniformity_pct": [
+          0.7584738538796683,
+          0.8360368790590496
+        ],
+        "T_center": [
+          926.2334168451816,
+          991.2406768296069
+        ],
+        "slip_max_ratio": [
+          null,
+          0.2199847592210287
+        ]
+      },
+      "feasible_truth": true,
+      "witness_recipe": {
+        "T_heater": 1344.1940949764103,
+        "film_thickness": 4.246293093264103e-06
+      },
+      "witness_outcome": {
+        "nonuniformity_pct": 0.8238592521343786,
+        "T_center": 980.8601413322468,
+        "slip_max_ratio": 0.11249995052225739,
+        "bow_cooldown_um": 0.0001612433198774187,
+        "thickness_grown": 4.246293093264103e-06
+      },
+      "id": "feasible_01"
+    },
+    {
+      "class": "feasible",
+      "spec": {
+        "nonuniformity_pct": [
+          0.7817115336096437,
+          0.859274558789025
+        ],
+        "T_center": [
+          945.5352749507589,
+          1010.5425349351841
+        ],
+        "slip_max_ratio": [
+          null,
+          0.2199847592210287
+        ]
+      },
+      "feasible_truth": true,
+      "witness_recipe": {
+        "T_heater": 1344.1940949764103,
+        "film_thickness": 4.246293093264103e-06
+      },
+      "witness_outcome": {
+        "nonuniformity_pct": 0.8238592521343786,
+        "T_center": 980.8601413322468,
+        "slip_max_ratio": 0.11249995052225739,
+        "bow_cooldown_um": 0.0001612433198774187,
+        "thickness_grown": 4.246293093264103e-06
+      },
+      "id": "feasible_02"
+    },
+    {
+      "class": "feasible",
+      "spec": {
+        "nonuniformity_pct": [
+          0.8598476492089967,
+          0.937410674388378
+        ],
+        "T_center": [
+          1012.9764112981425,
+          1077.9836712825677
+        ],
+        "slip_max_ratio": [
+          null,
+          0.2199847592210287
+        ]
+      },
+      "feasible_truth": true,
+      "witness_recipe": {
+        "T_heater": 1390.352948429063,
+        "film_thickness": 4.944542109966279e-07
+      },
+      "witness_outcome": {
+        "nonuniformity_pct": 0.8661109777805198,
+        "T_center": 1016.8808302749989,
+        "slip_max_ratio": 0.15347227340724987,
+        "bow_cooldown_um": 1.9693423872040663e-05,
+        "thickness_grown": 4.944542109966279e-07
+      },
+      "id": "feasible_03"
+    },
+    {
+      "class": "feasible",
+      "spec": {
+        "nonuniformity_pct": [
+          0.7159655039474345,
+          0.7935285291268158
+        ],
+        "T_center": [
+          891.6224457749599,
+          956.6297057593852
+        ],
+        "slip_max_ratio": [
+          null,
+          0.2199847592210287
+        ]
+      },
+      "feasible_truth": true,
+      "witness_recipe": {
+        "T_heater": 1258.4842294454575,
+        "film_thickness": 3.5719148963689806e-06
+      },
+      "witness_outcome": {
+        "nonuniformity_pct": 0.7430556562020475,
+        "T_center": 914.7442061832776,
+        "slip_max_ratio": 0.05997941092827497,
+        "bow_cooldown_um": 0.00012334390146419725,
+        "thickness_grown": 3.5719148963689806e-06
+      },
+      "id": "feasible_04"
+    },
+    {
+      "class": "feasible",
+      "spec": {
+        "nonuniformity_pct": [
+          0.7530873934373578,
+          0.830650418616739
+        ],
+        "T_center": [
+          921.8002895112242,
+          986.8075494956494
+        ],
+        "slip_max_ratio": [
+          null,
+          0.2199847592210287
+        ]
+      },
+      "feasible_truth": true,
+      "witness_recipe": {
+        "T_heater": 1344.1940949764103,
+        "film_thickness": 4.246293093264103e-06
+      },
+      "witness_outcome": {
+        "nonuniformity_pct": 0.8238592521343786,
+        "T_center": 980.8601413322468,
+        "slip_max_ratio": 0.11249995052225739,
+        "bow_cooldown_um": 0.0001612433198774187,
+        "thickness_grown": 4.246293093264103e-06
+      },
+      "id": "feasible_05"
+    },
+    {
+      "class": "feasible",
+      "spec": {
+        "nonuniformity_pct": [
+          0.8119354671719379,
+          0.8894984923513192
+        ],
+        "T_center": [
+          971.1160029938552,
+          1036.1232629782805
+        ],
+        "slip_max_ratio": [
+          null,
+          0.2199847592210287
+        ]
+      },
+      "feasible_truth": true,
+      "witness_recipe": {
+        "T_heater": 1344.1940949764103,
+        "film_thickness": 4.246293093264103e-06
+      },
+      "witness_outcome": {
+        "nonuniformity_pct": 0.8238592521343786,
+        "T_center": 980.8601413322468,
+        "slip_max_ratio": 0.11249995052225739,
+        "bow_cooldown_um": 0.0001612433198774187,
+        "thickness_grown": 4.246293093264103e-06
+      },
+      "id": "feasible_06"
+    },
+    {
+      "class": "feasible",
+      "spec": {
+        "nonuniformity_pct": [
+          0.777244994036123,
+          0.8548080192155043
+        ],
+        "T_center": [
+          941.8019935187717,
+          1006.8092535031969
+        ],
+        "slip_max_ratio": [
+          null,
+          0.2199847592210287
+        ]
+      },
+      "feasible_truth": true,
+      "witness_recipe": {
+        "T_heater": 1344.1940949764103,
+        "film_thickness": 4.246293093264103e-06
+      },
+      "witness_outcome": {
+        "nonuniformity_pct": 0.8238592521343786,
+        "T_center": 980.8601413322468,
+        "slip_max_ratio": 0.11249995052225739,
+        "bow_cooldown_um": 0.0001612433198774187,
+        "thickness_grown": 4.246293093264103e-06
+      },
+      "id": "feasible_07"
+    },
+    {
+      "class": "feasible",
+      "spec": {
+        "nonuniformity_pct": [
+          0.6173661356701392,
+          0.6949291608495205
+        ],
+        "T_center": [
+          813.9102414819804,
+          878.9175014664056
+        ],
+        "slip_max_ratio": [
+          null,
+          0.2199847592210287
+        ]
+      },
+      "feasible_truth": true,
+      "witness_recipe": {
+        "T_heater": 1173.5469836741686,
+        "film_thickness": 4.880683380365372e-06
+      },
+      "witness_outcome": {
+        "nonuniformity_pct": 0.6611369302919639,
+        "T_center": 850.282235538911,
+        "slip_max_ratio": 0.029789314536953486,
+        "bow_cooldown_um": 0.00015194183564894032,
+        "thickness_grown": 4.880683380365372e-06
+      },
+      "id": "feasible_08"
+    },
+    {
+      "class": "feasible",
+      "spec": {
+        "nonuniformity_pct": [
+          0.8542225111891067,
+          0.931785536368488
+        ],
+        "T_center": [
+          1007.9681828450841,
+          1072.9754428295093
+        ],
+        "slip_max_ratio": [
+          null,
+          0.2199847592210287
+        ]
+      },
+      "feasible_truth": true,
+      "witness_recipe": {
+        "T_heater": 1390.352948429063,
+        "film_thickness": 4.944542109966279e-07
+      },
+      "witness_outcome": {
+        "nonuniformity_pct": 0.8661109777805198,
+        "T_center": 1016.8808302749989,
+        "slip_max_ratio": 0.15347227340724987,
+        "bow_cooldown_um": 1.9693423872040663e-05,
+        "thickness_grown": 4.944542109966279e-07
+      },
+      "id": "feasible_09"
+    },
+    {
+      "class": "hard",
+      "spec": {
+        "nonuniformity_pct": [
+          0.6318611683337537,
+          0.6447883391969839
+        ],
+        "T_center": [
+          827.2187129469198,
+          838.0532562776573
+        ],
+        "slip_max_ratio": [
+          null,
+          0.2199847592210287
+        ]
+      },
+      "feasible_truth": true,
+      "witness_recipe": {
+        "T_heater": 1153.816022258252,
+        "film_thickness": 3.4323389708995827e-06
+      },
+      "witness_outcome": {
+        "nonuniformity_pct": 0.6419941712734479,
+        "T_center": 835.4676846224689,
+        "slip_max_ratio": 0.02500999292010108,
+        "bow_cooldown_um": 0.00010414852439310059,
+        "thickness_grown": 3.4323389708995827e-06
+      },
+      "id": "hard_00"
+    },
+    {
+      "class": "hard",
+      "spec": {
+        "nonuniformity_pct": [
+          0.9102711513976989,
+          0.923198322260929
+        ],
+        "T_center": [
+          1056.37105917574,
+          1067.2056025064776
+        ],
+        "slip_max_ratio": [
+          null,
+          0.2199847592210287
+        ]
+      },
+      "feasible_truth": true,
+      "witness_recipe": {
+        "T_heater": 1446.1016076151282,
+        "film_thickness": 2.0775280848145486e-06
+      },
+      "witness_outcome": {
+        "nonuniformity_pct": 0.9155879622496178,
+        "T_center": 1060.746543029803,
+        "slip_max_ratio": 0.2181221098711017,
+        "bow_cooldown_um": 8.740509811675347e-05,
+        "thickness_grown": 2.0775280848145486e-06
+      },
+      "id": "hard_01"
+    },
+    {
+      "class": "hard",
+      "spec": {
+        "nonuniformity_pct": [
+          0.6319231525936654,
+          0.6448503234568955
+        ],
+        "T_center": [
+          827.266526339613,
+          838.1010696703505
+        ],
+        "slip_max_ratio": [
+          null,
+          0.2199847592210287
+        ]
+      },
+      "feasible_truth": true,
+      "witness_recipe": {
+        "T_heater": 1153.816022258252,
+        "film_thickness": 3.4323389708995827e-06
+      },
+      "witness_outcome": {
+        "nonuniformity_pct": 0.6419941712734479,
+        "T_center": 835.4676846224689,
+        "slip_max_ratio": 0.02500999292010108,
+        "bow_cooldown_um": 0.00010414852439310059,
+        "thickness_grown": 3.4323389708995827e-06
+      },
+      "id": "hard_02"
+    },
+    {
+      "class": "hard",
+      "spec": {
+        "nonuniformity_pct": [
+          0.6320227883452574,
+          0.6449499592084875
+        ],
+        "T_center": [
+          827.3433847511211,
+          838.1779280818586
+        ],
+        "slip_max_ratio": [
+          null,
+          0.2199847592210287
+        ]
+      },
+      "feasible_truth": true,
+      "witness_recipe": {
+        "T_heater": 1153.816022258252,
+        "film_thickness": 3.4323389708995827e-06
+      },
+      "witness_outcome": {
+        "nonuniformity_pct": 0.6419941712734479,
+        "T_center": 835.4676846224689,
+        "slip_max_ratio": 0.02500999292010108,
+        "bow_cooldown_um": 0.00010414852439310059,
+        "thickness_grown": 3.4323389708995827e-06
+      },
+      "id": "hard_03"
+    },
+    {
+      "class": "hard",
+      "spec": {
+        "nonuniformity_pct": [
+          0.6320854413069054,
+          0.6450126121701355
+        ],
+        "T_center": [
+          827.391715765474,
+          838.2262590962115
+        ],
+        "slip_max_ratio": [
+          null,
+          0.2199847592210287
+        ]
+      },
+      "feasible_truth": true,
+      "witness_recipe": {
+        "T_heater": 1153.816022258252,
+        "film_thickness": 3.4323389708995827e-06
+      },
+      "witness_outcome": {
+        "nonuniformity_pct": 0.6419941712734479,
+        "T_center": 835.4676846224689,
+        "slip_max_ratio": 0.02500999292010108,
+        "bow_cooldown_um": 0.00010414852439310059,
+        "thickness_grown": 3.4323389708995827e-06
+      },
+      "id": "hard_04"
+    },
+    {
+      "class": "infeasible",
+      "spec": {
+        "nonuniformity_pct": [
+          0.0,
+          0.25532990150614754
+        ],
+        "T_center": [
+          873.2655221025544,
+          900.3518804293982
+        ],
+        "slip_max_ratio": [
+          null,
+          0.2199847592210287
+        ]
+      },
+      "feasible_truth": false,
+      "witness_recipe": null,
+      "witness_outcome": null,
+      "id": "infeasible_00"
+    },
+    {
+      "class": "infeasible",
+      "spec": {
+        "nonuniformity_pct": [
+          0.0,
+          0.25532990150614754
+        ],
+        "T_center": [
+          927.4382387562422,
+          954.524597083086
+        ],
+        "slip_max_ratio": [
+          null,
+          0.2199847592210287
+        ]
+      },
+      "feasible_truth": false,
+      "witness_recipe": null,
+      "witness_outcome": null,
+      "id": "infeasible_01"
+    },
+    {
+      "class": "infeasible",
+      "spec": {
+        "nonuniformity_pct": [
+          0.0,
+          0.25532990150614754
+        ],
+        "T_center": [
+          981.6109554099298,
+          1008.6973137367736
+        ],
+        "slip_max_ratio": [
+          null,
+          0.2199847592210287
+        ]
+      },
+      "feasible_truth": false,
+      "witness_recipe": null,
+      "witness_outcome": null,
+      "id": "infeasible_02"
+    },
+    {
+      "class": "infeasible",
+      "spec": {
+        "nonuniformity_pct": [
+          0.0,
+          0.25532990150614754
+        ],
+        "T_center": [
+          1035.7836720636176,
+          1062.8700303904614
+        ],
+        "slip_max_ratio": [
+          null,
+          0.2199847592210287
+        ]
+      },
+      "feasible_truth": false,
+      "witness_recipe": null,
+      "witness_outcome": null,
+      "id": "infeasible_03"
+    },
+    {
+      "class": "infeasible",
+      "spec": {
+        "nonuniformity_pct": [
+          0.7675964623976709,
+          0.832232316713822
+        ],
+        "T_center": [
+          1184.7586428612587,
+          1266.0177178417905
+        ],
+        "slip_max_ratio": [
+          null,
+          0.2199847592210287
+        ]
+      },
+      "feasible_truth": false,
+      "witness_recipe": null,
+      "witness_outcome": null,
+      "id": "infeasible_04"
+    }
+  ],
+  "hash": "02603fc1421f8e53f5d46958975b5448713bbeec6856ca8fd5d39127f4fc674c"
+}

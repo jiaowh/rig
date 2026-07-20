@@ -1,0 +1,273 @@
+{
+  "meta": {
+    "label": "smoke",
+    "citable": false,
+    "warning": "SMOKE RUN \u2014 reduced budget, NOT for citation (prereg protocol).",
+    "in_silico_only": "Both venues are simulators (prereg \u00a75). Nothing here is about real hardware.",
+    "n_seed": 30,
+    "n_reps": 50,
+    "n_targets": 4,
+    "seed": 20260718,
+    "targets_hash": "02603fc1421f8e53f5d46958975b5448713bbeec6856ca8fd5d39127f4fc674c",
+    "wall_clock_s": 29.2,
+    "created": "2026-07-19T03:09:18.589825+00:00"
+  },
+  "arms": [
+    {
+      "arm": "rig",
+      "n_targets": 4,
+      "n_presented": 2,
+      "certified_miss_rate": 0.0,
+      "false_abstention_rate": 0.3333333333333333,
+      "yield_under_noise_median": 1.0,
+      "normalized_margin_median": 9.934066584317996,
+      "machine_queries": {
+        "seed_runs": 30,
+        "loopB_evals": 0,
+        "fd_probe_evals": 0,
+        "revalidation_evals": 0,
+        "charitable_total": 30,
+        "deployable_total": 30
+      },
+      "per_target": [
+        {
+          "target_id": "feasible_00",
+          "presented": true,
+          "feasible_truth": true,
+          "in_spec_ground_truth": true,
+          "yield_under_noise": 1.0,
+          "normalized_margin": 8.163411975005484,
+          "recipe": {
+            "T_heater": 1282.9163042464522,
+            "film_thickness": 2.5872010078334554e-06
+          }
+        },
+        {
+          "target_id": "feasible_01",
+          "presented": true,
+          "feasible_truth": true,
+          "in_spec_ground_truth": true,
+          "yield_under_noise": 1.0,
+          "normalized_margin": 11.704721193630508,
+          "recipe": {
+            "T_heater": 1320.7837066710983,
+            "film_thickness": 4.997960093264408e-06
+          }
+        },
+        {
+          "target_id": "hard_00",
+          "presented": false,
+          "feasible_truth": true,
+          "in_spec_ground_truth": null,
+          "yield_under_noise": null,
+          "normalized_margin": null,
+          "recipe": null
+        },
+        {
+          "target_id": "infeasible_00",
+          "presented": false,
+          "feasible_truth": false,
+          "in_spec_ground_truth": null,
+          "yield_under_noise": null,
+          "normalized_margin": null,
+          "recipe": null
+        }
+      ]
+    },
+    {
+      "arm": "rig-reval",
+      "n_targets": 4,
+      "n_presented": 2,
+      "certified_miss_rate": 0.0,
+      "false_abstention_rate": 0.3333333333333333,
+      "yield_under_noise_median": 1.0,
+      "normalized_margin_median": 11.863559065125088,
+      "machine_queries": {
+        "seed_runs": 30,
+        "loopB_evals": 0,
+        "fd_probe_evals": 0,
+        "revalidation_evals": 0,
+        "charitable_total": 30,
+        "deployable_total": 30
+      },
+      "per_target": [
+        {
+          "target_id": "feasible_00",
+          "presented": true,
+          "feasible_truth": true,
+          "in_spec_ground_truth": true,
+          "yield_under_noise": 1.0,
+          "normalized_margin": 11.728328543287676,
+          "recipe": {
+            "T_heater": 1266.4012973586239,
+            "film_thickness": 2.0277946744636581e-07
+          }
+        },
+        {
+          "target_id": "feasible_01",
+          "presented": true,
+          "feasible_truth": true,
+          "in_spec_ground_truth": true,
+          "yield_under_noise": 1.0,
+          "normalized_margin": 11.9987895869625,
+          "recipe": {
+            "T_heater": 1322.0452370513021,
+            "film_thickness": 4.9978443232895995e-06
+          }
+        },
+        {
+          "target_id": "hard_00",
+          "presented": false,
+          "feasible_truth": true,
+          "in_spec_ground_truth": null,
+          "yield_under_noise": null,
+          "normalized_margin": null,
+          "recipe": null
+        },
+        {
+          "target_id": "infeasible_00",
+          "presented": false,
+          "feasible_truth": false,
+          "in_spec_ground_truth": null,
+          "yield_under_noise": null,
+          "normalized_margin": null,
+          "recipe": null
+        }
+      ]
+    },
+    {
+      "arm": "mfl-charitable",
+      "n_targets": 4,
+      "n_presented": 4,
+      "certified_miss_rate": 0.5,
+      "false_abstention_rate": 0.0,
+      "yield_under_noise_median": 0.5,
+      "normalized_margin_median": 2.492466108863131,
+      "machine_queries": {
+        "seed_runs": 30,
+        "loopB_evals": 100,
+        "fd_probe_evals": 200,
+        "revalidation_evals": 0,
+        "charitable_total": 130,
+        "deployable_total": 330
+      },
+      "per_target": [
+        {
+          "target_id": "feasible_00",
+          "presented": true,
+          "feasible_truth": true,
+          "in_spec_ground_truth": true,
+          "yield_under_noise": 1.0,
+          "normalized_margin": 6.6698652869506425,
+          "recipe": {
+            "T_heater": 1282.8355324667934,
+            "film_thickness": 1.9347086119103324e-06
+          }
+        },
+        {
+          "target_id": "feasible_01",
+          "presented": true,
+          "feasible_truth": true,
+          "in_spec_ground_truth": true,
+          "yield_under_noise": 1.0,
+          "normalized_margin": 9.667029813085803,
+          "recipe": {
+            "T_heater": 1330.1905419378427,
+            "film_thickness": 2.2792076606127525e-06
+          }
+        },
+        {
+          "target_id": "hard_00",
+          "presented": true,
+          "feasible_truth": true,
+          "in_spec_ground_truth": false,
+          "yield_under_noise": 0.0,
+          "normalized_margin": -1.684933069224381,
+          "recipe": {
+            "T_heater": 1159.5447811226888,
+            "film_thickness": 9.480378002166185e-07
+          }
+        },
+        {
+          "target_id": "infeasible_00",
+          "presented": true,
+          "feasible_truth": false,
+          "in_spec_ground_truth": false,
+          "yield_under_noise": 0.0,
+          "normalized_margin": -255.6367181430681,
+          "recipe": {
+            "T_heater": 1150.0,
+            "film_thickness": 2e-07
+          }
+        }
+      ]
+    },
+    {
+      "arm": "mfl-deployable",
+      "n_targets": 4,
+      "n_presented": 4,
+      "certified_miss_rate": 0.5,
+      "false_abstention_rate": 0.0,
+      "yield_under_noise_median": 0.5,
+      "normalized_margin_median": 2.492466108863131,
+      "machine_queries": {
+        "seed_runs": 30,
+        "loopB_evals": 100,
+        "fd_probe_evals": 200,
+        "revalidation_evals": 0,
+        "charitable_total": 130,
+        "deployable_total": 330
+      },
+      "per_target": [
+        {
+          "target_id": "feasible_00",
+          "presented": true,
+          "feasible_truth": true,
+          "in_spec_ground_truth": true,
+          "yield_under_noise": 1.0,
+          "normalized_margin": 6.6698652869506425,
+          "recipe": {
+            "T_heater": 1282.8355324667934,
+            "film_thickness": 1.9347086119103324e-06
+          }
+        },
+        {
+          "target_id": "feasible_01",
+          "presented": true,
+          "feasible_truth": true,
+          "in_spec_ground_truth": true,
+          "yield_under_noise": 1.0,
+          "normalized_margin": 9.667029813085803,
+          "recipe": {
+            "T_heater": 1330.1905419378427,
+            "film_thickness": 2.2792076606127525e-06
+          }
+        },
+        {
+          "target_id": "hard_00",
+          "presented": true,
+          "feasible_truth": true,
+          "in_spec_ground_truth": false,
+          "yield_under_noise": 0.0,
+          "normalized_margin": -1.684933069224381,
+          "recipe": {
+            "T_heater": 1159.5447811226888,
+            "film_thickness": 9.480378002166185e-07
+          }
+        },
+        {
+          "target_id": "infeasible_00",
+          "presented": true,
+          "feasible_truth": false,
+          "in_spec_ground_truth": false,
+          "yield_under_noise": 0.0,
+          "normalized_margin": -255.6367181430681,
+          "recipe": {
+            "T_heater": 1150.0,
+            "film_thickness": 2e-07
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,75 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "rig"
+version = "0.1.0"
+description = "RIG - Recipe Inverse Generator: calibrated learned process simulator + inverse recipe generation (process-agnostic core)."
+readme = "CLAUDE.md"
+requires-python = ">=3.12"
+license = { text = "Proprietary" }
+authors = [{ name = "jiaowh" }]
+dependencies = [
+    "pydantic>=2",
+    "pint>=0.23",
+    "numpy>=1.26",
+    "scipy>=1.11",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8",
+    "hypothesis>=6",
+    "ruff>=0.4",
+    "import-linter>=2",
+    # NB: pandera was declared here but imported NOWHERE (dropped 2026-07-17). It
+    # implied a frame-validation guarantee that did not exist. DataFrame validation
+    # at ingest is a real E1 item, to be built against the actual data contract when
+    # M0 lands — not speculatively now. See CLAUDE.md and BUILD_STATE E1 row.
+]
+
+# WP-E torch stack (implementation-plan §5.4 backend B, §14.3 SBI, §9.8 BoTorch BO/AL).
+# Installed on 2026-07-17 with the CUDA 12.8 wheels for the RTX 5050 (sm_120
+# Blackwell): torch is pulled from the cu128 index, NOT PyPI --
+#   python -m pip install torch --index-url https://download.pytorch.org/whl/cu128
+#   python -m pip install -e ".[torch]"   # gpytorch/botorch from PyPI
+# The CORE stays torch-free: rig.forward.__init__ imports the ensemble tier
+# lazily (via __getattr__) so `import rig` works without this extra installed.
+torch = [
+    "torch>=2.7",
+    "gpytorch>=1.13",
+    "botorch>=0.12",
+    "zuko>=1.4",  # pure-torch conditional neural spline flows for the M3 NPE generator (§14.3)
+]
+
+# Adapter self-registration group (implementation-plan §3): adapters register themselves
+# here; rig.registry discovers them via importlib.metadata. The CORE never
+# lists adapters statically - these names live in rig_adapters.* only.
+[project.entry-points."rig.adapters"]
+mbe = "rig_adapters.mbe.adapter:make_adapter"
+tabular = "rig_adapters.tabular.adapter:make_adapter"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/rig", "src/rig_adapters"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
+ignore = ["E501"]
+
+[tool.importlinter]
+root_packages = ["rig", "rig_adapters"]
+
+[[tool.importlinter.contracts]]
+name = "core must never import adapters (implementation-plan §3, §13)"
+type = "forbidden"
+source_modules = ["rig"]
+forbidden_modules = ["rig_adapters"]

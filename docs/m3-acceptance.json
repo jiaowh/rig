@@ -1,0 +1,105 @@
+{
+  "verdict": {
+    "gate_pass": true,
+    "n_targets": 5,
+    "n_cold_heavy_feasible": 5,
+    "n_d2_light_matches_cold_heavy": 5,
+    "n_d2_light_rescued_over_cold_light": 1,
+    "cost_ratio_starts": 0.281
+  },
+  "rows": [
+    {
+      "target": {
+        "rate": [
+          8.0,
+          12.0
+        ]
+      },
+      "cold_heavy_feasible": true,
+      "cold_light_feasible": true,
+      "d2_light_feasible": true,
+      "cold_heavy_conf": 1.0,
+      "cold_light_conf": 0.9999,
+      "d2_light_conf": 0.9999,
+      "raw_proposal_hit_rate": 1.0,
+      "cold_heavy_starts": 32,
+      "d2_light_starts": 9
+    },
+    {
+      "target": {
+        "rate": [
+          9.0,
+          13.0
+        ]
+      },
+      "cold_heavy_feasible": true,
+      "cold_light_feasible": true,
+      "d2_light_feasible": true,
+      "cold_heavy_conf": 1.0,
+      "cold_light_conf": 0.9999,
+      "d2_light_conf": 0.9999,
+      "raw_proposal_hit_rate": 1.0,
+      "cold_heavy_starts": 32,
+      "d2_light_starts": 9
+    },
+    {
+      "target": {
+        "rate": [
+          8.0,
+          12.0
+        ],
+        "uniformity": [
+          7.0,
+          9.5
+        ]
+      },
+      "cold_heavy_feasible": true,
+      "cold_light_feasible": false,
+      "d2_light_feasible": true,
+      "cold_heavy_conf": 0.9999,
+      "cold_light_conf": 0.0,
+      "d2_light_conf": 0.9999,
+      "raw_proposal_hit_rate": 1.0,
+      "cold_heavy_starts": 32,
+      "d2_light_starts": 9
+    },
+    {
+      "target": {
+        "rate": [
+          7.0,
+          10.0
+        ],
+        "uniformity": [
+          7.5,
+          9.0
+        ]
+      },
+      "cold_heavy_feasible": true,
+      "cold_light_feasible": true,
+      "d2_light_feasible": true,
+      "cold_heavy_conf": 0.9997,
+      "cold_light_conf": 0.9997,
+      "d2_light_conf": 0.9997,
+      "raw_proposal_hit_rate": 0.609,
+      "cold_heavy_starts": 32,
+      "d2_light_starts": 9
+    },
+    {
+      "target": {
+        "uniformity": [
+          8.5,
+          9.5
+        ]
+      },
+      "cold_heavy_feasible": true,
+      "cold_light_feasible": true,
+      "d2_light_feasible": true,
+      "cold_heavy_conf": 1.0,
+      "cold_light_conf": 1.0,
+      "d2_light_conf": 1.0,
+      "raw_proposal_hit_rate": 1.0,
+      "cold_heavy_starts": 32,
+      "d2_light_starts": 9
+    }
+  ]
+}

@@ -1,0 +1,1976 @@
+{
+  "meta": {
+    "seed": 0,
+    "alpha": 0.1,
+    "nominal_coverage": 0.9,
+    "ci": "exact (Clopper-Pearson) binomial, level 0.95",
+    "gate_form": "directional: nominal inside CI (implementation-plan 15.3 M1 row), not a hard +/-2%",
+    "smoke": false,
+    "gp_restarts": 5,
+    "solver_restarts": "24*dim default",
+    "campaigns_run": [
+      "al_120w_short_pw",
+      "al_200w_high_pw",
+      "al_250w_low_duty",
+      "ti_120w_short_pw",
+      "ti_200w_high_pw",
+      "ti_250w_low_duty"
+    ],
+    "caveats": [
+      "REAL measured data (real_tool) but NOT the signed M1 program gate: M0 venue is a user/PI decision and this is not the MBE target process",
+      "BO-driven (BayBE) sampling: rows cluster near optima; split-conformal exchangeability is an approximation; the temporal split doubles as a drift stress test",
+      "pooled coverage CI treats 2*n_test trials as independent although outputs share test rows (optimistic)",
+      "ti_120w_short_pw: temporal order key is unverified file order; 5 rows skip-rejected (3e-11 to 4e-11 outside full-precision bounds)",
+      "Ipk (A) is measured, never set"
+    ],
+    "aci": {
+      "status": "ADDITIONAL online evaluation (D4/section 5.6); the static split-conformal blocks are the unchanged baseline",
+      "guarantee": "asymptotic AVERAGE coverage under arbitrary distribution shift (Gibbs & Candes 2021); NOT finite-sample exact -- the binomial-CI row on realized online coverage is directional, same status as the static gate",
+      "hyperparameters": "ACIController library defaults (gamma=0.05, window=50, alpha_clip=(0.001, 0.5), update_scores=True), uniform across all campaigns and splits, fixed before any per-campaign outcome was seen",
+      "method_currency": "implementation-plan section 20.2 makes conformal-PID the online endpoint with bare ACI a component; this validates the D4 ACI component only"
+    }
+  },
+  "campaigns": {
+    "al_120w_short_pw": {
+      "process_id": "empa_hipims_al_120w_short_pw",
+      "material": "Al",
+      "parameterization": "prr",
+      "n_ingested": 601,
+      "n_rejects": 0,
+      "order_key": "BatchNr",
+      "temporal_split_meaningful": true,
+      "split_sizes": {
+        "train": 361,
+        "cal": 120,
+        "test": 120
+      },
+      "splits": {
+        "temporal": {
+          "per_output": {
+            "dep_rate_A_per_s": {
+              "unit": "angstrom/second",
+              "rmse": 0.1262268868719307,
+              "nrmse_pct": 7.771993392100178,
+              "mae": 0.10438874008709144,
+              "crps": 0.07246956867931029,
+              "picp": 0.8583333333333333,
+              "k_covered": 103,
+              "n_test": 120,
+              "ci95": [
+                0.7828931017566235,
+                0.9152552705054843
+              ],
+              "nominal_in_ci": true,
+              "mpiw": 0.3798115599737893,
+              "qce": 0.03728070175438592
+            },
+            "Ipk (A)": {
+              "unit": "A",
+              "rmse": 0.04869118528880527,
+              "nrmse_pct": 5.909318464740899,
+              "mae": 0.015549745605163194,
+              "crps": 0.01900548333282034,
+              "picp": 0.8916666666666667,
+              "k_covered": 107,
+              "n_test": 120,
+              "ci95": [
+                0.8218725616110573,
+                0.941041693770915
+              ],
+              "nominal_in_ci": true,
+              "mpiw": 0.04690074396939692,
+              "qce": 0.18070175438596486
+            }
+          },
+          "pooled": {
+            "picp": 0.875,
+            "k_covered": 210,
+            "n_trials": 240,
+            "ci95": [
+              0.8263850821261609,
+              0.914050444623906
+            ],
+            "nominal_in_ci": true
+          },
+          "noise_std": {
+            "dep_rate_A_per_s": 0.1193130960576065,
+            "Ipk (A)": 0.02677127665265089
+          },
+          "wall_seconds": 8.1,
+          "aci": {
+            "protocol": "online D4/section 5.6: fresh split calibrator on the SAME calibration slice; test rows streamed in split order; interval at the current alpha_t scored BEFORE observe(x, y)",
+            "hyperparameters": {
+              "alpha_target": 0.1,
+              "gamma": 0.05,
+              "alpha_clip": [
+                0.001,
+                0.5
+              ],
+              "window": 50,
+              "update_scores": true,
+              "provenance": "ACIController library defaults, uniform across all campaigns and splits, fixed before any per-campaign outcome was seen"
+            },
+            "per_output": {
+              "dep_rate_A_per_s": {
+                "unit": "angstrom/second",
+                "picp": 0.8916666666666667,
+                "k_covered": 107,
+                "n_test": 120,
+                "ci95": [
+                  0.8218725616110573,
+                  0.941041693770915
+                ],
+                "nominal_in_ci": true,
+                "mean_width": 0.4286852880890607,
+                "n_infinite_width": 2,
+                "alpha_t": {
+                  "used_min": 0.001,
+                  "used_max": 0.14500000000000005,
+                  "used_mean": 0.0725000000000001,
+                  "final": 0.05100000000000024
+                },
+                "rolling_coverage": {
+                  "window": 50,
+                  "min_full_window": 0.88,
+                  "final": 0.9
+                }
+              },
+              "Ipk (A)": {
+                "unit": "A",
+                "picp": 0.9,
+                "k_covered": 108,
+                "n_test": 120,
+                "ci95": [
+                  0.8318347872973342,
+                  0.9472522136099402
+                ],
+                "nominal_in_ci": true,
+                "mean_width": 0.07448957003796432,
+                "n_infinite_width": 0,
+                "alpha_t": {
+                  "used_min": 0.020000000000000163,
+                  "used_max": 0.17000000000000012,
+                  "used_mean": 0.09833333333333351,
+                  "final": 0.10000000000000034
+                },
+                "rolling_coverage": {
+                  "window": 50,
+                  "min_full_window": 0.86,
+                  "final": 0.92
+                }
+              }
+            },
+            "pooled": {
+              "picp": 0.8958333333333334,
+              "k_covered": 215,
+              "n_trials": 240,
+              "ci95": [
+                0.8500767992012184,
+                0.931446249150148
+              ],
+              "nominal_in_ci": true
+            },
+            "wall_seconds": 0.2
+          }
+        },
+        "random": {
+          "per_output": {
+            "dep_rate_A_per_s": {
+              "unit": "angstrom/second",
+              "rmse": 0.12975292711534547,
+              "nrmse_pct": 8.074808121178101,
+              "mae": 0.10479957642179757,
+              "crps": 0.07358395415439807,
+              "picp": 0.9,
+              "k_covered": 108,
+              "n_test": 120,
+              "ci95": [
+                0.8318347872973342,
+                0.9472522136099402
+              ],
+              "nominal_in_ci": true,
+              "mpiw": 0.41798075026367376,
+              "qce": 0.03859649122807022
+            },
+            "Ipk (A)": {
+              "unit": "A",
+              "rmse": 0.058459835312394216,
+              "nrmse_pct": 5.816834376012445,
+              "mae": 0.01617529442067388,
+              "crps": 0.01647492763517131,
+              "picp": 0.9333333333333333,
+              "k_covered": 112,
+              "n_test": 120,
+              "ci95": [
+                0.8728632517607872,
+                0.9707808156862037
+              ],
+              "nominal_in_ci": true,
+              "mpiw": 0.08543697817988294,
+              "qce": 0.14298245614035082
+            }
+          },
+          "pooled": {
+            "picp": 0.9166666666666666,
+            "k_covered": 220,
+            "n_trials": 240,
+            "ci95": [
+              0.8742321304809253,
+              0.9483550308745274
+            ],
+            "nominal_in_ci": true
+          },
+          "noise_std": {
+            "dep_rate_A_per_s": 0.11347921628214071,
+            "Ipk (A)": 0.019687403997021766
+          },
+          "wall_seconds": 10.5,
+          "aci": {
+            "protocol": "online D4/section 5.6: fresh split calibrator on the SAME calibration slice; test rows streamed in split order; interval at the current alpha_t scored BEFORE observe(x, y)",
+            "hyperparameters": {
+              "alpha_target": 0.1,
+              "gamma": 0.05,
+              "alpha_clip": [
+                0.001,
+                0.5
+              ],
+              "window": 50,
+              "update_scores": true,
+              "provenance": "ACIController library defaults, uniform across all campaigns and splits, fixed before any per-campaign outcome was seen"
+            },
+            "per_output": {
+              "dep_rate_A_per_s": {
+                "unit": "angstrom/second",
+                "picp": 0.9,
+                "k_covered": 108,
+                "n_test": 120,
+                "ci95": [
+                  0.8318347872973342,
+                  0.9472522136099402
+                ],
+                "nominal_in_ci": true,
+                "mean_width": 0.4421138400889733,
+                "n_infinite_width": 1,
+                "alpha_t": {
+                  "used_min": 0.001,
+                  "used_max": 0.2000000000000001,
+                  "used_mean": 0.09356666666666677,
+                  "final": 0.1160000000000001
+                },
+                "rolling_coverage": {
+                  "window": 50,
+                  "min_full_window": 0.84,
+                  "final": 0.92
+                }
+              },
+              "Ipk (A)": {
+                "unit": "A",
+                "picp": 0.9083333333333333,
+                "k_covered": 109,
+                "n_test": 120,
+                "ci95": [
+                  0.8419014588041668,
+                  0.9533477303447515
+                ],
+                "nominal_in_ci": true,
+                "mean_width": 0.12250643756643514,
+                "n_infinite_width": 2,
+                "alpha_t": {
+                  "used_min": 0.001,
+                  "used_max": 0.19600000000000026,
+                  "used_mean": 0.10508333333333347,
+                  "final": 0.15100000000000033
+                },
+                "rolling_coverage": {
+                  "window": 50,
+                  "min_full_window": 0.88,
+                  "final": 0.9
+                }
+              }
+            },
+            "pooled": {
+              "picp": 0.9041666666666667,
+              "k_covered": 217,
+              "n_trials": 240,
+              "ci95": [
+                0.8596762733892943,
+                0.9382759047111259
+              ],
+              "nominal_in_ci": true
+            },
+            "wall_seconds": 0.2
+          }
+        }
+      }
+    },
+    "al_200w_high_pw": {
+      "process_id": "empa_hipims_al_200w_high_pw",
+      "material": "Al",
+      "parameterization": "prr",
+      "n_ingested": 651,
+      "n_rejects": 0,
+      "order_key": "BatchNr",
+      "temporal_split_meaningful": true,
+      "split_sizes": {
+        "train": 391,
+        "cal": 130,
+        "test": 130
+      },
+      "splits": {
+        "temporal": {
+          "per_output": {
+            "dep_rate_A_per_s": {
+              "unit": "angstrom/second",
+              "rmse": 0.05952140926213467,
+              "nrmse_pct": 6.044976585071528,
+              "mae": 0.047318092971810735,
+              "crps": 0.03387674635723848,
+              "picp": 0.8923076923076924,
+              "k_covered": 116,
+              "n_test": 130,
+              "ci95": [
+                0.825914479386931,
+                0.9398593128963649
+              ],
+              "nominal_in_ci": true,
+              "mpiw": 0.18837662822869536,
+              "qce": 0.03805668016194331
+            },
+            "Ipk (A)": {
+              "unit": "A",
+              "rmse": 0.0034574630858924473,
+              "nrmse_pct": 0.6152410043242031,
+              "mae": 0.0021123018107026908,
+              "crps": 0.0016589817389017945,
+              "picp": 0.9384615384615385,
+              "k_covered": 122,
+              "n_test": 130,
+              "ci95": [
+                0.8823447665861507,
+                0.9730603038740709
+              ],
+              "nominal_in_ci": true,
+              "mpiw": 0.01066617208309875,
+              "qce": 0.06963562753036436
+            }
+          },
+          "pooled": {
+            "picp": 0.9153846153846154,
+            "k_covered": 238,
+            "n_trials": 260,
+            "ci95": [
+              0.8746935930911707,
+              0.9462123600999673
+            ],
+            "nominal_in_ci": true
+          },
+          "noise_std": {
+            "dep_rate_A_per_s": 0.05540661470762981,
+            "Ipk (A)": 0.002918448825007156
+          },
+          "wall_seconds": 11.5,
+          "aci": {
+            "protocol": "online D4/section 5.6: fresh split calibrator on the SAME calibration slice; test rows streamed in split order; interval at the current alpha_t scored BEFORE observe(x, y)",
+            "hyperparameters": {
+              "alpha_target": 0.1,
+              "gamma": 0.05,
+              "alpha_clip": [
+                0.001,
+                0.5
+              ],
+              "window": 50,
+              "update_scores": true,
+              "provenance": "ACIController library defaults, uniform across all campaigns and splits, fixed before any per-campaign outcome was seen"
+            },
+            "per_output": {
+              "dep_rate_A_per_s": {
+                "unit": "angstrom/second",
+                "picp": 0.9,
+                "k_covered": 117,
+                "n_test": 130,
+                "ci95": [
+                  0.8350683267206863,
+                  0.9456713071727957
+                ],
+                "nominal_in_ci": true,
+                "mean_width": 0.20110330134821042,
+                "n_infinite_width": 0,
+                "alpha_t": {
+                  "used_min": 0.015000000000000027,
+                  "used_max": 0.16000000000000028,
+                  "used_mean": 0.10403846153846172,
+                  "final": 0.10000000000000037
+                },
+                "rolling_coverage": {
+                  "window": 50,
+                  "min_full_window": 0.88,
+                  "final": 0.9
+                }
+              },
+              "Ipk (A)": {
+                "unit": "A",
+                "picp": 0.8923076923076924,
+                "k_covered": 116,
+                "n_test": 130,
+                "ci95": [
+                  0.825914479386931,
+                  0.9398593128963649
+                ],
+                "nominal_in_ci": true,
+                "mean_width": 0.010501400671064738,
+                "n_infinite_width": 1,
+                "alpha_t": {
+                  "used_min": 0.001,
+                  "used_max": 0.24500000000000025,
+                  "used_mean": 0.1195615384615386,
+                  "final": 0.06600000000000006
+                },
+                "rolling_coverage": {
+                  "window": 50,
+                  "min_full_window": 0.8200000000000001,
+                  "final": 0.88
+                }
+              }
+            },
+            "pooled": {
+              "picp": 0.8961538461538462,
+              "k_covered": 233,
+              "n_trials": 260,
+              "ci95": [
+                0.8525125391488944,
+                0.9304417618232222
+              ],
+              "nominal_in_ci": true
+            },
+            "wall_seconds": 0.2
+          }
+        },
+        "random": {
+          "per_output": {
+            "dep_rate_A_per_s": {
+              "unit": "angstrom/second",
+              "rmse": 0.17030561960547416,
+              "nrmse_pct": 8.810271718140118,
+              "mae": 0.06218099047136216,
+              "crps": 0.04773701465004014,
+              "picp": 0.8769230769230769,
+              "k_covered": 114,
+              "n_test": 130,
+              "ci95": [
+                0.807835887591724,
+                0.9279869124984215
+              ],
+              "nominal_in_ci": true,
+              "mpiw": 0.18944135183647082,
+              "qce": 0.025506072874493933
+            },
+            "Ipk (A)": {
+              "unit": "A",
+              "rmse": 0.0029937398432661076,
+              "nrmse_pct": 0.5453255204965288,
+              "mae": 0.0021022071040704927,
+              "crps": 0.001621940725077963,
+              "picp": 0.8692307692307693,
+              "k_covered": 113,
+              "n_test": 130,
+              "ci95": [
+                0.798899232944449,
+                0.9219402507362385
+              ],
+              "nominal_in_ci": true,
+              "mpiw": 0.008791116843426755,
+              "qce": 0.06315789473684207
+            }
+          },
+          "pooled": {
+            "picp": 0.8730769230769231,
+            "k_covered": 227,
+            "n_trials": 260,
+            "ci95": [
+              0.8263922508319549,
+              0.9109970791366565
+            ],
+            "nominal_in_ci": true
+          },
+          "noise_std": {
+            "dep_rate_A_per_s": 0.05513135556587001,
+            "Ipk (A)": 0.0033008960902865176
+          },
+          "wall_seconds": 14.3,
+          "aci": {
+            "protocol": "online D4/section 5.6: fresh split calibrator on the SAME calibration slice; test rows streamed in split order; interval at the current alpha_t scored BEFORE observe(x, y)",
+            "hyperparameters": {
+              "alpha_target": 0.1,
+              "gamma": 0.05,
+              "alpha_clip": [
+                0.001,
+                0.5
+              ],
+              "window": 50,
+              "update_scores": true,
+              "provenance": "ACIController library defaults, uniform across all campaigns and splits, fixed before any per-campaign outcome was seen"
+            },
+            "per_output": {
+              "dep_rate_A_per_s": {
+                "unit": "angstrom/second",
+                "picp": 0.9,
+                "k_covered": 117,
+                "n_test": 130,
+                "ci95": [
+                  0.8350683267206863,
+                  0.9456713071727957
+                ],
+                "nominal_in_ci": true,
+                "mean_width": 0.21812913942895515,
+                "n_infinite_width": 0,
+                "alpha_t": {
+                  "used_min": 0.025000000000000112,
+                  "used_max": 0.13500000000000026,
+                  "used_mean": 0.08519230769230787,
+                  "final": 0.10000000000000037
+                },
+                "rolling_coverage": {
+                  "window": 50,
+                  "min_full_window": 0.88,
+                  "final": 0.9
+                }
+              },
+              "Ipk (A)": {
+                "unit": "A",
+                "picp": 0.9,
+                "k_covered": 117,
+                "n_test": 130,
+                "ci95": [
+                  0.8350683267206863,
+                  0.9456713071727957
+                ],
+                "nominal_in_ci": true,
+                "mean_width": 0.010350206384697497,
+                "n_infinite_width": 0,
+                "alpha_t": {
+                  "used_min": 0.020000000000000302,
+                  "used_max": 0.15500000000000005,
+                  "used_mean": 0.0771153846153848,
+                  "final": 0.10000000000000037
+                },
+                "rolling_coverage": {
+                  "window": 50,
+                  "min_full_window": 0.86,
+                  "final": 0.9
+                }
+              }
+            },
+            "pooled": {
+              "picp": 0.9,
+              "k_covered": 234,
+              "n_trials": 260,
+              "ci95": [
+                0.8569152139756238,
+                0.9336311093483357
+              ],
+              "nominal_in_ci": true
+            },
+            "wall_seconds": 0.2
+          }
+        }
+      }
+    },
+    "al_250w_low_duty": {
+      "process_id": "empa_hipims_al_250w_low_duty",
+      "material": "Al",
+      "parameterization": "duty",
+      "n_ingested": 401,
+      "n_rejects": 0,
+      "order_key": "BatchNr",
+      "temporal_split_meaningful": true,
+      "split_sizes": {
+        "train": 241,
+        "cal": 80,
+        "test": 80
+      },
+      "splits": {
+        "temporal": {
+          "per_output": {
+            "dep_rate_A_per_s": {
+              "unit": "angstrom/second",
+              "rmse": 0.35701331290320315,
+              "nrmse_pct": 10.2067484017384,
+              "mae": 0.25646818947759636,
+              "crps": 0.1902452793724751,
+              "picp": 0.875,
+              "k_covered": 70,
+              "n_test": 80,
+              "ci95": [
+                0.7821108659305637,
+                0.9383979034415657
+              ],
+              "nominal_in_ci": true,
+              "mpiw": 1.047084302825059,
+              "qce": 0.06315789473684207
+            },
+            "Ipk (A)": {
+              "unit": "A",
+              "rmse": 0.026844686505520104,
+              "nrmse_pct": 1.839246350992287,
+              "mae": 0.01953516660463377,
+              "crps": 0.014654921659337124,
+              "picp": 0.875,
+              "k_covered": 70,
+              "n_test": 80,
+              "ci95": [
+                0.7821108659305637,
+                0.9383979034415657
+              ],
+              "nominal_in_ci": true,
+              "mpiw": 0.08560153895756653,
+              "qce": 0.0914473684210526
+            }
+          },
+          "pooled": {
+            "picp": 0.875,
+            "k_covered": 140,
+            "n_trials": 160,
+            "ci95": [
+              0.8135668103703722,
+              0.9219471886087791
+            ],
+            "nominal_in_ci": true
+          },
+          "noise_std": {
+            "dep_rate_A_per_s": 0.3122900669005163,
+            "Ipk (A)": 0.025409784469348204
+          },
+          "wall_seconds": 3.3,
+          "aci": {
+            "protocol": "online D4/section 5.6: fresh split calibrator on the SAME calibration slice; test rows streamed in split order; interval at the current alpha_t scored BEFORE observe(x, y)",
+            "hyperparameters": {
+              "alpha_target": 0.1,
+              "gamma": 0.05,
+              "alpha_clip": [
+                0.001,
+                0.5
+              ],
+              "window": 50,
+              "update_scores": true,
+              "provenance": "ACIController library defaults, uniform across all campaigns and splits, fixed before any per-campaign outcome was seen"
+            },
+            "per_output": {
+              "dep_rate_A_per_s": {
+                "unit": "angstrom/second",
+                "picp": 0.9,
+                "k_covered": 72,
+                "n_test": 80,
+                "ci95": [
+                  0.8124348925365684,
+                  0.9558290598463709
+                ],
+                "nominal_in_ci": true,
+                "mean_width": 1.137117421023952,
+                "n_infinite_width": 0,
+                "alpha_t": {
+                  "used_min": 0.04000000000000018,
+                  "used_max": 0.13000000000000017,
+                  "used_mean": 0.08437500000000012,
+                  "final": 0.10000000000000023
+                },
+                "rolling_coverage": {
+                  "window": 50,
+                  "min_full_window": 0.88,
+                  "final": 0.92
+                }
+              },
+              "Ipk (A)": {
+                "unit": "A",
+                "picp": 0.8875,
+                "k_covered": 71,
+                "n_test": 80,
+                "ci95": [
+                  0.7971534080830098,
+                  0.9472484868543125
+                ],
+                "nominal_in_ci": true,
+                "mean_width": 0.08774516970672415,
+                "n_infinite_width": 0,
+                "alpha_t": {
+                  "used_min": 0.025000000000000057,
+                  "used_max": 0.17500000000000018,
+                  "used_mean": 0.10250000000000012,
+                  "final": 0.05000000000000021
+                },
+                "rolling_coverage": {
+                  "window": 50,
+                  "min_full_window": 0.88,
+                  "final": 0.9
+                }
+              }
+            },
+            "pooled": {
+              "picp": 0.89375,
+              "k_covered": 143,
+              "n_trials": 160,
+              "ci95": [
+                0.8353387790599096,
+                0.936875678691764
+              ],
+              "nominal_in_ci": true
+            },
+            "wall_seconds": 0.1
+          }
+        },
+        "random": {
+          "per_output": {
+            "dep_rate_A_per_s": {
+              "unit": "angstrom/second",
+              "rmse": 0.37911206418143,
+              "nrmse_pct": 12.122488434460964,
+              "mae": 0.28503230088277576,
+              "crps": 0.20667595258238033,
+              "picp": 0.8375,
+              "k_covered": 67,
+              "n_test": 80,
+              "ci95": [
+                0.7381631061748871,
+                0.9105383582774708
+              ],
+              "nominal_in_ci": true,
+              "mpiw": 0.9213784005118827,
+              "qce": 0.07697368421052629
+            },
+            "Ipk (A)": {
+              "unit": "A",
+              "rmse": 0.02577671776703262,
+              "nrmse_pct": 1.7942742790621447,
+              "mae": 0.01904710196788419,
+              "crps": 0.01388977613227907,
+              "picp": 0.9125,
+              "k_covered": 73,
+              "n_test": 80,
+              "ci95": [
+                0.8279916615801152,
+                0.9640936410104413
+              ],
+              "nominal_in_ci": true,
+              "mpiw": 0.0890610561966467,
+              "qce": 0.028947368421052628
+            }
+          },
+          "pooled": {
+            "picp": 0.875,
+            "k_covered": 140,
+            "n_trials": 160,
+            "ci95": [
+              0.8135668103703722,
+              0.9219471886087791
+            ],
+            "nominal_in_ci": true
+          },
+          "noise_std": {
+            "dep_rate_A_per_s": 0.3328948698725892,
+            "Ipk (A)": 0.022509440592488304
+          },
+          "wall_seconds": 3.4,
+          "aci": {
+            "protocol": "online D4/section 5.6: fresh split calibrator on the SAME calibration slice; test rows streamed in split order; interval at the current alpha_t scored BEFORE observe(x, y)",
+            "hyperparameters": {
+              "alpha_target": 0.1,
+              "gamma": 0.05,
+              "alpha_clip": [
+                0.001,
+                0.5
+              ],
+              "window": 50,
+              "update_scores": true,
+              "provenance": "ACIController library defaults, uniform across all campaigns and splits, fixed before any per-campaign outcome was seen"
+            },
+            "per_output": {
+              "dep_rate_A_per_s": {
+                "unit": "angstrom/second",
+                "picp": 0.8875,
+                "k_covered": 71,
+                "n_test": 80,
+                "ci95": [
+                  0.7971534080830098,
+                  0.9472484868543125
+                ],
+                "nominal_in_ci": true,
+                "mean_width": 1.1553411271128051,
+                "n_infinite_width": 1,
+                "alpha_t": {
+                  "used_min": 0.00500000000000015,
+                  "used_max": 0.15000000000000005,
+                  "used_mean": 0.0862500000000001,
+                  "final": 0.05000000000000018
+                },
+                "rolling_coverage": {
+                  "window": 50,
+                  "min_full_window": 0.86,
+                  "final": 0.88
+                }
+              },
+              "Ipk (A)": {
+                "unit": "A",
+                "picp": 0.9,
+                "k_covered": 72,
+                "n_test": 80,
+                "ci95": [
+                  0.8124348925365684,
+                  0.9558290598463709
+                ],
+                "nominal_in_ci": true,
+                "mean_width": 0.0972647334080445,
+                "n_infinite_width": 0,
+                "alpha_t": {
+                  "used_min": 0.03500000000000004,
+                  "used_max": 0.15000000000000013,
+                  "used_mean": 0.0887500000000001,
+                  "final": 0.10000000000000023
+                },
+                "rolling_coverage": {
+                  "window": 50,
+                  "min_full_window": 0.88,
+                  "final": 0.9
+                }
+              }
+            },
+            "pooled": {
+              "picp": 0.89375,
+              "k_covered": 143,
+              "n_trials": 160,
+              "ci95": [
+                0.8353387790599096,
+                0.936875678691764
+              ],
+              "nominal_in_ci": true
+            },
+            "wall_seconds": 0.1
+          }
+        }
+      }
+    },
+    "ti_120w_short_pw": {
+      "process_id": "empa_hipims_ti_120w_short_pw",
+      "material": "Ti",
+      "parameterization": "prr",
+      "n_ingested": 490,
+      "n_rejects": 5,
+      "order_key": "file_order_UNVERIFIED",
+      "temporal_split_meaningful": false,
+      "split_sizes": {
+        "train": 294,
+        "cal": 98,
+        "test": 98
+      },
+      "splits": {
+        "temporal": {
+          "per_output": {
+            "dep_rate_A_per_s": {
+              "unit": "angstrom/second",
+              "rmse": 0.0604432777829601,
+              "nrmse_pct": 9.518085526872765,
+              "mae": 0.04821765150972134,
+              "crps": 0.03417851781514283,
+              "picp": 0.9591836734693877,
+              "k_covered": 94,
+              "n_test": 98,
+              "ci95": [
+                0.8987821811112336,
+                0.9887686824398149
+              ],
+              "nominal_in_ci": true,
+              "mpiw": 0.2355138835491944,
+              "qce": 0.04253490870032221
+            },
+            "Ipk (A)": {
+              "unit": "A",
+              "rmse": 0.025971845527581593,
+              "nrmse_pct": 4.6146429553502015,
+              "mae": 0.009248032299365931,
+              "crps": 0.01066886493655462,
+              "picp": 0.9183673469387755,
+              "k_covered": 90,
+              "n_test": 98,
+              "ci95": [
+                0.8454749494815671,
+                0.964097000470202
+              ],
+              "nominal_in_ci": true,
+              "mpiw": 0.03454291832860737,
+              "qce": 0.1713211600429645
+            }
+          },
+          "pooled": {
+            "picp": 0.9387755102040817,
+            "k_covered": 184,
+            "n_trials": 196,
+            "ci95": [
+              0.895495934729186,
+              0.9679674218216554
+            ],
+            "nominal_in_ci": true
+          },
+          "noise_std": {
+            "dep_rate_A_per_s": 0.054017833367151144,
+            "Ipk (A)": 0.02344053435041342
+          },
+          "wall_seconds": 5.3,
+          "aci": {
+            "protocol": "online D4/section 5.6: fresh split calibrator on the SAME calibration slice; test rows streamed in split order; interval at the current alpha_t scored BEFORE observe(x, y)",
+            "hyperparameters": {
+              "alpha_target": 0.1,
+              "gamma": 0.05,
+              "alpha_clip": [
+                0.001,
+                0.5
+              ],
+              "window": 50,
+              "update_scores": true,
+              "provenance": "ACIController library defaults, uniform across all campaigns and splits, fixed before any per-campaign outcome was seen"
+            },
+            "per_output": {
+              "dep_rate_A_per_s": {
+                "unit": "angstrom/second",
+                "picp": 0.9183673469387755,
+                "k_covered": 90,
+                "n_test": 98,
+                "ci95": [
+                  0.8454749494815671,
+                  0.964097000470202
+                ],
+                "nominal_in_ci": true,
+                "mean_width": 0.21042060555361947,
+                "n_infinite_width": 0,
+                "alpha_t": {
+                  "used_min": 0.040000000000000153,
+                  "used_max": 0.1950000000000001,
+                  "used_mean": 0.12260204081632667,
+                  "final": 0.1900000000000003
+                },
+                "rolling_coverage": {
+                  "window": 50,
+                  "min_full_window": 0.86,
+                  "final": 0.92
+                }
+              },
+              "Ipk (A)": {
+                "unit": "A",
+                "picp": 0.9081632653061225,
+                "k_covered": 89,
+                "n_test": 98,
+                "ci95": [
+                  0.8328133504122911,
+                  0.9571416325975936
+                ],
+                "nominal_in_ci": true,
+                "mean_width": 0.04589815510524373,
+                "n_infinite_width": 0,
+                "alpha_t": {
+                  "used_min": 0.025000000000000168,
+                  "used_max": 0.14500000000000027,
+                  "used_mean": 0.09352040816326544,
+                  "final": 0.1400000000000003
+                },
+                "rolling_coverage": {
+                  "window": 50,
+                  "min_full_window": 0.86,
+                  "final": 0.9
+                }
+              }
+            },
+            "pooled": {
+              "picp": 0.9132653061224489,
+              "k_covered": 179,
+              "n_trials": 196,
+              "ci95": [
+                0.8647615195453305,
+                0.9486608154531861
+              ],
+              "nominal_in_ci": true
+            },
+            "wall_seconds": 0.1
+          }
+        },
+        "random": {
+          "per_output": {
+            "dep_rate_A_per_s": {
+              "unit": "angstrom/second",
+              "rmse": 0.06285402731061235,
+              "nrmse_pct": 8.791859391659633,
+              "mae": 0.04954512690546787,
+              "crps": 0.03504199080873589,
+              "picp": 0.9183673469387755,
+              "k_covered": 90,
+              "n_test": 98,
+              "ci95": [
+                0.8454749494815671,
+                0.964097000470202
+              ],
+              "nominal_in_ci": true,
+              "mpiw": 0.23023769217589604,
+              "qce": 0.022019334049409235
+            },
+            "Ipk (A)": {
+              "unit": "A",
+              "rmse": 0.023471948257597797,
+              "nrmse_pct": 4.659438165850914,
+              "mae": 0.009478860441277884,
+              "crps": 0.01061370505013035,
+              "picp": 0.9081632653061225,
+              "k_covered": 89,
+              "n_test": 98,
+              "ci95": [
+                0.8328133504122911,
+                0.9571416325975936
+              ],
+              "nominal_in_ci": true,
+              "mpiw": 0.059836404872834065,
+              "qce": 0.15692803437164338
+            }
+          },
+          "pooled": {
+            "picp": 0.9132653061224489,
+            "k_covered": 179,
+            "n_trials": 196,
+            "ci95": [
+              0.8647615195453305,
+              0.9486608154531861
+            ],
+            "nominal_in_ci": true
+          },
+          "noise_std": {
+            "dep_rate_A_per_s": 0.05872774388217584,
+            "Ipk (A)": 0.02247151236590252
+          },
+          "wall_seconds": 7.0,
+          "aci": {
+            "protocol": "online D4/section 5.6: fresh split calibrator on the SAME calibration slice; test rows streamed in split order; interval at the current alpha_t scored BEFORE observe(x, y)",
+            "hyperparameters": {
+              "alpha_target": 0.1,
+              "gamma": 0.05,
+              "alpha_clip": [
+                0.001,
+                0.5
+              ],
+              "window": 50,
+              "update_scores": true,
+              "provenance": "ACIController library defaults, uniform across all campaigns and splits, fixed before any per-campaign outcome was seen"
+            },
+            "per_output": {
+              "dep_rate_A_per_s": {
+                "unit": "angstrom/second",
+                "picp": 0.8979591836734694,
+                "k_covered": 88,
+                "n_test": 98,
+                "ci95": [
+                  0.82034034493393,
+                  0.949972373679884
+                ],
+                "nominal_in_ci": true,
+                "mean_width": 0.19566806488616423,
+                "n_infinite_width": 0,
+                "alpha_t": {
+                  "used_min": 0.06500000000000011,
+                  "used_max": 0.19500000000000028,
+                  "used_mean": 0.12260204081632668,
+                  "final": 0.09000000000000027
+                },
+                "rolling_coverage": {
+                  "window": 50,
+                  "min_full_window": 0.88,
+                  "final": 0.9
+                }
+              },
+              "Ipk (A)": {
+                "unit": "A",
+                "picp": 0.8877551020408163,
+                "k_covered": 87,
+                "n_test": 98,
+                "ci95": [
+                  0.8080330009693152,
+                  0.9426176216449822
+                ],
+                "nominal_in_ci": true,
+                "mean_width": 0.07121156963640962,
+                "n_infinite_width": 0,
+                "alpha_t": {
+                  "used_min": 0.01000000000000019,
+                  "used_max": 0.1900000000000002,
+                  "used_mean": 0.11086734693877565,
+                  "final": 0.040000000000000244
+                },
+                "rolling_coverage": {
+                  "window": 50,
+                  "min_full_window": 0.86,
+                  "final": 0.86
+                }
+              }
+            },
+            "pooled": {
+              "picp": 0.8928571428571429,
+              "k_covered": 175,
+              "n_trials": 196,
+              "ci95": [
+                0.8408913627232347,
+                0.9324424076807466
+              ],
+              "nominal_in_ci": true
+            },
+            "wall_seconds": 0.1
+          }
+        }
+      }
+    },
+    "ti_200w_high_pw": {
+      "process_id": "empa_hipims_ti_200w_high_pw",
+      "material": "Ti",
+      "parameterization": "prr",
+      "n_ingested": 601,
+      "n_rejects": 0,
+      "order_key": "BatchNr",
+      "temporal_split_meaningful": true,
+      "split_sizes": {
+        "train": 361,
+        "cal": 120,
+        "test": 120
+      },
+      "splits": {
+        "temporal": {
+          "per_output": {
+            "dep_rate_A_per_s": {
+              "unit": "angstrom/second",
+              "rmse": 0.060976639570360085,
+              "nrmse_pct": 14.674929942708557,
+              "mae": 0.051906499105006984,
+              "crps": 0.036148198766722255,
+              "picp": 0.8083333333333333,
+              "k_covered": 97,
+              "n_test": 120,
+              "ci95": [
+                0.7264176172626801,
+                0.8744482751435358
+              ],
+              "nominal_in_ci": false,
+              "mpiw": 0.16886547238267502,
+              "qce": 0.07763157894736845
+            },
+            "Ipk (A)": {
+              "unit": "A",
+              "rmse": 0.003963151805693169,
+              "nrmse_pct": 0.7715862315287767,
+              "mae": 0.0029422172908918254,
+              "crps": 0.002115889116976325,
+              "picp": 0.825,
+              "k_covered": 99,
+              "n_test": 120,
+              "ci95": [
+                0.7450199724342718,
+                0.8882856569062535
+              ],
+              "nominal_in_ci": false,
+              "mpiw": 0.009038751582392883,
+              "qce": 0.1214912280701755
+            }
+          },
+          "pooled": {
+            "picp": 0.8166666666666667,
+            "k_covered": 196,
+            "n_trials": 240,
+            "ci95": [
+              0.7618086408344017,
+              0.8635159849243971
+            ],
+            "nominal_in_ci": false
+          },
+          "noise_std": {
+            "dep_rate_A_per_s": 0.045699644352970595,
+            "Ipk (A)": 0.0029222807574189346
+          },
+          "wall_seconds": 8.9,
+          "aci": {
+            "protocol": "online D4/section 5.6: fresh split calibrator on the SAME calibration slice; test rows streamed in split order; interval at the current alpha_t scored BEFORE observe(x, y)",
+            "hyperparameters": {
+              "alpha_target": 0.1,
+              "gamma": 0.05,
+              "alpha_clip": [
+                0.001,
+                0.5
+              ],
+              "window": 50,
+              "update_scores": true,
+              "provenance": "ACIController library defaults, uniform across all campaigns and splits, fixed before any per-campaign outcome was seen"
+            },
+            "per_output": {
+              "dep_rate_A_per_s": {
+                "unit": "angstrom/second",
+                "picp": 0.8916666666666667,
+                "k_covered": 107,
+                "n_test": 120,
+                "ci95": [
+                  0.8218725616110573,
+                  0.941041693770915
+                ],
+                "nominal_in_ci": true,
+                "mean_width": 0.19226512462932932,
+                "n_infinite_width": 1,
+                "alpha_t": {
+                  "used_min": 0.001,
+                  "used_max": 0.17000000000000007,
+                  "used_mean": 0.0592333333333334,
+                  "final": 0.06600000000000014
+                },
+                "rolling_coverage": {
+                  "window": 50,
+                  "min_full_window": 0.84,
+                  "final": 0.9
+                }
+              },
+              "Ipk (A)": {
+                "unit": "A",
+                "picp": 0.8833333333333333,
+                "k_covered": 106,
+                "n_test": 120,
+                "ci95": [
+                  0.8120049096131917,
+                  0.9347278494900572
+                ],
+                "nominal_in_ci": true,
+                "mean_width": 0.014198883845134949,
+                "n_infinite_width": 5,
+                "alpha_t": {
+                  "used_min": 0.001,
+                  "used_max": 0.13100000000000012,
+                  "used_mean": 0.06225000000000006,
+                  "final": 0.03100000000000013
+                },
+                "rolling_coverage": {
+                  "window": 50,
+                  "min_full_window": 0.86,
+                  "final": 0.9
+                }
+              }
+            },
+            "pooled": {
+              "picp": 0.8875,
+              "k_covered": 213,
+              "n_trials": 240,
+              "ci95": [
+                0.840550857927553,
+                0.9245394007031613
+              ],
+              "nominal_in_ci": true
+            },
+            "wall_seconds": 0.2
+          }
+        },
+        "random": {
+          "per_output": {
+            "dep_rate_A_per_s": {
+              "unit": "angstrom/second",
+              "rmse": 0.04919340417631688,
+              "nrmse_pct": 12.36230110301555,
+              "mae": 0.040827660288747084,
+              "crps": 0.028133932137580645,
+              "picp": 0.9416666666666667,
+              "k_covered": 113,
+              "n_test": 120,
+              "ci95": [
+                0.8835016203543854,
+                0.9762279762094809
+              ],
+              "nominal_in_ci": true,
+              "mpiw": 0.163758417227781,
+              "qce": 0.027192982456140307
+            },
+            "Ipk (A)": {
+              "unit": "A",
+              "rmse": 0.0032647753621371455,
+              "nrmse_pct": 0.6577956486535698,
+              "mae": 0.002203838781782092,
+              "crps": 0.001669011540438582,
+              "picp": 0.9583333333333334,
+              "k_covered": 115,
+              "n_test": 120,
+              "ci95": [
+                0.9054412000240628,
+                0.9863346158832105
+              ],
+              "nominal_in_ci": false,
+              "mpiw": 0.014689590512864418,
+              "qce": 0.04780701754385961
+            }
+          },
+          "pooled": {
+            "picp": 0.95,
+            "k_covered": 228,
+            "n_trials": 240,
+            "ci95": [
+              0.9142894831394027,
+              0.9739007131487578
+            ],
+            "nominal_in_ci": false
+          },
+          "noise_std": {
+            "dep_rate_A_per_s": 0.04949034208265721,
+            "Ipk (A)": 0.0025749397856198366
+          },
+          "wall_seconds": 7.5,
+          "aci": {
+            "protocol": "online D4/section 5.6: fresh split calibrator on the SAME calibration slice; test rows streamed in split order; interval at the current alpha_t scored BEFORE observe(x, y)",
+            "hyperparameters": {
+              "alpha_target": 0.1,
+              "gamma": 0.05,
+              "alpha_clip": [
+                0.001,
+                0.5
+              ],
+              "window": 50,
+              "update_scores": true,
+              "provenance": "ACIController library defaults, uniform across all campaigns and splits, fixed before any per-campaign outcome was seen"
+            },
+            "per_output": {
+              "dep_rate_A_per_s": {
+                "unit": "angstrom/second",
+                "picp": 0.9166666666666666,
+                "k_covered": 110,
+                "n_test": 120,
+                "ci95": [
+                  0.8520845706626649,
+                  0.9593138711319835
+                ],
+                "nominal_in_ci": true,
+                "mean_width": 0.15315162345339678,
+                "n_infinite_width": 0,
+                "alpha_t": {
+                  "used_min": 0.05000000000000005,
+                  "used_max": 0.24000000000000035,
+                  "used_mean": 0.1500000000000002,
+                  "final": 0.20000000000000037
+                },
+                "rolling_coverage": {
+                  "window": 50,
+                  "min_full_window": 0.9,
+                  "final": 0.9
+                }
+              },
+              "Ipk (A)": {
+                "unit": "A",
+                "picp": 0.9,
+                "k_covered": 108,
+                "n_test": 120,
+                "ci95": [
+                  0.8318347872973342,
+                  0.9472522136099402
+                ],
+                "nominal_in_ci": true,
+                "mean_width": 0.010977562860086247,
+                "n_infinite_width": 0,
+                "alpha_t": {
+                  "used_min": 0.035000000000000205,
+                  "used_max": 0.1900000000000002,
+                  "used_mean": 0.12000000000000016,
+                  "final": 0.10000000000000034
+                },
+                "rolling_coverage": {
+                  "window": 50,
+                  "min_full_window": 0.86,
+                  "final": 0.9
+                }
+              }
+            },
+            "pooled": {
+              "picp": 0.9083333333333333,
+              "k_covered": 218,
+              "n_trials": 240,
+              "ci95": [
+                0.8645061244714324,
+                0.941659001897254
+              ],
+              "nominal_in_ci": true
+            },
+            "wall_seconds": 0.2
+          }
+        }
+      }
+    },
+    "ti_250w_low_duty": {
+      "process_id": "empa_hipims_ti_250w_low_duty",
+      "material": "Ti",
+      "parameterization": "duty",
+      "n_ingested": 401,
+      "n_rejects": 0,
+      "order_key": "BatchNr",
+      "temporal_split_meaningful": true,
+      "split_sizes": {
+        "train": 241,
+        "cal": 80,
+        "test": 80
+      },
+      "splits": {
+        "temporal": {
+          "per_output": {
+            "dep_rate_A_per_s": {
+              "unit": "angstrom/second",
+              "rmse": 0.14445415906541292,
+              "nrmse_pct": 13.132220647759333,
+              "mae": 0.10660544118395146,
+              "crps": 0.07826718379753518,
+              "picp": 0.9,
+              "k_covered": 72,
+              "n_test": 80,
+              "ci95": [
+                0.8124348925365684,
+                0.9558290598463709
+              ],
+              "nominal_in_ci": true,
+              "mpiw": 0.4684536587794167,
+              "qce": 0.06776315789473682
+            },
+            "Ipk (A)": {
+              "unit": "A",
+              "rmse": 0.03491083118935955,
+              "nrmse_pct": 2.6307883000521115,
+              "mae": 0.022447278988980746,
+              "crps": 0.017596887609810645,
+              "picp": 0.875,
+              "k_covered": 70,
+              "n_test": 80,
+              "ci95": [
+                0.7821108659305637,
+                0.9383979034415657
+              ],
+              "nominal_in_ci": true,
+              "mpiw": 0.10147094240583732,
+              "qce": 0.06118421052631582
+            }
+          },
+          "pooled": {
+            "picp": 0.8875,
+            "k_covered": 142,
+            "n_trials": 160,
+            "ci95": [
+              0.8280375288321168,
+              0.9319463455364979
+            ],
+            "nominal_in_ci": true
+          },
+          "noise_std": {
+            "dep_rate_A_per_s": 0.12034700265823625,
+            "Ipk (A)": 0.027803431429691855
+          },
+          "wall_seconds": 3.6,
+          "aci": {
+            "protocol": "online D4/section 5.6: fresh split calibrator on the SAME calibration slice; test rows streamed in split order; interval at the current alpha_t scored BEFORE observe(x, y)",
+            "hyperparameters": {
+              "alpha_target": 0.1,
+              "gamma": 0.05,
+              "alpha_clip": [
+                0.001,
+                0.5
+              ],
+              "window": 50,
+              "update_scores": true,
+              "provenance": "ACIController library defaults, uniform across all campaigns and splits, fixed before any per-campaign outcome was seen"
+            },
+            "per_output": {
+              "dep_rate_A_per_s": {
+                "unit": "angstrom/second",
+                "picp": 0.9,
+                "k_covered": 72,
+                "n_test": 80,
+                "ci95": [
+                  0.8124348925365684,
+                  0.9558290598463709
+                ],
+                "nominal_in_ci": true,
+                "mean_width": 0.5446222189839521,
+                "n_infinite_width": 0,
+                "alpha_t": {
+                  "used_min": 0.04000000000000004,
+                  "used_max": 0.16500000000000023,
+                  "used_mean": 0.09437500000000013,
+                  "final": 0.10000000000000023
+                },
+                "rolling_coverage": {
+                  "window": 50,
+                  "min_full_window": 0.88,
+                  "final": 0.9
+                }
+              },
+              "Ipk (A)": {
+                "unit": "A",
+                "picp": 0.8875,
+                "k_covered": 71,
+                "n_test": 80,
+                "ci95": [
+                  0.7971534080830098,
+                  0.9472484868543125
+                ],
+                "nominal_in_ci": true,
+                "mean_width": 0.15448365239801773,
+                "n_infinite_width": 2,
+                "alpha_t": {
+                  "used_min": 0.001,
+                  "used_max": 0.11500000000000007,
+                  "used_mean": 0.06195000000000006,
+                  "final": 0.08100000000000007
+                },
+                "rolling_coverage": {
+                  "window": 50,
+                  "min_full_window": 0.86,
+                  "final": 0.88
+                }
+              }
+            },
+            "pooled": {
+              "picp": 0.89375,
+              "k_covered": 143,
+              "n_trials": 160,
+              "ci95": [
+                0.8353387790599096,
+                0.936875678691764
+              ],
+              "nominal_in_ci": true
+            },
+            "wall_seconds": 0.1
+          }
+        },
+        "random": {
+          "per_output": {
+            "dep_rate_A_per_s": {
+              "unit": "angstrom/second",
+              "rmse": 0.13168210414502526,
+              "nrmse_pct": 12.969529100908394,
+              "mae": 0.09717830224302895,
+              "crps": 0.07149731371117732,
+              "picp": 0.9,
+              "k_covered": 72,
+              "n_test": 80,
+              "ci95": [
+                0.8124348925365684,
+                0.9558290598463709
+              ],
+              "nominal_in_ci": true,
+              "mpiw": 0.3945458643478551,
+              "qce": 0.05921052631578945
+            },
+            "Ipk (A)": {
+              "unit": "A",
+              "rmse": 0.02369332756625906,
+              "nrmse_pct": 1.764727883680993,
+              "mae": 0.01674854571570995,
+              "crps": 0.013185520423881705,
+              "picp": 0.9,
+              "k_covered": 72,
+              "n_test": 80,
+              "ci95": [
+                0.8124348925365684,
+                0.9558290598463709
+              ],
+              "nominal_in_ci": true,
+              "mpiw": 0.08864418850240932,
+              "qce": 0.07236842105263154
+            }
+          },
+          "pooled": {
+            "picp": 0.9,
+            "k_covered": 144,
+            "n_trials": 160,
+            "ci95": [
+              0.8426882641923475,
+              0.9417533123564462
+            ],
+            "nominal_in_ci": true
+          },
+          "noise_std": {
+            "dep_rate_A_per_s": 0.12495305334597813,
+            "Ipk (A)": 0.026377872515551785
+          },
+          "wall_seconds": 3.8,
+          "aci": {
+            "protocol": "online D4/section 5.6: fresh split calibrator on the SAME calibration slice; test rows streamed in split order; interval at the current alpha_t scored BEFORE observe(x, y)",
+            "hyperparameters": {
+              "alpha_target": 0.1,
+              "gamma": 0.05,
+              "alpha_clip": [
+                0.001,
+                0.5
+              ],
+              "window": 50,
+              "update_scores": true,
+              "provenance": "ACIController library defaults, uniform across all campaigns and splits, fixed before any per-campaign outcome was seen"
+            },
+            "per_output": {
+              "dep_rate_A_per_s": {
+                "unit": "angstrom/second",
+                "picp": 0.9125,
+                "k_covered": 73,
+                "n_test": 80,
+                "ci95": [
+                  0.8279916615801152,
+                  0.9640936410104413
+                ],
+                "nominal_in_ci": true,
+                "mean_width": 0.45444370729893235,
+                "n_infinite_width": 0,
+                "alpha_t": {
+                  "used_min": 0.05000000000000008,
+                  "used_max": 0.17000000000000023,
+                  "used_mean": 0.1087500000000001,
+                  "final": 0.15000000000000024
+                },
+                "rolling_coverage": {
+                  "window": 50,
+                  "min_full_window": 0.9,
+                  "final": 0.94
+                }
+              },
+              "Ipk (A)": {
+                "unit": "A",
+                "picp": 0.9,
+                "k_covered": 72,
+                "n_test": 80,
+                "ci95": [
+                  0.8124348925365684,
+                  0.9558290598463709
+                ],
+                "nominal_in_ci": true,
+                "mean_width": 0.09267771958903133,
+                "n_infinite_width": 0,
+                "alpha_t": {
+                  "used_min": 0.02500000000000014,
+                  "used_max": 0.16000000000000011,
+                  "used_mean": 0.0887500000000001,
+                  "final": 0.10000000000000023
+                },
+                "rolling_coverage": {
+                  "window": 50,
+                  "min_full_window": 0.86,
+                  "final": 0.88
+                }
+              }
+            },
+            "pooled": {
+              "picp": 0.90625,
+              "k_covered": 145,
+              "n_trials": 160,
+              "ci95": [
+                0.8500898173450577,
+                0.9465748779900249
+              ],
+              "nominal_in_ci": true
+            },
+            "wall_seconds": 0.1
+          }
+        }
+      }
+    }
+  },
+  "ood_check": {
+    "design": "random-split model; ID = own held-out random-test rows; OOD = all rows of the other campaign",
+    "output_order": [
+      "dep_rate_A_per_s",
+      "Ipk (A)"
+    ],
+    "pairs": [
+      {
+        "model": "al_120w_short_pw",
+        "queried_on": "al_200w_high_pw",
+        "id_mean_epi": [
+          0.03150874137418993,
+          0.010969285617481506
+        ],
+        "ood_mean_epi": [
+          1.0106143755207961,
+          4.623572672518269
+        ],
+        "id_mean_support": -2.2377033595860514,
+        "ood_mean_support": -5.43278516658,
+        "ood_epi_greater_both_outputs": true
+      },
+      {
+        "model": "al_120w_short_pw",
+        "queried_on": "ti_120w_short_pw",
+        "id_mean_epi": [
+          0.03150874137418993,
+          0.010969285617481506
+        ],
+        "ood_mean_epi": [
+          0.03071621835417256,
+          0.01056739236135458
+        ],
+        "id_mean_support": -2.2377033595860514,
+        "ood_mean_support": -2.2172091918204635,
+        "ood_epi_greater_both_outputs": false
+      },
+      {
+        "model": "al_120w_short_pw",
+        "queried_on": "ti_200w_high_pw",
+        "id_mean_epi": [
+          0.03150874137418993,
+          0.010969285617481506
+        ],
+        "ood_mean_epi": [
+          1.074937225744595,
+          4.780239406072872
+        ],
+        "id_mean_support": -2.2377033595860514,
+        "ood_mean_support": -5.403774138409185,
+        "ood_epi_greater_both_outputs": true
+      },
+      {
+        "model": "al_200w_high_pw",
+        "queried_on": "al_120w_short_pw",
+        "id_mean_epi": [
+          0.011366038661564819,
+          0.001192808485818386
+        ],
+        "ood_mean_epi": [
+          0.8805494992332467,
+          1.6556903594602663
+        ],
+        "id_mean_support": -2.2879523568373417,
+        "ood_mean_support": -11.630936933953405,
+        "ood_epi_greater_both_outputs": true
+      },
+      {
+        "model": "al_200w_high_pw",
+        "queried_on": "ti_120w_short_pw",
+        "id_mean_epi": [
+          0.011366038661564819,
+          0.001192808485818386
+        ],
+        "ood_mean_epi": [
+          0.7996902058247626,
+          1.4780513953895158
+        ],
+        "id_mean_support": -2.2879523568373417,
+        "ood_mean_support": -10.681137661098097,
+        "ood_epi_greater_both_outputs": true
+      },
+      {
+        "model": "al_200w_high_pw",
+        "queried_on": "ti_200w_high_pw",
+        "id_mean_epi": [
+          0.011366038661564819,
+          0.001192808485818386
+        ],
+        "ood_mean_epi": [
+          0.011139094379764918,
+          0.0012369533919063288
+        ],
+        "id_mean_support": -2.2879523568373417,
+        "ood_mean_support": -2.2350111316700305,
+        "ood_epi_greater_both_outputs": false
+      },
+      {
+        "model": "ti_120w_short_pw",
+        "queried_on": "al_120w_short_pw",
+        "id_mean_epi": [
+          0.019623150557603785,
+          0.011526434131004501
+        ],
+        "ood_mean_epi": [
+          0.019606782854071227,
+          0.01203324220585787
+        ],
+        "id_mean_support": -2.2214829726074257,
+        "ood_mean_support": -2.2525498793265264,
+        "ood_epi_greater_both_outputs": false
+      },
+      {
+        "model": "ti_120w_short_pw",
+        "queried_on": "al_200w_high_pw",
+        "id_mean_epi": [
+          0.019623150557603785,
+          0.011526434131004501
+        ],
+        "ood_mean_epi": [
+          0.11489041908983309,
+          0.3006719611541421
+        ],
+        "id_mean_support": -2.2214829726074257,
+        "ood_mean_support": -5.678295461765866,
+        "ood_epi_greater_both_outputs": true
+      },
+      {
+        "model": "ti_120w_short_pw",
+        "queried_on": "ti_200w_high_pw",
+        "id_mean_epi": [
+          0.019623150557603785,
+          0.011526434131004501
+        ],
+        "ood_mean_epi": [
+          0.11852191020303386,
+          0.32040400891014875
+        ],
+        "id_mean_support": -2.2214829726074257,
+        "ood_mean_support": -5.64805608547673,
+        "ood_epi_greater_both_outputs": true
+      },
+      {
+        "model": "ti_200w_high_pw",
+        "queried_on": "al_120w_short_pw",
+        "id_mean_epi": [
+          0.0133079552171698,
+          0.0010737834057415144
+        ],
+        "ood_mean_epi": [
+          0.08576821057303806,
+          0.9659106042579921
+        ],
+        "id_mean_support": -2.2505289415380236,
+        "ood_mean_support": -11.38612338444647,
+        "ood_epi_greater_both_outputs": true
+      },
+      {
+        "model": "ti_200w_high_pw",
+        "queried_on": "al_200w_high_pw",
+        "id_mean_epi": [
+          0.0133079552171698,
+          0.0010737834057415144
+        ],
+        "ood_mean_epi": [
+          0.013076075494749392,
+          0.0010597127642089353
+        ],
+        "id_mean_support": -2.2505289415380236,
+        "ood_mean_support": -2.2395644694856043,
+        "ood_epi_greater_both_outputs": false
+      },
+      {
+        "model": "ti_200w_high_pw",
+        "queried_on": "ti_120w_short_pw",
+        "id_mean_epi": [
+          0.0133079552171698,
+          0.0010737834057415144
+        ],
+        "ood_mean_epi": [
+          0.08384800297234679,
+          0.8702946777463546
+        ],
+        "id_mean_support": -2.2505289415380236,
+        "ood_mean_support": -10.45433763525735,
+        "ood_epi_greater_both_outputs": true
+      }
+    ],
+    "n_pairs": 12,
+    "n_directional_pass": 8,
+    "caveat": "shared 5-D PRR knob space, but different material (Al/Ti) and power tier -- cross-campaign shift, not adversarial far-OOD"
+  },
+  "inverse_demo": {
+    "campaign": "al_120w_short_pw",
+    "model": "random-split train model",
+    "target_output": "dep_rate_A_per_s",
+    "unit": "angstrom/second",
+    "query_populated_overtight": {
+      "targets": [
+        1.4192312714530404,
+        1.5859659480820798
+      ],
+      "quantiles": [
+        0.6,
+        0.9
+      ],
+      "band_width": 0.1667346766290394,
+      "credited_floor_2_kappa_sigma_ale": 0.45391686512856283,
+      "expected": "INFEASIBLE",
+      "observed": "INFEASIBLE",
+      "reason": "in-spec on the mean but not robustly at \u03ba=2.0: PARTLY epistemic \u2014 collecting runs near the reported recipe cuts the required relaxation from 1.81\u03c3 toward 1.34\u03c3, and relaxing the spec or lowering \u03ba closes the rest. Required per-output relaxation: dep_rate_A_per_s by 0.205.",
+      "distance_to_feasible": 1.8078517233503493,
+      "as_expected": true
+    },
+    "query_populated": {
+      "targets": [
+        0.89023339982428,
+        1.5859659480820798
+      ],
+      "quantiles": [
+        0.1,
+        0.9
+      ],
+      "expected": "FEASIBLE",
+      "observed": "FEASIBLE",
+      "candidates": [
+        {
+          "recipe_si": {
+            "PRR (Hz)": 501.5090755990624,
+            "PW (us)": 8.083888155260907e-05,
+            "pos Delay (us)": 1.5131808355994018e-06,
+            "pos PW (us)": 3.998338989467954e-05,
+            "pos Setpoint (V)": 55.71983254905598
+          },
+          "confidence": 0.9802139034001867,
+          "support_score": -2.3221955571892012,
+          "credited_interval": {
+            "dep_rate_A_per_s": [
+              0.940849304601873,
+              1.5587966941091038
+            ]
+          },
+          "nn_distance_normalized": 0.09232954208852047,
+          "nn_measured_dep_rate": 1.4084447623733203,
+          "nn_in_target_band": true
+        },
+        {
+          "recipe_si": {
+            "PRR (Hz)": 501.5090755870992,
+            "PW (us)": 8.06886031715269e-05,
+            "pos Delay (us)": 6.582720047616155e-06,
+            "pos PW (us)": 3.080655630236047e-05,
+            "pos Setpoint (V)": 99.9573348616365
+          },
+          "confidence": 0.9797467638415724,
+          "support_score": -2.2350140444445508,
+          "credited_interval": {
+            "dep_rate_A_per_s": [
+              0.9574367843174288,
+              1.5680981562744858
+            ]
+          },
+          "nn_distance_normalized": 0.20073912230632293,
+          "nn_measured_dep_rate": 1.3659076060508002,
+          "nn_in_target_band": true
+        },
+        {
+          "recipe_si": {
+            "PRR (Hz)": 501.5090755870992,
+            "PW (us)": 8.067390213560806e-05,
+            "pos Delay (us)": 7.710021701049797e-06,
+            "pos PW (us)": 2.9792729203308415e-05,
+            "pos Setpoint (V)": 53.13347401050357
+          },
+          "confidence": 0.9794555127567341,
+          "support_score": -1.8652440231009557,
+          "credited_interval": {
+            "dep_rate_A_per_s": [
+              0.9598836374747292,
+              1.569768046383838
+            ]
+          },
+          "nn_distance_normalized": 0.23681590425854604,
+          "nn_measured_dep_rate": 1.23491607763052,
+          "nn_in_target_band": true
+        }
+      ],
+      "as_expected": true
+    },
+    "query_beyond_data": {
+      "targets": [
+        2.7636031850508003,
+        3.6848042467344
+      ],
+      "observed_max": 1.8424021233672,
+      "expected": "INFEASIBLE",
+      "observed": "INFEASIBLE",
+      "reason": "genuinely unreachable: the predicted mean itself is outside the spec box for dep_rate_A_per_s (margin -10.8\u03c3). More data will not move it in \u2014 relax the target (not just the tolerance) or change the process. Required per-output relaxation: dep_rate_A_per_s by 1.45.",
+      "distance_to_feasible": 12.780010788149305,
+      "nearest_achievable": {
+        "PRR (Hz)": 2977.5083377008114,
+        "PW (us)": 3.896267591564748e-05,
+        "pos Delay (us)": 3.998708901997704e-05,
+        "pos PW (us)": 3.9986585935734156e-05,
+        "pos Setpoint (V)": 98.73827733506985
+      },
+      "as_expected": true
+    }
+  }
+}

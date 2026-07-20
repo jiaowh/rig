@@ -1,0 +1,20 @@
+# RIG data/ — third-party dataset payloads are NOT tracked.
+#
+# Rationale: the M0 candidate sets are externally licensed and large
+# (empa-hipims/hipims_raw.zip alone is 378 MB, well past GitHub's 100 MB
+# per-file hard limit). We track *provenance*, not payloads: MANIFEST.md,
+# per-dataset README.md, record.json and *.sha256 are enough for a fresh
+# clone to re-fetch each source and verify it byte-for-byte.
+
+# Ignore everything under data/ by default...
+*
+
+# ...but keep descending into subdirectories so the un-ignores below apply,
+# and keep the provenance/licensing files themselves.
+!*/
+!.gitignore
+!MANIFEST.md
+!README.md
+!LICENSE.txt
+!record.json
+!*.sha256

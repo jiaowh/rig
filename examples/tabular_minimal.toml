@@ -1,0 +1,15 @@
+# Minimal generic process spec for the RIG tabular adapter (WP-H).
+# Smallest thing that validates: one continuous input, one output.
+# Cost block omitted -> Kanarik defaults (c_batch=$1000, c_recipe=$1000, batch_size=4).
+
+process_id = "demo_minimal"
+description = "Smallest valid tabular process spec: one knob, one KPI."
+
+[inputs.knob]
+kind = "continuous"
+unit = "dimensionless"
+lower = 0.0
+upper = 1.0
+
+[outputs.kpi]
+unit = "dimensionless"

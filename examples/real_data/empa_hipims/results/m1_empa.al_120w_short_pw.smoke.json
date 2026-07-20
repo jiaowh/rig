@@ -1,0 +1,224 @@
+{
+  "meta": {
+    "seed": 0,
+    "alpha": 0.1,
+    "nominal_coverage": 0.9,
+    "ci": "exact (Clopper-Pearson) binomial, level 0.95",
+    "gate_form": "directional: nominal inside CI (implementation-plan 15.3 M1 row), not a hard +/-2%",
+    "smoke": true,
+    "gp_restarts": 2,
+    "solver_restarts": 24,
+    "campaigns_run": [
+      "al_120w_short_pw"
+    ],
+    "caveats": [
+      "REAL measured data (real_tool) but NOT the signed M1 program gate: M0 venue is a user/PI decision and this is not the MBE target process",
+      "BO-driven (BayBE) sampling: rows cluster near optima; split-conformal exchangeability is an approximation; the temporal split doubles as a drift stress test",
+      "pooled coverage CI treats 2*n_test trials as independent although outputs share test rows (optimistic)",
+      "ti_120w_short_pw: temporal order key is unverified file order; 5 rows skip-rejected (~3e-11 outside full-precision bounds)",
+      "Ipk (A) is measured, never set"
+    ]
+  },
+  "campaigns": {
+    "al_120w_short_pw": {
+      "process_id": "empa_hipims_al_120w_short_pw",
+      "material": "Al",
+      "parameterization": "prr",
+      "n_ingested": 601,
+      "n_rejects": 0,
+      "order_key": "BatchNr",
+      "temporal_split_meaningful": true,
+      "split_sizes": {
+        "train": 361,
+        "cal": 120,
+        "test": 120
+      },
+      "splits": {
+        "temporal": {
+          "per_output": {
+            "dep_rate_A_per_s": {
+              "unit": "angstrom/second",
+              "rmse": 0.1262269265556936,
+              "nrmse_pct": 7.771995835493584,
+              "mae": 0.10438878521951768,
+              "crps": 0.07246958861276456,
+              "picp": 0.8583333333333333,
+              "k_covered": 103,
+              "n_test": 120,
+              "ci95": [
+                0.7828931017566235,
+                0.9152552705054843
+              ],
+              "nominal_in_ci": true,
+              "mpiw": 0.379811101265268,
+              "qce": 0.03728070175438592
+            },
+            "Ipk (A)": {
+              "unit": "A",
+              "rmse": 0.04869118528880527,
+              "nrmse_pct": 5.909318464740899,
+              "mae": 0.015549745605163194,
+              "crps": 0.01900548333282034,
+              "picp": 0.8916666666666667,
+              "k_covered": 107,
+              "n_test": 120,
+              "ci95": [
+                0.8218725616110573,
+                0.941041693770915
+              ],
+              "nominal_in_ci": true,
+              "mpiw": 0.04690074396939692,
+              "qce": 0.18070175438596486
+            }
+          },
+          "pooled": {
+            "picp": 0.875,
+            "k_covered": 210,
+            "n_trials": 240,
+            "ci95": [
+              0.8263850821261609,
+              0.914050444623906
+            ],
+            "nominal_in_ci": true
+          },
+          "noise_std": {
+            "dep_rate_A_per_s": 0.11931314929048198,
+            "Ipk (A)": 0.02677127665265089
+          },
+          "wall_seconds": 2.3
+        },
+        "random": {
+          "per_output": {
+            "dep_rate_A_per_s": {
+              "unit": "angstrom/second",
+              "rmse": 0.12975328549026502,
+              "nrmse_pct": 8.074830423632275,
+              "mae": 0.10480001159818861,
+              "crps": 0.07358416881940298,
+              "picp": 0.9,
+              "k_covered": 108,
+              "n_test": 120,
+              "ci95": [
+                0.8318347872973342,
+                0.9472522136099402
+              ],
+              "nominal_in_ci": true,
+              "mpiw": 0.4179902628020017,
+              "qce": 0.03859649122807022
+            },
+            "Ipk (A)": {
+              "unit": "A",
+              "rmse": 0.058459835312394216,
+              "nrmse_pct": 5.816834376012445,
+              "mae": 0.01617529442067388,
+              "crps": 0.01647492763517131,
+              "picp": 0.9333333333333333,
+              "k_covered": 112,
+              "n_test": 120,
+              "ci95": [
+                0.8728632517607872,
+                0.9707808156862037
+              ],
+              "nominal_in_ci": true,
+              "mpiw": 0.08543697817988294,
+              "qce": 0.14298245614035082
+            }
+          },
+          "pooled": {
+            "picp": 0.9166666666666666,
+            "k_covered": 220,
+            "n_trials": 240,
+            "ci95": [
+              0.8742321304809253,
+              0.9483550308745274
+            ],
+            "nominal_in_ci": true
+          },
+          "noise_std": {
+            "dep_rate_A_per_s": 0.1134797411084521,
+            "Ipk (A)": 0.019687403997021766
+          },
+          "wall_seconds": 3.2
+        }
+      }
+    }
+  },
+  "ood_check": null,
+  "inverse_demo": {
+    "campaign": "al_120w_short_pw",
+    "model": "random-split train model",
+    "target_output": "dep_rate_A_per_s",
+    "unit": "angstrom/second",
+    "query_populated_overtight": {
+      "targets": [
+        1.4192312714530404,
+        1.5859659480820798
+      ],
+      "quantiles": [
+        0.6,
+        0.9
+      ],
+      "band_width": 0.1667346766290394,
+      "credited_floor_2_kappa_sigma_ale": 0.4539189644338084,
+      "expected": "INFEASIBLE",
+      "observed": "INFEASIBLE",
+      "reason": "in-spec on the mean but not robustly at \u03ba=2.0: PARTLY epistemic \u2014 collecting runs near the reported recipe cuts the required relaxation from 1.81\u03c3 toward 1.34\u03c3, and relaxing the spec or lowering \u03ba closes the rest. Required per-output relaxation: dep_rate_A_per_s by 0.205.",
+      "distance_to_feasible": 1.807925798762513,
+      "as_expected": true
+    },
+    "query_populated": {
+      "targets": [
+        0.89023339982428,
+        1.5859659480820798
+      ],
+      "quantiles": [
+        0.1,
+        0.9
+      ],
+      "expected": "FEASIBLE",
+      "observed": "FEASIBLE",
+      "candidates": [
+        {
+          "recipe_si": {
+            "PRR (Hz)": 501.5090755870992,
+            "PW (us)": 8.067365776733233e-05,
+            "pos Delay (us)": 7.649651913501132e-06,
+            "pos PW (us)": 2.9791997403460824e-05,
+            "pos Setpoint (V)": 53.19356062404478
+          },
+          "confidence": 0.9794649285147496,
+          "support_score": -1.8668438834297132,
+          "credited_interval": {
+            "dep_rate_A_per_s": [
+              0.9597997378401731,
+              1.5697138451632302
+            ]
+          },
+          "nn_distance_normalized": 0.23564839218187206,
+          "nn_measured_dep_rate": 1.23491607763052,
+          "nn_in_target_band": true
+        }
+      ],
+      "as_expected": true
+    },
+    "query_beyond_data": {
+      "targets": [
+        2.7636031850508003,
+        3.6848042467344
+      ],
+      "observed_max": 1.8424021233672,
+      "expected": "INFEASIBLE",
+      "observed": "INFEASIBLE",
+      "reason": "genuinely unreachable: the predicted mean itself is outside the spec box for dep_rate_A_per_s (margin -10.8\u03c3). More data will not move it in \u2014 relax the target (not just the tolerance) or change the process. Required per-output relaxation: dep_rate_A_per_s by 1.45.",
+      "distance_to_feasible": 12.78015943081372,
+      "nearest_achievable": {
+        "PRR (Hz)": 2978.637954054212,
+        "PW (us)": 3.8961404049476076e-05,
+        "pos Delay (us)": 3.9954822691299054e-05,
+        "pos PW (us)": 3.998626705496684e-05,
+        "pos Setpoint (V)": 99.90736007125798
+      },
+      "as_expected": true
+    }
+  }
+}

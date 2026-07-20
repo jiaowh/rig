@@ -1,0 +1,60 @@
+# Process spec for a REAL public magnetron-sputtering dataset (WP-H tabular adapter).
+#
+# Dataset: Zr_grid.csv from https://github.com/jarlsanna/gps-for-magnetron-sputtering
+#   (self-driving-lab magnetron sputtering, single material = Zr). A dense 15x15
+#   grid over source power x chamber pressure; each grid point carries measured
+#   deposition rates at three QCM (quartz-crystal-microbalance) positions plus a
+#   per-point measurement error (aleatoric sigma). See RESULTS.md for provenance.
+#
+# HONEST FRAMING: this spec drives an M1-MACHINERY validation on genuine measured
+# data. It is NOT the RIG M1 program gate (that needs the project's real MBE
+# target-process data, which does not exist yet -- that is M0, still open).
+#
+# The variable NAMES below are the CSV column headers verbatim (the tabular
+# adapter matches on exact column name); `unit` is declared separately and is
+# what the ingest layer uses to SI-canonicalize. The CSV's `[mTorr]` label maps
+# to pint's `mtorr`; `[ng/cm2s]` maps to `ng/(cm^2*s)`.
+#
+# All non-declared CSV columns (the *_error columns, source voltage, n, A, and
+# the `synthetic` flag) are NOT declared here -- the adapter keeps them in
+# RunRecord.extra["unmatched_columns"], which the run script uses to (a) drop
+# the 16 synthetic-augmented rows and keep only the 209 measured ones, and
+# (b) read the per-point error columns for the aleatoric-sigma ballpark check.
+
+process_id = "zr_magnetron_sputtering"
+description = "Zr magnetron sputtering (jarlsanna SDL): power x pressure grid -> 3 QCM mass-deposition rates. Real measured data; M1-machinery validation only."
+
+# --- inputs: the two tunable process parameters -----------------------------
+# Bounds are the observed grid extents (power/pressure both {1,4,...,43}).
+
+[inputs."source_1_set_power_[W]"]
+kind = "continuous"
+unit = "W"
+lower = 1.0
+upper = 43.0
+
+[inputs."set_pressure_[mTorr]"]
+kind = "continuous"
+unit = "mtorr"          # pint spelling of the CSV's [mTorr] label (1 mtorr = 0.1333 Pa)
+lower = 1.0
+upper = 43.0
+
+# --- outputs: measured deposition rate at each of the 3 QCM positions -------
+# Unit `ng/(cm^2*s)` SI-canonicalizes to kg/(m^2*s) with factor 1e-8.
+# Rates can be slightly negative at low power (QCM noise near zero) -- outputs
+# carry no lower bound, so those rows ingest fine.
+
+[outputs."qcm_1_mass_rate_[ng/cm2s]"]
+unit = "ng/(cm^2*s)"
+
+[outputs."qcm_2_mass_rate_[ng/cm2s]"]
+unit = "ng/(cm^2*s)"
+
+[outputs."qcm_3_mass_rate_[ng/cm2s]"]
+unit = "ng/(cm^2*s)"
+
+# --- cost model: left at documented defaults (not used by this M1 demo) ------
+[cost]
+c_batch = 1000.0
+c_recipe = 1000.0
+batch_size = 4
