@@ -45,10 +45,23 @@ never exercised. This driver fixes all of that:
   pooled ΔRMST so the "cheaper" claim is separated from the "more reliable"
   (hit-rate) claim (SDM-2); a support-score honesty readout checks the winning
   inverse proposal is on-support (A5).
+* **feasibility policy selectable via ``--policy`` (F3, audit 2026-07-21/22)** — the
+  RIG arm's §8 conservatism is chosen at run time. ``--policy ablation`` (DEFAULT, the
+  published M2 config) pins ``kappa=z_epi=1.0``, ``delta_frac=0.01`` — the MORE
+  PERMISSIVE ablation — and writes ``docs/m2-result.json``. ``--policy binding`` pins
+  the binding §8 ``2.0/2.0/0.02`` policy that ``PessimisticInverseSolver`` and
+  ``ActiveLearningLoop`` default to, and writes ``docs/m2-result-binding.json``. The
+  knobs are applied at BOTH RIG pin sites (the active-loop factory ``_make_factories``
+  and the inverse readout ``_inverse_readout``); the warm-BO comparator is NEVER
+  touched (the policy is RIG's feasibility conservatism, not BO's search — and
+  ``WarmStartedBO`` does not even accept these knobs). The selected label is written
+  into the result JSON (``feasibility_policy``) and printed at run start so no reader
+  mistakes ablation numbers for binding-policy numbers.
 
 Usage (from repo root, with the sim on MBE_SIM_PATH):
+    python examples/run_m2_sweep.py --policy binding      # binding §8 2.0/2.0/0.02
     python examples/run_m2_sweep.py --seeds 50 --targets 4 --tol-k 6 \
-        --out docs/m2-result.json
+        --out docs/m2-result.json                          # ablation (default)
 """
 
 from __future__ import annotations
@@ -76,6 +89,30 @@ from rig.inverse import PessimisticInverseSolver
 DEFAULT_TOL_K = 6.0
 # The coupled non-identity KPI pair (see module docstring / probe).
 INSILICO_OKEYS = ["T_center", "bow_cooldown_um"]
+
+# §8 feasibility policy under which THIS driver runs its RIG arm (F3, audit
+# 2026-07-21/22). The `--policy` flag selects one of these knob sets and applies it at
+# BOTH RIG pin sites (`_make_factories` active-loop factory + `_inverse_readout`); the
+# warm-BO comparator is never touched. The `ablation` set (the MORE PERMISSIVE 1.0/1.0/
+# 0.01) is what produced the published M2 numbers; `binding` is the §8 2.0/2.0/0.02
+# policy that PessimisticInverseSolver and ActiveLearningLoop default to. The selected
+# label is written into the result JSON (`feasibility_policy`) and printed at run start
+# so no reader mistakes ablation numbers for binding-policy numbers.
+FEASIBILITY_POLICIES: dict[str, dict[str, float]] = {
+    "ablation": {"kappa": 1.0, "z_epi": 1.0, "delta_frac": 0.01},
+    "binding": {"kappa": 2.0, "z_epi": 2.0, "delta_frac": 0.02},
+}
+FEASIBILITY_POLICY_LABELS: dict[str, str] = {
+    "ablation": (
+        "ablation-1.0/1.0/0.01 (kappa/z_epi/delta_frac) — the MORE PERMISSIVE "
+        "ablation, NOT the binding §8 2.0/2.0/0.02 policy; see "
+        "docs/m2-result-binding.json for the binding-policy re-run"
+    ),
+    "binding": (
+        "binding-2.0/2.0/0.02 (kappa/z_epi/delta_frac) — the binding §8 policy that "
+        "PessimisticInverseSolver and ActiveLearningLoop default to"
+    ),
+}
 
 
 def _synthetic(n_targets: int, tol_k: float):
@@ -193,7 +230,7 @@ def _build_targets(okeys, lo, hi, sigma, n_targets, tol_k):
     return targets
 
 
-def _make_factories(variables, ikeys, okeys, cost, *, budget, q, n_seed, n_pool):
+def _make_factories(variables, ikeys, okeys, cost, *, budget, q, n_seed, n_pool, policy_knobs):
     def rig(*, machine, in_spec, spec, seed):
         return ActiveLearningLoop(
             machine=machine,
@@ -206,9 +243,15 @@ def _make_factories(variables, ikeys, okeys, cost, *, budget, q, n_seed, n_pool)
             q=q,
             n_seed=n_seed,
             n_pool=n_pool,
-            kappa=1.0,
-            z_epi=1.0,
-            delta_frac=0.01,
+            # F3 (audit 2026-07-21/22): the RIG arm's §8 conservatism is the
+            # `--policy`-selected knob set (see FEASIBILITY_POLICIES) — ablation
+            # 1.0/1.0/0.01 (the published M2 config) or binding 2.0/2.0/0.02 — applied
+            # identically here and in `_inverse_readout`. The `bo` factory below never
+            # receives these: the policy is RIG's feasibility conservatism, not BO's
+            # search (WarmStartedBO does not accept kappa/z_epi/delta_frac at all).
+            kappa=policy_knobs["kappa"],
+            z_epi=policy_knobs["z_epi"],
+            delta_frac=policy_knobs["delta_frac"],
             seed=seed,
             **cost,
         )
@@ -263,7 +306,9 @@ def _both_hit_delta_rmst(report, horizon):
     }
 
 
-def _inverse_readout(make_machine, target, variables, ikeys, okeys, *, n_design, seed):
+def _inverse_readout(
+    make_machine, target, variables, ikeys, okeys, *, n_design, seed, policy_knobs
+):
     """RIG returns a DIVERSE, ON-SUPPORT pre-image (§8.7); BO returns one point.
     Fit a GP on a shared design, run the inverse solver, and report (a) Vendi
     diversity of the candidate set vs BO's singleton and (b) the winning
@@ -285,8 +330,18 @@ def _inverse_readout(make_machine, target, variables, ikeys, okeys, *, n_design,
     X = np.array([[r[k] for k in flat] for r in recipes], dtype=float)
     Y = np.array([np.asarray(machine(r), dtype=float) for r in recipes], dtype=float)
     gp = GPForwardModel(n_restarts=2, seed=seed).fit(X, Y)
+    # F3: the solver runs under the `--policy`-selected knobs (see FEASIBILITY_POLICIES),
+    # IDENTICAL to the active-loop factory, so the readout reflects the same conservatism
+    # the loop's exploit pick was solved under.
     solver = PessimisticInverseSolver(
-        gp, variables, okeys, X_train=X, kappa=1.0, z_epi=1.0, delta_frac=0.01, seed=seed
+        gp,
+        variables,
+        okeys,
+        X_train=X,
+        kappa=policy_knobs["kappa"],
+        z_epi=policy_knobs["z_epi"],
+        delta_frac=policy_knobs["delta_frac"],
+        seed=seed,
     )
     res = solver.solve({**target.spec, "max_candidates": 6})
     if isinstance(res, list) and len(res) >= 1:
@@ -350,13 +405,23 @@ def _run_curve(
     n_seed,
     n_pool,
     bootstrap,
+    policy_knobs,
 ):
     """Tol-sensitivity curve (TS1): is RIG's advantage knob-dependent? Sweep the
     metrology multiplier tol_k at reduced seeds/targets and report the pooled
-    ΔRMST + per-method hit-rate at each spec tightness."""
+    ΔRMST + per-method hit-rate at each spec tightness. Runs the RIG arm under the
+    same `--policy` knob set as the headline sweep (`policy_knobs`)."""
     horizon = _horizon(budget, n_seed, q, cost)
     methods = _make_factories(
-        variables, ikeys, okeys, cost, budget=budget, q=q, n_seed=n_seed, n_pool=n_pool
+        variables,
+        ikeys,
+        okeys,
+        cost,
+        budget=budget,
+        q=q,
+        n_seed=n_seed,
+        n_pool=n_pool,
+        policy_knobs=policy_knobs,
     )
     curve = []
     for k in curve_ks:
@@ -433,9 +498,39 @@ def main(argv=None) -> int:
     ap.add_argument("--curve-seeds", type=int, default=16)
     ap.add_argument("--curve-targets", type=int, default=2)
     ap.add_argument("--no-curve", action="store_true", help="skip the tol-sensitivity curve")
-    ap.add_argument("--out", type=str, default="docs/m2-result.json")
+    ap.add_argument(
+        "--policy",
+        choices=("ablation", "binding"),
+        default="ablation",
+        help=(
+            "RIG feasibility policy (kappa/z_epi/delta_frac), applied to the RIG arm's "
+            "loop + inverse readout but NEVER the BO comparator: 'ablation' (default) = "
+            "1.0/1.0/0.01 (published M2 config); 'binding' = the §8 2.0/2.0/0.02 default"
+        ),
+    )
+    ap.add_argument(
+        "--out",
+        type=str,
+        default=None,
+        help=(
+            "output JSON path; default docs/m2-result.json for --policy ablation, "
+            "docs/m2-result-binding.json for --policy binding"
+        ),
+    )
     ap.add_argument("--force-synthetic", action="store_true")
     args = ap.parse_args(argv)
+
+    # F3 (audit 2026-07-22): resolve the RIG feasibility policy once, then thread the
+    # SAME knob set through both RIG pin sites (loop factory + inverse readout). The
+    # default --out follows the policy so a binding run never clobbers the published
+    # ablation artifact. --out is resolved before vars(args) is serialized, so the
+    # config block records the concrete path.
+    policy_knobs = FEASIBILITY_POLICIES[args.policy]
+    feasibility_policy = FEASIBILITY_POLICY_LABELS[args.policy]
+    if args.out is None:
+        args.out = (
+            "docs/m2-result-binding.json" if args.policy == "binding" else "docs/m2-result.json"
+        )
 
     from rig_adapters.mbe import simlink
 
@@ -463,6 +558,7 @@ def main(argv=None) -> int:
         q=args.q,
         n_seed=args.n_seed,
         n_pool=args.n_pool,
+        policy_knobs=policy_knobs,
     )
 
     n_campaigns = 2 * args.targets * args.seeds
@@ -473,6 +569,7 @@ def main(argv=None) -> int:
         flush=True,
     )
     print(f"[m2] pathology={meta['pathology']}  sigma={meta['sigma']}", flush=True)
+    print(f"[m2] feasibility_policy [{args.policy}]: {feasibility_policy}", flush=True)
     if not use_sim:
         print(
             "[m2] WARNING: sim unavailable -> SYNTHETIC fallback (not MBE physics). "
@@ -529,6 +626,7 @@ def main(argv=None) -> int:
             n_seed=args.n_seed,
             n_pool=args.n_pool,
             bootstrap=args.bootstrap,
+            policy_knobs=policy_knobs,
         )
 
     try:
@@ -540,6 +638,7 @@ def main(argv=None) -> int:
             okeys,
             n_design=max(24, 4 * len(variables) + 8),
             seed=0,
+            policy_knobs=policy_knobs,
         )
     except Exception as e:  # noqa: BLE001 — a readout must never sink the run
         readout = {"error": repr(e)}
@@ -560,10 +659,13 @@ def main(argv=None) -> int:
     out["inverse_readout"] = readout
     out["scoped_verdict"] = _scoped_verdict(report, meta, args.tol_k)
     out["config"] = vars(args)
+    out["policy"] = args.policy  # F3: "ablation" | "binding"
+    out["feasibility_policy"] = feasibility_policy  # F3: the --policy-selected label
 
     print("\n================= M2 RESULT (honest config) =================")
     print(f"machine: {machine_name}   (used_sim={use_sim})  pathology={meta['pathology']}")
     print(f"target: coupled {okeys}   spec: tol={args.tol_k:g}*sigma (metrology-anchored)")
+    print(f"feasibility_policy [{args.policy}]: {feasibility_policy}")
     print(
         f"pooled RMST  rig={report.pooled_rmst['rig']:.4g}  bo={report.pooled_rmst['bo']:.4g}  "
         f"(smaller = cheaper)"

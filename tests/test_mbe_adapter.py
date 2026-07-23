@@ -168,9 +168,15 @@ def test_encode_accepts_quantities(adapter):
 # -- physics plug-in / D7 ---------------------------------------------------------
 
 
-def test_physics_plugin_present_verifier_absent(adapter):
+def test_physics_plugin_and_independent_verifier_present(adapter):
+    from rig_adapters.mbe.verifier import GeometricDepositionVerifier
+
     assert adapter.physics_plugin is not None
-    assert adapter.independent_verifier is None  # honest D7 state (E2)
+    # D7/R10 resolved 2026-07-22: the different-physics ROM verifier now ships and
+    # is a DIFFERENT object from the fast-path physics plug-in (identity check in
+    # validate_adapter). Full verifier behaviour is covered by test_mbe_verifier.py.
+    assert isinstance(adapter.independent_verifier, GeometricDepositionVerifier)
+    assert adapter.independent_verifier is not adapter.physics_plugin
 
 
 def test_physics_plugin_matches_direct_evaluation(adapter):

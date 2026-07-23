@@ -13,6 +13,14 @@ Machine-agnostic: driven by a ``machine(recipe) -> outcome`` callable and a
 ground-truth ``in_spec(outcome) -> bool`` (τ floored at Gage-R&R), so it runs on
 WP-B's in-silico pathology machine or any process. The amortized-posterior
 re-distillation (offline, D6) and the Phase-II qLogNEHVI hand-off are WP-E.
+
+Opt-in qualification hook (audit F2 remainder, 2026-07-22): construct with
+``qualification=<a rig.active.campaign.ConfirmationCampaign>`` to require
+independent confirmation-batch certification before a ground-truth in-spec
+observation is allowed to stand as a "target met" stop -- see
+:class:`ActiveLearningLoop`'s own docstring for the full hook semantics.
+Default ``qualification=None`` is byte-identical to every prior release of
+this module (test_loop_qualification_none_is_byte_identical_to_no_param).
 """
 
 from __future__ import annotations
@@ -27,11 +35,13 @@ from scipy.stats import qmc
 
 from rig.active.acquisition import anneal, cost_cooled_acquisition
 from rig.active.batch import select_batch
+from rig.active.campaign import CampaignResult, ConfirmationCampaign
 from rig.forward.gp import GPForwardModel
 from rig.interfaces import (
     CompositionalVariable,
     ContinuousVariable,
     Infeasible,
+    RecipeCandidate,
 )
 from rig.inverse import PessimisticInverseSolver
 from rig.transforms import RecipeTransform
@@ -39,7 +49,17 @@ from rig.transforms import RecipeTransform
 
 @dataclass
 class Trajectory:
-    """One campaign's cost-to-target trajectory (feeds the WP-G survival stats)."""
+    """One campaign's cost-to-target trajectory (feeds the WP-G survival stats).
+
+    ``qualification_outcome`` / ``qualification_rejections`` are ADDITIVE
+    fields (default ``None`` / ``[]``): populated only when the owning
+    ``ActiveLearningLoop`` was constructed with ``qualification=<a
+    ConfirmationCampaign>`` (audit F2 remainder, 2026-07-22 -- see that
+    constructor argument's own docstring for the full hook semantics). Every
+    existing consumer that does not know about these two fields keeps
+    working unmodified, including the byte-identical ``qualification=None``
+    default path, which never touches either one.
+    """
 
     hit: bool
     cost_to_target: float  # inf if the spec was not hit within budget
@@ -47,12 +67,95 @@ class Trajectory:
     cumulative_cost: list[float] = field(default_factory=list)  # after each batch
     per_batch_hit: list[bool] = field(default_factory=list)
     stop_reason: str = ""
+    # -- F2 remainder: opt-in qualification hook, both additive/optional --
+    qualification_outcome: CampaignResult | None = None  # CampaignResult that certified `hit`
+    qualification_rejections: list[CampaignResult] = field(
+        default_factory=list
+    )  # rejected attempts
 
 
 class ActiveLearningLoop:
     """Closed-loop cost-to-target campaign for ONE spec (§9). Drives ``machine``
     (the real tool ``M``), never differentiates it: gradients flow only through
-    the refit surrogate (the standard offline-MBO posture, §3.2)."""
+    the refit surrogate (the standard offline-MBO posture, §3.2).
+
+    Opt-in qualification hook (audit F2 remainder, 2026-07-22)
+    ------------------------------------------------------------
+    ``rig.active.campaign.ConfirmationCampaign`` wraps
+    ``rig.qualification.ConfirmationBatchGate`` into a provenance-logged
+    confirmation-batch orchestrator, but nothing called it automatically:
+    this loop declared a hit the instant the real machine's outcome landed
+    in-spec, with NO independent confirmation -- "a successful solve is a
+    recommendation, not a validated recipe" (root ``audit.md``, F2). The
+    ``qualification`` constructor argument closes that gap, OPT-IN:
+
+    ``qualification=None`` (the default)
+        Byte-identical to every prior release of this class: a ground-truth
+        in-spec observation (seed DoE or in-loop batch) is declared a hit
+        immediately, exactly as before -- proven by
+        ``test_loop_qualification_none_is_byte_identical_to_no_param``.
+    ``qualification=<a ConfirmationCampaign>``
+        At EVERY point this loop would otherwise declare ``hit=True`` and
+        return with a "target met" ``stop_reason`` -- the seed-DoE early
+        return AND the in-loop per-batch hit, identically -- every recipe
+        that measured in-spec IN THAT LOT is first wrapped as a
+        ``RecipeCandidate`` (see ``_hitting_candidates``; only ``.recipe``
+        is ever read downstream) and run through
+        ``qualification.run(candidates)`` before the hit is allowed to
+        stand:
+
+        * **certified** (>=1 candidate passes): the hit stands exactly as
+          in the ``None`` path (``hit=True``, ``cost_to_target`` = this
+          lot's cumulative SEARCH cost -- unaffected by qualification cost,
+          see below), plus the ``CampaignResult`` is attached to the new
+          ``Trajectory.qualification_outcome`` field and ``stop_reason``
+          gets a "(qualified)" suffix.
+        * **rejected** (every hitting candidate fails confirmation): the
+          hit is NOT declared -- ``hit`` stays False and the loop does NOT
+          stop. The ``CampaignResult`` is appended to
+          ``Trajectory.qualification_rejections`` (there can be more than
+          one over a campaign's lifetime). The in-spec observation still
+          counts as DATA: it was already queried and already sits in
+          ``X``/``Y`` before qualification ever runs, the surrogate refits
+          on it, and the search continues exactly as if ``_any_in_spec``
+          had returned False for this lot -- only the STOP decision is
+          gated, never the data.
+        * **budget-exhausted**: see "Budget honesty" below -- a distinct
+          terminal ``stop_reason``, no gate fired.
+
+    Budget honesty
+        A confirmation run is a REAL machine query exactly like a seed-DoE
+        or exploit/explore query, so it is charged against the SAME
+        ``budget``/``n_queries`` accounting, never a separate pool. Before
+        firing, the EXACT cost is computed as ``n_hitting_candidates *
+        n_runs`` (every ``ConfirmationBatchGate.certify`` call fires
+        precisely ``n_runs`` verifier calls with no early exit, so this is
+        exact, not an estimate -- ``_expected_qualification_calls``). If
+        ``traj.n_queries + that_cost`` would exceed ``budget``, NOTHING is
+        fired (a confirmation run cannot be un-fired) and the loop stops
+        immediately with the distinct ``stop_reason`` "unqualified hit,
+        budget exhausted" (``hit`` stays False). Otherwise the campaign
+        runs and ``traj.n_queries`` is charged for exactly
+        ``CampaignResult.n_machine_calls`` afterward -- in BOTH the
+        certified and the rejected case (a rejected confirmation batch
+        still spent real machine time). ``cost_to_target`` (the $ metric,
+        via ``cost_recipe``/``c_batch``) is deliberately NOT inflated by
+        qualification cost: it keeps measuring the SEARCH's cost to find
+        the candidate, a distinct question from the cost of independently
+        validating it -- the validation cost is visible instead via
+        ``n_queries`` and ``qualification_outcome.n_machine_calls``.
+
+    Caveat (pre-existing, not introduced or repaired by this hook):
+    ``ConfirmationCampaign`` derives ``RunRecord.run_id`` from ``(seed,
+    candidate_index, run_index)``, both of which restart at 0 on every
+    ``.run()`` call (see that module's docstring). If the SAME
+    ``qualification`` instance is fired more than once over one loop's
+    lifetime (e.g. a rejected seed-DoE hit followed by a later in-loop
+    hit), the second ``CampaignResult``'s ``run_id``\\ s can collide with
+    the first's whenever the same recipe recurs at the same candidate
+    index. This is a property of ``ConfirmationCampaign``'s single-call-
+    oriented determinism contract, not something this hook changes.
+    """
 
     def __init__(
         self,
@@ -71,9 +174,21 @@ class ActiveLearningLoop:
         n_pool: int = 256,
         surrogate_factory: Callable[[], Any] | None = None,
         revalidation_model: Any | None = None,
-        kappa: float = 1.0,
-        z_epi: float = 1.0,
-        delta_frac: float = 0.01,
+        # Opt-in F2 remainder (audit 2026-07-22): when set, every target-met
+        # stop (seed DoE AND in-loop) first requires independent confirmation
+        # via this campaign before the hit is allowed to stand. Default None
+        # is byte-identical to every prior release -- see the class docstring.
+        qualification: ConfirmationCampaign | None = None,
+        # §8 binding feasibility policy (F3, audit 2026-07-21): kappa=z_epi=2.0,
+        # delta_frac=0.02 — IDENTICAL to PessimisticInverseSolver's defaults, so a loop
+        # built with defaults searches under the same conservatism as a direct solve.
+        # These previously defaulted to the more permissive 1.0/1.0/0.01 ablation, which
+        # silently flipped FEASIBLE/INFEASIBLE relative to the binding policy. The two
+        # default sets are pinned equal by test_active_loop's
+        # test_loop_feasibility_defaults_match_solver_binding_policy so they cannot drift.
+        kappa: float = 2.0,
+        z_epi: float = 2.0,
+        delta_frac: float = 0.02,
         stall_eps: float = 1e-4,
         u_bound: float = 5.0,
         seed: int = 0,
@@ -96,6 +211,7 @@ class ActiveLearningLoop:
         self.u_bound = u_bound
         self.seed = int(seed)
         self.revalidation_model = revalidation_model
+        self.qualification = qualification
         self._rt = RecipeTransform(self.variables)
         self._flat_keys = self._build_flat_keys()
         d = self._rt.dim
@@ -156,6 +272,124 @@ class ActiveLearningLoop:
         """True iff any queried outcome row is in-spec on the real machine."""
         return any(bool(self.in_spec(Y[i])) for i in range(Y.shape[0]))
 
+    # -- opt-in qualification hook (audit F2 remainder, 2026-07-22) -------------
+    # Only ever called when `self.qualification is not None` AND a lot's
+    # ground-truth `_any_in_spec` already came back True -- see the class
+    # docstring for the full hook semantics (budget arithmetic, stop reasons,
+    # what stays byte-identical).
+
+    def _hitting_candidates(
+        self, recipes: Sequence[Mapping[str, float]], Y: np.ndarray
+    ) -> list[RecipeCandidate]:
+        """Wrap every in-spec recipe from one lot as a RecipeCandidate.
+
+        Only ``.recipe`` is ever read downstream by ConfirmationCampaign /
+        ConfirmationBatchGate.certify -- certification never consults
+        confidence/support_score/feasibility_flag (D7 non-circularity,
+        rig.qualification's own module docstring) -- so the other
+        RecipeCandidate fields below are uninformative placeholders, not a
+        model opinion: this loop has no surrogate to report one from at the
+        seed-DoE stage, and even in-loop it was the machine's MEASUREMENT,
+        not a prediction, that triggered this call.
+        """
+        return [
+            RecipeCandidate(
+                recipe=dict(recipes[i]),
+                confidence=1.0,
+                predicted_outcome_interval=None,
+                feasibility_flag=True,
+                support_score=0.0,
+            )
+            for i in range(Y.shape[0])
+            if bool(self.in_spec(Y[i]))
+        ]
+
+    def _expected_qualification_calls(self, n_candidates: int) -> int | None:
+        """Predict exactly how many real machine calls firing
+        ``self.qualification`` on ``n_candidates`` recipes will cost --
+        checked BEFORE firing, because a confirmation run cannot be un-fired.
+
+        ``ConfirmationCampaign`` exposes no public "cost of running this"
+        accessor, so this reads its gate configuration directly: exactly one
+        of a pre-built ``gate`` or ``gate_params`` is always set
+        (``ConfirmationCampaign.__init__`` enforces it), and
+        ``ConfirmationBatchGate.certify`` fires EXACTLY ``n_runs`` verifier
+        calls per candidate with no early exit -- so
+        ``n_candidates * n_runs`` is exact, never an estimate, whenever
+        ``n_runs`` is resolvable this way. Returns None on the well-formed-
+        but-unresolvable edge case where ``gate_params`` omits ``n_runs``
+        (the caller treats None as fail-closed, i.e. as if it WOULD
+        overspend -- this loop has no business guessing a confirmation-batch
+        size).
+        """
+        if n_candidates == 0:
+            return 0
+        campaign = self.qualification
+        assert campaign is not None
+        gate = getattr(campaign, "_static_gate", None)
+        if gate is not None:
+            n_runs = getattr(gate, "_n_runs", None)
+        else:
+            params = getattr(campaign, "_gate_params", None) or {}
+            n_runs = params.get("n_runs")
+        if n_runs is None:
+            return None
+        return int(n_candidates) * int(n_runs)
+
+    def _qualify_hit(
+        self,
+        traj: Trajectory,
+        cumulative: float,
+        recipes: Sequence[Mapping[str, float]],
+        Y: np.ndarray,
+        hit_stop_reason: str,
+    ) -> bool:
+        """Attempt confirmation of one lot's in-spec recipe(s) (F2 remainder).
+
+        Mutates ``traj`` and returns True iff the loop should STOP now:
+
+        * budget cannot afford the confirmation batch -> fires NOTHING,
+          ``stop_reason`` = "unqualified hit, budget exhausted", ``hit``
+          stays False. Returns True (STOP).
+        * >=1 hitting recipe is certified -> ``hit=True``,
+          ``cost_to_target=cumulative``, ``stop_reason=hit_stop_reason``,
+          ``qualification_outcome`` carries the CampaignResult. Returns
+          True (STOP).
+        * every hitting recipe is rejected -> the CampaignResult is appended
+          to ``qualification_rejections``, ``hit`` stays False. Returns
+          False (CONTINUE): the caller must fall through to the ordinary
+          non-hit path exactly as if ``_any_in_spec`` had returned False for
+          this lot -- the in-spec observation still counts as DATA (X/Y
+          already include it), only the STOP decision is gated.
+
+        In every branch ``traj.n_queries`` is charged for exactly the
+        confirmation runs actually fired (zero in the budget-exhausted
+        branch, since none are fired there) -- budget honesty (the loop's
+        ``budget`` is a count of real machine queries, and a confirmation
+        run is one).
+        """
+        assert self.qualification is not None
+        candidates = self._hitting_candidates(recipes, Y)
+        expected = self._expected_qualification_calls(len(candidates))
+        if expected is None or traj.n_queries + expected > self.budget:
+            traj.stop_reason = "unqualified hit, budget exhausted"
+            return True
+        outcome = self.qualification.run(candidates)
+        # `candidates` is a non-empty list[RecipeCandidate], never Infeasible,
+        # so ConfirmationCampaign.run always takes the CampaignResult branch
+        # here (NothingToQualify is only ever returned for an Infeasible
+        # input -- see that class's own run() docstring).
+        assert isinstance(outcome, CampaignResult)
+        traj.n_queries += outcome.n_machine_calls
+        if outcome.n_certified > 0:
+            traj.hit = True
+            traj.cost_to_target = cumulative
+            traj.qualification_outcome = outcome
+            traj.stop_reason = hit_stop_reason
+            return True
+        traj.qualification_rejections.append(outcome)
+        return False
+
     # -- the loop ---------------------------------------------------------------
 
     def run(self) -> Trajectory:
@@ -172,10 +406,17 @@ class ActiveLearningLoop:
         seed_hit = self._any_in_spec(Y)
         traj.per_batch_hit.append(seed_hit)
         if seed_hit:
-            traj.hit = True
-            traj.cost_to_target = cumulative
-            traj.stop_reason = "target met in seed DoE"
-            return traj
+            if self.qualification is None:
+                traj.hit = True
+                traj.cost_to_target = cumulative
+                traj.stop_reason = "target met in seed DoE"
+                return traj
+            if self._qualify_hit(
+                traj, cumulative, seed_recipes, Y, "target met in seed DoE (qualified)"
+            ):
+                return traj
+            # rejected: fall through, continuing exactly as if seed_hit had
+            # been False -- the seed observations still count as data below.
 
         surrogate = self.surrogate_factory().fit(X, Y)
         low_acq_streak = 0
@@ -269,10 +510,21 @@ class ActiveLearningLoop:
             traj.cumulative_cost.append(cumulative)
             traj.per_batch_hit.append(batch_hit)
             if batch_hit:
-                traj.hit = True
-                traj.cost_to_target = cumulative
-                traj.stop_reason = "target met (proposal in-spec on machine)"
-                return traj
+                if self.qualification is None:
+                    traj.hit = True
+                    traj.cost_to_target = cumulative
+                    traj.stop_reason = "target met (proposal in-spec on machine)"
+                    return traj
+                if self._qualify_hit(
+                    traj,
+                    cumulative,
+                    batch,
+                    Yb,
+                    "target met (proposal in-spec on machine, qualified)",
+                ):
+                    return traj
+                # rejected: fall through to the refit + stall-check below,
+                # continuing exactly as if batch_hit had been False.
 
             # refit on all data (§9.7 warm-start refit cadence).
             X = np.vstack([X, Xb])

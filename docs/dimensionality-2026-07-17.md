@@ -109,6 +109,28 @@ defence that would catch exactly this — the §13.2 `C(x') ⊆ Z*` re-validatio
 (`revalidation_model`) — **defaults to `None`**, and `active/loop.py` never sets it. The default
 path a user gets has no conformal check on feasibility whatsoever.
 
+> **UPDATE 2026-07-22 (F1/F7, audit 2026-07-21) — the two claims in the paragraph above are
+> now stale; corrected here, original left in place as the record (never rewrite history).**
+> (a) `active/loop.py` DOES set `revalidation_model`: since the WP-E slice-2 work it
+> auto-sets it to the full surrogate whenever a fast/full ensemble split exists
+> (`inner is not surrogate`), so "`active/loop.py` never sets it" is no longer true.
+> (b) BUT that auto-revalidation was conformally INERT on every default path anyway,
+> because nothing in the loop conformal-**wraps** the surrogate — its §13.2 component
+> re-checked only margins/support (`_conformal_in_box` returns `True` when
+> `conformal_set is None`). So the substance of the finding — the default path had no
+> conformal check on feasibility — held, for a subtler reason than the sentence gives.
+> (c) As of 2026-07-22 `PessimisticInverseSolver.solve` applies the §13.2 `C(x) ⊆ Z*`
+> containment **by default** whenever its own `model` IS conformal-wrapped (no
+> `revalidation_model` needed), using the same anti-false-abstention pool sweep the
+> reval path uses; and every emitted candidate now carries an explicit
+> `calibration_status` ∈ {`model-feasible`, `conformal-checked`, `revalidated`}, so a
+> raw-σ recommendation is no longer indistinguishable from a conformally-accepted one.
+> `model-feasible` (no conformal model present — e.g. a **bare GP**, which is what every
+> d=20 row above used) is still ONLY the raw-σ κ margin and remains explicitly NOT a
+> calibrated guarantee — so the false-success verdicts above are unchanged. Owed item 2
+> below (does a conformal-wrapped model reject the bad candidate?) is now mechanized as
+> the default path and covered by `tests/test_conformal_feasibility.py`.
+
 **Owed, in priority order:**
 1. Quantify the false-success RATE vs d across many seeds AND across GP-fit restarts
    (`rig.eval` already has a `false_success` metric). One cell is not a rate.

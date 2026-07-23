@@ -1,0 +1,2101 @@
+{
+  "meta": {
+    "seed": 0,
+    "alpha": 0.1,
+    "nominal_coverage": 0.9,
+    "ci": "exact (Clopper-Pearson) binomial, level 0.95",
+    "smoke": true,
+    "n_restarts": 1,
+    "max_iter": 60,
+    "model": "MultiToolGPForwardModel (ICM multi-task GP, implementation-plan 10.4), tool_id=material",
+    "subspaces": {
+      "prr": [
+        "al_120w_short_pw",
+        "al_200w_high_pw",
+        "ti_120w_short_pw",
+        "ti_200w_high_pw"
+      ],
+      "duty": [
+        "al_250w_low_duty",
+        "ti_250w_low_duty"
+      ]
+    },
+    "baseline": "m1_empa.json",
+    "epi_margin": 0.02,
+    "supp_margin": 0.02,
+    "fewshot_K": [
+      10,
+      20
+    ],
+    "caveats": [
+      "REAL measured data (real_tool) but NOT the signed M1 program gate; not the MBE target process",
+      "pooling is WITHIN a parameterization subspace (PRR / DUTY have incompatible knob names)",
+      "BO-driven (BayBE) sampling clusters rows near optima; split-conformal exchangeability is approximate",
+      "pooled coverage CI treats 2*n_test trials as independent although outputs share test rows (optimistic)",
+      "ti_120w_short_pw temporal order is unverified file order; 5 rows skip-rejected",
+      "Ipk (A) is measured, never set"
+    ]
+  },
+  "block_a_awareness": {
+    "protocol": "pooled PRR model (material as task) on the 4 PRR campaigns' random-fit slices; for each ordered (src=A, tgt=B) pair, at B's held-out random-test recipes compare epistemic + support under material(B) [in-dist] vs material(A) [cross] vs None [unknown fallback], plus the predicted-mean shift",
+    "criterion": "directional PASS = cross-material epistemic > in-dist by >2% on both outputs OR support drops by >0.02; only meaningful for cross-material pairs (same-material pairs have material(A)==material(B))",
+    "material_as_task": {
+      "fitted_task_correlation_al_ti": {
+        "dep_rate_A_per_s": 0.9984962526151084,
+        "Ipk (A)": 0.9986482148267222
+      },
+      "pairs": [
+        {
+          "src": "al_120w_short_pw",
+          "tgt": "al_200w_high_pw",
+          "cross_material": false,
+          "same_tier": false,
+          "blind_pair": false,
+          "tool_in": "al",
+          "tool_cross": "al",
+          "id_mean_epi": [
+            0.03973976690592844,
+            0.006157710078193462
+          ],
+          "cross_mean_epi": [
+            0.03973976690592844,
+            0.006157710078193462
+          ],
+          "epi_ratio_cross_over_in": [
+            1.0,
+            1.0
+          ],
+          "unknown_mean_epi": [
+            1.1887267307257254,
+            0.2110512017845047
+          ],
+          "unknown_dominates_both": true,
+          "id_mean_support": -2.199125880504169,
+          "cross_mean_support": -2.199125880504169,
+          "support_delta_cross_minus_in": 0.0,
+          "mean_shift_abs": [
+            0.0,
+            0.0
+          ],
+          "mean_shift_in_id_sigma": [
+            0.0,
+            0.0
+          ],
+          "epi_inflates_both": false,
+          "support_drops": false,
+          "directional_pass": false
+        },
+        {
+          "src": "al_120w_short_pw",
+          "tgt": "ti_120w_short_pw",
+          "cross_material": true,
+          "same_tier": true,
+          "blind_pair": true,
+          "tool_in": "ti",
+          "tool_cross": "al",
+          "id_mean_epi": [
+            0.022884053483818508,
+            0.007454959286564386
+          ],
+          "cross_mean_epi": [
+            0.05079666149826112,
+            0.008870672336136996
+          ],
+          "epi_ratio_cross_over_in": [
+            2.219740551392254,
+            1.1899021839225954
+          ],
+          "unknown_mean_epi": [
+            1.026000265776045,
+            0.21170325811793314
+          ],
+          "unknown_dominates_both": true,
+          "id_mean_support": -2.3721986161881476,
+          "cross_mean_support": -2.3144369643685128,
+          "support_delta_cross_minus_in": 0.057761651819634885,
+          "mean_shift_abs": [
+            0.781045408983403,
+            0.022469039749463765
+          ],
+          "mean_shift_in_id_sigma": [
+            34.13055338013811,
+            3.013972160781392
+          ],
+          "epi_inflates_both": true,
+          "support_drops": false,
+          "directional_pass": true
+        },
+        {
+          "src": "al_120w_short_pw",
+          "tgt": "ti_200w_high_pw",
+          "cross_material": true,
+          "same_tier": false,
+          "blind_pair": false,
+          "tool_in": "ti",
+          "tool_cross": "al",
+          "id_mean_epi": [
+            0.020111629307496066,
+            0.005464591200314493
+          ],
+          "cross_mean_epi": [
+            0.04397373808620897,
+            0.0066847461240914195
+          ],
+          "epi_ratio_cross_over_in": [
+            2.1864831244586904,
+            1.22328384302685
+          ],
+          "unknown_mean_epi": [
+            1.1896782130758483,
+            0.21106661115255426
+          ],
+          "unknown_dominates_both": true,
+          "id_mean_support": -2.1284180459372113,
+          "cross_mean_support": -2.1793046351639123,
+          "support_delta_cross_minus_in": -0.05088658922670097,
+          "mean_shift_abs": [
+            1.6655125123237702,
+            0.006016724435281728
+          ],
+          "mean_shift_in_id_sigma": [
+            82.81340546103817,
+            1.101038342069478
+          ],
+          "epi_inflates_both": true,
+          "support_drops": true,
+          "directional_pass": true
+        },
+        {
+          "src": "al_200w_high_pw",
+          "tgt": "al_120w_short_pw",
+          "cross_material": false,
+          "same_tier": false,
+          "blind_pair": false,
+          "tool_in": "al",
+          "tool_cross": "al",
+          "id_mean_epi": [
+            0.052515856239100295,
+            0.009263682964761839
+          ],
+          "cross_mean_epi": [
+            0.052515856239100295,
+            0.009263682964761839
+          ],
+          "epi_ratio_cross_over_in": [
+            1.0,
+            1.0
+          ],
+          "unknown_mean_epi": [
+            1.0274623428466025,
+            0.21189661269199167
+          ],
+          "unknown_dominates_both": true,
+          "id_mean_support": -2.31248410022642,
+          "cross_mean_support": -2.31248410022642,
+          "support_delta_cross_minus_in": 0.0,
+          "mean_shift_abs": [
+            0.0,
+            0.0
+          ],
+          "mean_shift_in_id_sigma": [
+            0.0,
+            0.0
+          ],
+          "epi_inflates_both": false,
+          "support_drops": false,
+          "directional_pass": false
+        },
+        {
+          "src": "al_200w_high_pw",
+          "tgt": "ti_120w_short_pw",
+          "cross_material": true,
+          "same_tier": false,
+          "blind_pair": false,
+          "tool_in": "ti",
+          "tool_cross": "al",
+          "id_mean_epi": [
+            0.022884053483818508,
+            0.007454959286564386
+          ],
+          "cross_mean_epi": [
+            0.05079666149826112,
+            0.008870672336136996
+          ],
+          "epi_ratio_cross_over_in": [
+            2.219740551392254,
+            1.1899021839225954
+          ],
+          "unknown_mean_epi": [
+            1.026000265776045,
+            0.21170325811793314
+          ],
+          "unknown_dominates_both": true,
+          "id_mean_support": -2.3721986161881476,
+          "cross_mean_support": -2.3144369643685128,
+          "support_delta_cross_minus_in": 0.057761651819634885,
+          "mean_shift_abs": [
+            0.781045408983403,
+            0.022469039749463765
+          ],
+          "mean_shift_in_id_sigma": [
+            34.13055338013811,
+            3.013972160781392
+          ],
+          "epi_inflates_both": true,
+          "support_drops": false,
+          "directional_pass": true
+        },
+        {
+          "src": "al_200w_high_pw",
+          "tgt": "ti_200w_high_pw",
+          "cross_material": true,
+          "same_tier": true,
+          "blind_pair": true,
+          "tool_in": "ti",
+          "tool_cross": "al",
+          "id_mean_epi": [
+            0.020111629307496066,
+            0.005464591200314493
+          ],
+          "cross_mean_epi": [
+            0.04397373808620897,
+            0.0066847461240914195
+          ],
+          "epi_ratio_cross_over_in": [
+            2.1864831244586904,
+            1.22328384302685
+          ],
+          "unknown_mean_epi": [
+            1.1896782130758483,
+            0.21106661115255426
+          ],
+          "unknown_dominates_both": true,
+          "id_mean_support": -2.1284180459372113,
+          "cross_mean_support": -2.1793046351639123,
+          "support_delta_cross_minus_in": -0.05088658922670097,
+          "mean_shift_abs": [
+            1.6655125123237702,
+            0.006016724435281728
+          ],
+          "mean_shift_in_id_sigma": [
+            82.81340546103817,
+            1.101038342069478
+          ],
+          "epi_inflates_both": true,
+          "support_drops": true,
+          "directional_pass": true
+        },
+        {
+          "src": "ti_120w_short_pw",
+          "tgt": "al_120w_short_pw",
+          "cross_material": true,
+          "same_tier": true,
+          "blind_pair": true,
+          "tool_in": "al",
+          "tool_cross": "ti",
+          "id_mean_epi": [
+            0.052515856239100295,
+            0.009263682964761839
+          ],
+          "cross_mean_epi": [
+            0.02366702437612706,
+            0.007978225444398168
+          ],
+          "epi_ratio_cross_over_in": [
+            0.45066435303602553,
+            0.8612368832943196
+          ],
+          "unknown_mean_epi": [
+            1.0274623428466025,
+            0.21189661269199167
+          ],
+          "unknown_dominates_both": true,
+          "id_mean_support": -2.31248410022642,
+          "cross_mean_support": -2.371089014417041,
+          "support_delta_cross_minus_in": -0.05860491419062086,
+          "mean_shift_abs": [
+            0.7941372330264924,
+            0.022008765925041363
+          ],
+          "mean_shift_in_id_sigma": [
+            15.121856328702938,
+            2.375811651668197
+          ],
+          "epi_inflates_both": false,
+          "support_drops": true,
+          "directional_pass": true
+        },
+        {
+          "src": "ti_120w_short_pw",
+          "tgt": "al_200w_high_pw",
+          "cross_material": true,
+          "same_tier": false,
+          "blind_pair": false,
+          "tool_in": "al",
+          "tool_cross": "ti",
+          "id_mean_epi": [
+            0.03973976690592844,
+            0.006157710078193462
+          ],
+          "cross_mean_epi": [
+            0.01876769533262747,
+            0.005112539121180278
+          ],
+          "epi_ratio_cross_over_in": [
+            0.4722648569392509,
+            0.8302662931932295
+          ],
+          "unknown_mean_epi": [
+            1.1887267307257254,
+            0.2110512017845047
+          ],
+          "unknown_dominates_both": true,
+          "id_mean_support": -2.199125880504169,
+          "cross_mean_support": -2.13839727279847,
+          "support_delta_cross_minus_in": 0.06072860770569921,
+          "mean_shift_abs": [
+            1.661925347354022,
+            0.006201701707886587
+          ],
+          "mean_shift_in_id_sigma": [
+            41.82020874174009,
+            1.0071441540986013
+          ],
+          "epi_inflates_both": false,
+          "support_drops": false,
+          "directional_pass": false
+        },
+        {
+          "src": "ti_120w_short_pw",
+          "tgt": "ti_200w_high_pw",
+          "cross_material": false,
+          "same_tier": false,
+          "blind_pair": false,
+          "tool_in": "ti",
+          "tool_cross": "ti",
+          "id_mean_epi": [
+            0.020111629307496066,
+            0.005464591200314493
+          ],
+          "cross_mean_epi": [
+            0.020111629307496066,
+            0.005464591200314493
+          ],
+          "epi_ratio_cross_over_in": [
+            1.0,
+            1.0
+          ],
+          "unknown_mean_epi": [
+            1.1896782130758483,
+            0.21106661115255426
+          ],
+          "unknown_dominates_both": true,
+          "id_mean_support": -2.1284180459372113,
+          "cross_mean_support": -2.1284180459372113,
+          "support_delta_cross_minus_in": 0.0,
+          "mean_shift_abs": [
+            0.0,
+            0.0
+          ],
+          "mean_shift_in_id_sigma": [
+            0.0,
+            0.0
+          ],
+          "epi_inflates_both": false,
+          "support_drops": false,
+          "directional_pass": false
+        },
+        {
+          "src": "ti_200w_high_pw",
+          "tgt": "al_120w_short_pw",
+          "cross_material": true,
+          "same_tier": false,
+          "blind_pair": false,
+          "tool_in": "al",
+          "tool_cross": "ti",
+          "id_mean_epi": [
+            0.052515856239100295,
+            0.009263682964761839
+          ],
+          "cross_mean_epi": [
+            0.02366702437612706,
+            0.007978225444398168
+          ],
+          "epi_ratio_cross_over_in": [
+            0.45066435303602553,
+            0.8612368832943196
+          ],
+          "unknown_mean_epi": [
+            1.0274623428466025,
+            0.21189661269199167
+          ],
+          "unknown_dominates_both": true,
+          "id_mean_support": -2.31248410022642,
+          "cross_mean_support": -2.371089014417041,
+          "support_delta_cross_minus_in": -0.05860491419062086,
+          "mean_shift_abs": [
+            0.7941372330264924,
+            0.022008765925041363
+          ],
+          "mean_shift_in_id_sigma": [
+            15.121856328702938,
+            2.375811651668197
+          ],
+          "epi_inflates_both": false,
+          "support_drops": true,
+          "directional_pass": true
+        },
+        {
+          "src": "ti_200w_high_pw",
+          "tgt": "al_200w_high_pw",
+          "cross_material": true,
+          "same_tier": true,
+          "blind_pair": true,
+          "tool_in": "al",
+          "tool_cross": "ti",
+          "id_mean_epi": [
+            0.03973976690592844,
+            0.006157710078193462
+          ],
+          "cross_mean_epi": [
+            0.01876769533262747,
+            0.005112539121180278
+          ],
+          "epi_ratio_cross_over_in": [
+            0.4722648569392509,
+            0.8302662931932295
+          ],
+          "unknown_mean_epi": [
+            1.1887267307257254,
+            0.2110512017845047
+          ],
+          "unknown_dominates_both": true,
+          "id_mean_support": -2.199125880504169,
+          "cross_mean_support": -2.13839727279847,
+          "support_delta_cross_minus_in": 0.06072860770569921,
+          "mean_shift_abs": [
+            1.661925347354022,
+            0.006201701707886587
+          ],
+          "mean_shift_in_id_sigma": [
+            41.82020874174009,
+            1.0071441540986013
+          ],
+          "epi_inflates_both": false,
+          "support_drops": false,
+          "directional_pass": false
+        },
+        {
+          "src": "ti_200w_high_pw",
+          "tgt": "ti_120w_short_pw",
+          "cross_material": false,
+          "same_tier": false,
+          "blind_pair": false,
+          "tool_in": "ti",
+          "tool_cross": "ti",
+          "id_mean_epi": [
+            0.022884053483818508,
+            0.007454959286564386
+          ],
+          "cross_mean_epi": [
+            0.022884053483818508,
+            0.007454959286564386
+          ],
+          "epi_ratio_cross_over_in": [
+            1.0,
+            1.0
+          ],
+          "unknown_mean_epi": [
+            1.026000265776045,
+            0.21170325811793314
+          ],
+          "unknown_dominates_both": true,
+          "id_mean_support": -2.3721986161881476,
+          "cross_mean_support": -2.3721986161881476,
+          "support_delta_cross_minus_in": 0.0,
+          "mean_shift_abs": [
+            0.0,
+            0.0
+          ],
+          "mean_shift_in_id_sigma": [
+            0.0,
+            0.0
+          ],
+          "epi_inflates_both": false,
+          "support_drops": false,
+          "directional_pass": false
+        }
+      ],
+      "n_pairs": 12,
+      "n_directional_pass": 6,
+      "n_blind_pairs": 4,
+      "n_blind_directional_pass": 3,
+      "n_crossmaterial_pairs": 8,
+      "n_crossmaterial_directional_pass": 6,
+      "n_unknown_dominates": 12
+    },
+    "campaign_as_task_blind_pairs": [
+      {
+        "src": "al_120w_short_pw",
+        "tgt": "ti_120w_short_pw",
+        "cross_material": true,
+        "same_tier": true,
+        "blind_pair": true,
+        "tool_in": "ti_120w_short_pw",
+        "tool_cross": "al_120w_short_pw",
+        "id_mean_epi": [
+          0.01436567604941717,
+          0.029436186889373286
+        ],
+        "cross_mean_epi": [
+          0.02484480074160607,
+          0.033228264313857135
+        ],
+        "epi_ratio_cross_over_in": [
+          1.7294557287900172,
+          1.128823663157704
+        ],
+        "unknown_mean_epi": [
+          1.336671453721399,
+          0.5811607918803899
+        ],
+        "unknown_dominates_both": true,
+        "id_mean_support": -2.2214813004295295,
+        "cross_mean_support": -2.2147214992124007,
+        "support_delta_cross_minus_in": 0.006759801217128825,
+        "mean_shift_abs": [
+          0.7779328856795457,
+          0.023372094520443032
+        ],
+        "mean_shift_in_id_sigma": [
+          54.15219464809713,
+          0.7939919191395186
+        ],
+        "epi_inflates_both": true,
+        "support_drops": false,
+        "directional_pass": true
+      },
+      {
+        "src": "al_200w_high_pw",
+        "tgt": "ti_200w_high_pw",
+        "cross_material": true,
+        "same_tier": true,
+        "blind_pair": true,
+        "tool_in": "ti_200w_high_pw",
+        "tool_cross": "al_200w_high_pw",
+        "id_mean_epi": [
+          0.01109051961365441,
+          0.0021661677033440875
+        ],
+        "cross_mean_epi": [
+          0.02137107561734851,
+          0.002209471139858817
+        ],
+        "epi_ratio_cross_over_in": [
+          1.9269679295311735,
+          1.0199908051661366
+        ],
+        "unknown_mean_epi": [
+          1.3106711052057782,
+          0.7921726018158427
+        ],
+        "unknown_dominates_both": true,
+        "id_mean_support": -2.250516750181206,
+        "cross_mean_support": -2.242551989757024,
+        "support_delta_cross_minus_in": 0.007964760424181705,
+        "mean_shift_abs": [
+          1.6833767502228558,
+          0.006251233626893782
+        ],
+        "mean_shift_in_id_sigma": [
+          151.78520113253472,
+          2.885849335323045
+        ],
+        "epi_inflates_both": false,
+        "support_drops": false,
+        "directional_pass": false
+      },
+      {
+        "src": "ti_120w_short_pw",
+        "tgt": "al_120w_short_pw",
+        "cross_material": true,
+        "same_tier": true,
+        "blind_pair": true,
+        "tool_in": "al_120w_short_pw",
+        "tool_cross": "ti_120w_short_pw",
+        "id_mean_epi": [
+          0.026008438371204253,
+          0.03794115317799573
+        ],
+        "cross_mean_epi": [
+          0.015434920523394726,
+          0.033456601635237636
+        ],
+        "epi_ratio_cross_over_in": [
+          0.5934581808834705,
+          0.8818024449146437
+        ],
+        "unknown_mean_epi": [
+          1.3414074644604448,
+          0.5819738180550114
+        ],
+        "unknown_dominates_both": true,
+        "id_mean_support": -2.2377015929285866,
+        "cross_mean_support": -2.2479817484492135,
+        "support_delta_cross_minus_in": -0.010280155520626888,
+        "mean_shift_abs": [
+          0.7812344890974442,
+          0.022518053597368415
+        ],
+        "mean_shift_in_id_sigma": [
+          30.03773152187419,
+          0.5934994514196247
+        ],
+        "epi_inflates_both": false,
+        "support_drops": false,
+        "directional_pass": false
+      },
+      {
+        "src": "ti_200w_high_pw",
+        "tgt": "al_200w_high_pw",
+        "cross_material": true,
+        "same_tier": true,
+        "blind_pair": true,
+        "tool_in": "al_200w_high_pw",
+        "tool_cross": "ti_200w_high_pw",
+        "id_mean_epi": [
+          0.019697301054899613,
+          0.002069741847027651
+        ],
+        "cross_mean_epi": [
+          0.010861179037489545,
+          0.0020309872150887833
+        ],
+        "epi_ratio_cross_over_in": [
+          0.5514044288208652,
+          0.9812756204381126
+        ],
+        "unknown_mean_epi": [
+          1.3109904373304875,
+          0.7873494946288231
+        ],
+        "unknown_dominates_both": true,
+        "id_mean_support": -2.2879398521311383,
+        "cross_mean_support": -2.266950849362563,
+        "support_delta_cross_minus_in": 0.020989002768575293,
+        "mean_shift_abs": [
+          1.6810472467011948,
+          0.005249500322155098
+        ],
+        "mean_shift_in_id_sigma": [
+          85.34403987713037,
+          2.536306800625347
+        ],
+        "epi_inflates_both": false,
+        "support_drops": false,
+        "directional_pass": false
+      }
+    ],
+    "baseline_per_campaign_blind_pairs": [
+      {
+        "model": "al_120w_short_pw",
+        "queried_on": "ti_120w_short_pw",
+        "id_mean_epi": [
+          0.03150874137418993,
+          0.010969285617481506
+        ],
+        "ood_mean_epi": [
+          0.03071621835417256,
+          0.01056739236135458
+        ],
+        "id_mean_support": -2.2377033595860514,
+        "ood_mean_support": -2.2172091918204635,
+        "ood_epi_greater_both_outputs": false
+      },
+      {
+        "model": "al_200w_high_pw",
+        "queried_on": "ti_200w_high_pw",
+        "id_mean_epi": [
+          0.011366038661564819,
+          0.001192808485818386
+        ],
+        "ood_mean_epi": [
+          0.011139094379764918,
+          0.0012369533919063288
+        ],
+        "id_mean_support": -2.2879523568373417,
+        "ood_mean_support": -2.2350111316700305,
+        "ood_epi_greater_both_outputs": false
+      },
+      {
+        "model": "ti_120w_short_pw",
+        "queried_on": "al_120w_short_pw",
+        "id_mean_epi": [
+          0.019623150557603785,
+          0.011526434131004501
+        ],
+        "ood_mean_epi": [
+          0.019606782854071227,
+          0.01203324220585787
+        ],
+        "id_mean_support": -2.2214829726074257,
+        "ood_mean_support": -2.2525498793265264,
+        "ood_epi_greater_both_outputs": false
+      },
+      {
+        "model": "ti_200w_high_pw",
+        "queried_on": "al_200w_high_pw",
+        "id_mean_epi": [
+          0.0133079552171698,
+          0.0010737834057415144
+        ],
+        "ood_mean_epi": [
+          0.013076075494749392,
+          0.0010597127642089353
+        ],
+        "id_mean_support": -2.2505289415380236,
+        "ood_mean_support": -2.2395644694856043,
+        "ood_epi_greater_both_outputs": false
+      }
+    ],
+    "finding": "The pooled model REPRESENTS the material shift in the MEAN (0.78-1.67 Ang/s on dep rate, tens of in-distribution sigmas) and inflates epistemic to DOMINATE both materials when the material is UNSPECIFIED (unknown fallback, section 5.8, 12/12) -- neither is expressible by a per-campaign model. But wrong-material EPISTEMIC screening is ASYMMETRIC (inflates when querying the wider-variance material's conditioning, deflates the other way) and SUPPORT stays ~flat (+-0.06): input-space screening remains blind to a same-box material shift, exactly as the per-campaign OOD finding said. Awareness is achieved by making material an EXPLICIT conditioning axis, not by auto-detecting a wrong-material query from the recipe alone."
+  },
+  "block_b_leave_one_material_out": {
+    "protocol": "PRR subspace; train on one material's 2 campaigns (temporal-fit, material as task); held-out material = UNKNOWN tool. Zero-shot asserts the section 5.8 fallback dominates elementwise. Few-shot adapt_to_tool on the first K held rows, then split-conformal PICP + binomial gate on cal(next 20%)/test(rest).",
+    "directions": {
+      "leave_ti_out": {
+        "known_material": "al",
+        "known_campaigns": [
+          "al_120w_short_pw",
+          "al_200w_high_pw"
+        ],
+        "held_material": "ti",
+        "held_campaigns": [
+          "ti_120w_short_pw",
+          "ti_200w_high_pw"
+        ],
+        "n_known_train": 752,
+        "n_held_stream": 1091,
+        "zero_shot": {
+          "unknown_epistemic_dominates_known_elementwise": true,
+          "min_margin": 0.4018285765848678,
+          "fallback_point_rmse": {
+            "dep_rate_A_per_s": 1.3625152399985017,
+            "Ipk (A)": 0.041048450303285446
+          }
+        },
+        "few_shot": {
+          "K=10": {
+            "per_output": {
+              "dep_rate_A_per_s": {
+                "unit": "angstrom/second",
+                "picp": 0.24565469293163383,
+                "k_covered": 212,
+                "n_test": 863,
+                "ci95": [
+                  0.21726371837870334,
+                  0.27579391313604257
+                ],
+                "nominal_in_ci": false,
+                "mpiw": 1.30224344936962
+              },
+              "Ipk (A)": {
+                "unit": "A",
+                "picp": 0.8644264194669756,
+                "k_covered": 746,
+                "n_test": 863,
+                "ci95": [
+                  0.8397610782400906,
+                  0.88657053928474
+                ],
+                "nominal_in_ci": false,
+                "mpiw": 0.10412709235248085
+              }
+            },
+            "pooled": {
+              "picp": 0.5550405561993047,
+              "k_covered": 958,
+              "n_trials": 1726,
+              "ci95": [
+                0.5312289565157211,
+                0.5786647125146384
+              ],
+              "nominal_in_ci": false
+            }
+          },
+          "K=20": {
+            "per_output": {
+              "dep_rate_A_per_s": {
+                "unit": "angstrom/second",
+                "picp": 0.25205158264947247,
+                "k_covered": 215,
+                "n_test": 853,
+                "ci95": [
+                  0.22322592886318324,
+                  0.28260133794703435
+                ],
+                "nominal_in_ci": false,
+                "mpiw": 1.2449476318978492
+              },
+              "Ipk (A)": {
+                "unit": "A",
+                "picp": 0.8370457209847597,
+                "k_covered": 714,
+                "n_test": 853,
+                "ci95": [
+                  0.8105194486982875,
+                  0.8612179471031892
+                ],
+                "nominal_in_ci": false,
+                "mpiw": 0.10038690784155575
+              }
+            },
+            "pooled": {
+              "picp": 0.5445486518171161,
+              "k_covered": 929,
+              "n_trials": 1706,
+              "ci95": [
+                0.52056414201722,
+                0.5683796627866694
+              ],
+              "nominal_in_ci": false
+            }
+          }
+        }
+      },
+      "leave_al_out": {
+        "known_material": "ti",
+        "known_campaigns": [
+          "ti_120w_short_pw",
+          "ti_200w_high_pw"
+        ],
+        "held_material": "al",
+        "held_campaigns": [
+          "al_120w_short_pw",
+          "al_200w_high_pw"
+        ],
+        "n_known_train": 655,
+        "n_held_stream": 1252,
+        "zero_shot": {
+          "unknown_epistemic_dominates_known_elementwise": true,
+          "min_margin": 0.2184626280064107,
+          "fallback_point_rmse": {
+            "dep_rate_A_per_s": 1.3424676310684862,
+            "Ipk (A)": 0.04484070698492121
+          }
+        },
+        "few_shot": {
+          "K=10": {
+            "per_output": {
+              "dep_rate_A_per_s": {
+                "unit": "angstrom/second",
+                "picp": 0.3780241935483871,
+                "k_covered": 375,
+                "n_test": 992,
+                "ci95": [
+                  0.3477459289726937,
+                  0.40902879547388604
+                ],
+                "nominal_in_ci": false,
+                "mpiw": 2.2910794019792773
+              },
+              "Ipk (A)": {
+                "unit": "A",
+                "picp": 0.8084677419354839,
+                "k_covered": 802,
+                "n_test": 992,
+                "ci95": [
+                  0.7825747622351963,
+                  0.83251483012647
+                ],
+                "nominal_in_ci": false,
+                "mpiw": 0.18555014112712753
+              }
+            },
+            "pooled": {
+              "picp": 0.5932459677419355,
+              "k_covered": 1177,
+              "n_trials": 1984,
+              "ci95": [
+                0.5712539592937289,
+                0.6149619351543624
+              ],
+              "nominal_in_ci": false
+            }
+          },
+          "K=20": {
+            "per_output": {
+              "dep_rate_A_per_s": {
+                "unit": "angstrom/second",
+                "picp": 0.48065173116089616,
+                "k_covered": 472,
+                "n_test": 982,
+                "ci95": [
+                  0.4489916225205114,
+                  0.5124281650202892
+                ],
+                "nominal_in_ci": false,
+                "mpiw": 2.141893496402159
+              },
+              "Ipk (A)": {
+                "unit": "A",
+                "picp": 0.8177189409368636,
+                "k_covered": 803,
+                "n_test": 982,
+                "ci95": [
+                  0.7921222267385457,
+                  0.8413938562729097
+                ],
+                "nominal_in_ci": false,
+                "mpiw": 0.185290141537553
+              }
+            },
+            "pooled": {
+              "picp": 0.6491853360488798,
+              "k_covered": 1275,
+              "n_trials": 1964,
+              "ci95": [
+                0.6276145266239826,
+                0.6703097783258348
+              ],
+              "nominal_in_ci": false
+            }
+          }
+        }
+      }
+    },
+    "transfer_claimable": false,
+    "verdict": "cross-material transfer stays FORBIDDEN (audit F4): not every few-shot arm passes the directional coverage gate. Zero-shot has NO mean transfer (fallback predicts the trained material's surface); few-shot coverage is what it is, reported with its binomial CI, PASS or FAIL."
+  },
+  "block_c_pooling_cost": {
+    "protocol": "material-conditioned pooled model per (subspace, split), split-conformal wrapped per campaign on the for_tool(material) view; split indices identical to run_m1_empa (asserted against results/m1_empa.json split_sizes)",
+    "per_campaign": {
+      "al_120w_short_pw": {
+        "material": "al",
+        "parameterization": "prr",
+        "split_sizes": {
+          "train": 361,
+          "cal": 120,
+          "test": 120
+        },
+        "splits": {
+          "temporal": {
+            "pooled_model": {
+              "per_output": {
+                "dep_rate_A_per_s": {
+                  "unit": "angstrom/second",
+                  "picp": 0.8833333333333333,
+                  "k_covered": 106,
+                  "n_test": 120,
+                  "ci95": [
+                    0.8120049096131917,
+                    0.9347278494900572
+                  ],
+                  "nominal_in_ci": true,
+                  "mpiw": 0.45606802392237517
+                },
+                "Ipk (A)": {
+                  "unit": "A",
+                  "picp": 0.8833333333333333,
+                  "k_covered": 106,
+                  "n_test": 120,
+                  "ci95": [
+                    0.8120049096131917,
+                    0.9347278494900572
+                  ],
+                  "nominal_in_ci": true,
+                  "mpiw": 0.07210477699317965
+                }
+              },
+              "pooled": {
+                "picp": 0.8833333333333333,
+                "k_covered": 212,
+                "n_trials": 240,
+                "ci95": [
+                  0.8358132643444429,
+                  0.9210594262206582
+                ],
+                "nominal_in_ci": true
+              }
+            },
+            "baseline": {
+              "pooled": {
+                "picp": 0.875,
+                "k_covered": 210,
+                "n_trials": 240,
+                "ci95": [
+                  0.8263850821261609,
+                  0.914050444623906
+                ],
+                "nominal_in_ci": true
+              },
+              "per_output": {
+                "dep_rate_A_per_s": {
+                  "unit": "angstrom/second",
+                  "rmse": 0.1262268868719307,
+                  "nrmse_pct": 7.771993392100178,
+                  "mae": 0.10438874008709144,
+                  "crps": 0.07246956867931029,
+                  "picp": 0.8583333333333333,
+                  "k_covered": 103,
+                  "n_test": 120,
+                  "ci95": [
+                    0.7828931017566235,
+                    0.9152552705054843
+                  ],
+                  "nominal_in_ci": true,
+                  "mpiw": 0.3798115599737893,
+                  "qce": 0.03728070175438592
+                },
+                "Ipk (A)": {
+                  "unit": "A",
+                  "rmse": 0.04869118528880527,
+                  "nrmse_pct": 5.909318464740899,
+                  "mae": 0.015549745605163194,
+                  "crps": 0.01900548333282034,
+                  "picp": 0.8916666666666667,
+                  "k_covered": 107,
+                  "n_test": 120,
+                  "ci95": [
+                    0.8218725616110573,
+                    0.941041693770915
+                  ],
+                  "nominal_in_ci": true,
+                  "mpiw": 0.04690074396939692,
+                  "qce": 0.18070175438596486
+                }
+              }
+            }
+          },
+          "random": {
+            "pooled_model": {
+              "per_output": {
+                "dep_rate_A_per_s": {
+                  "unit": "angstrom/second",
+                  "picp": 0.9166666666666666,
+                  "k_covered": 110,
+                  "n_test": 120,
+                  "ci95": [
+                    0.8520845706626649,
+                    0.9593138711319835
+                  ],
+                  "nominal_in_ci": true,
+                  "mpiw": 0.45622467058076793
+                },
+                "Ipk (A)": {
+                  "unit": "A",
+                  "picp": 0.9416666666666667,
+                  "k_covered": 113,
+                  "n_test": 120,
+                  "ci95": [
+                    0.8835016203543854,
+                    0.9762279762094809
+                  ],
+                  "nominal_in_ci": true,
+                  "mpiw": 0.11572287076967876
+                }
+              },
+              "pooled": {
+                "picp": 0.9291666666666667,
+                "k_covered": 223,
+                "n_trials": 240,
+                "ci95": [
+                  0.889009776887031,
+                  0.9581981815037065
+                ],
+                "nominal_in_ci": true
+              }
+            },
+            "baseline": {
+              "pooled": {
+                "picp": 0.9166666666666666,
+                "k_covered": 220,
+                "n_trials": 240,
+                "ci95": [
+                  0.8742321304809253,
+                  0.9483550308745274
+                ],
+                "nominal_in_ci": true
+              },
+              "per_output": {
+                "dep_rate_A_per_s": {
+                  "unit": "angstrom/second",
+                  "rmse": 0.12975292711534547,
+                  "nrmse_pct": 8.074808121178101,
+                  "mae": 0.10479957642179757,
+                  "crps": 0.07358395415439807,
+                  "picp": 0.9,
+                  "k_covered": 108,
+                  "n_test": 120,
+                  "ci95": [
+                    0.8318347872973342,
+                    0.9472522136099402
+                  ],
+                  "nominal_in_ci": true,
+                  "mpiw": 0.41798075026367376,
+                  "qce": 0.03859649122807022
+                },
+                "Ipk (A)": {
+                  "unit": "A",
+                  "rmse": 0.058459835312394216,
+                  "nrmse_pct": 5.816834376012445,
+                  "mae": 0.01617529442067388,
+                  "crps": 0.01647492763517131,
+                  "picp": 0.9333333333333333,
+                  "k_covered": 112,
+                  "n_test": 120,
+                  "ci95": [
+                    0.8728632517607872,
+                    0.9707808156862037
+                  ],
+                  "nominal_in_ci": true,
+                  "mpiw": 0.08543697817988294,
+                  "qce": 0.14298245614035082
+                }
+              }
+            }
+          }
+        }
+      },
+      "al_200w_high_pw": {
+        "material": "al",
+        "parameterization": "prr",
+        "split_sizes": {
+          "train": 391,
+          "cal": 130,
+          "test": 130
+        },
+        "splits": {
+          "temporal": {
+            "pooled_model": {
+              "per_output": {
+                "dep_rate_A_per_s": {
+                  "unit": "angstrom/second",
+                  "picp": 0.8846153846153846,
+                  "k_covered": 115,
+                  "n_test": 130,
+                  "ci95": [
+                    0.8168391407147356,
+                    0.9339620342185204
+                  ],
+                  "nominal_in_ci": true,
+                  "mpiw": 0.2535037346961851
+                },
+                "Ipk (A)": {
+                  "unit": "A",
+                  "picp": 0.9153846153846154,
+                  "k_covered": 119,
+                  "n_test": 130,
+                  "ci95": [
+                    0.8536434475610114,
+                    0.9570020059402645
+                  ],
+                  "nominal_in_ci": true,
+                  "mpiw": 0.02255222251445022
+                }
+              },
+              "pooled": {
+                "picp": 0.9,
+                "k_covered": 234,
+                "n_trials": 260,
+                "ci95": [
+                  0.8569152139756238,
+                  0.9336311093483357
+                ],
+                "nominal_in_ci": true
+              }
+            },
+            "baseline": {
+              "pooled": {
+                "picp": 0.9153846153846154,
+                "k_covered": 238,
+                "n_trials": 260,
+                "ci95": [
+                  0.8746935930911707,
+                  0.9462123600999673
+                ],
+                "nominal_in_ci": true
+              },
+              "per_output": {
+                "dep_rate_A_per_s": {
+                  "unit": "angstrom/second",
+                  "rmse": 0.05952140926213467,
+                  "nrmse_pct": 6.044976585071528,
+                  "mae": 0.047318092971810735,
+                  "crps": 0.03387674635723848,
+                  "picp": 0.8923076923076924,
+                  "k_covered": 116,
+                  "n_test": 130,
+                  "ci95": [
+                    0.825914479386931,
+                    0.9398593128963649
+                  ],
+                  "nominal_in_ci": true,
+                  "mpiw": 0.18837662822869536,
+                  "qce": 0.03805668016194331
+                },
+                "Ipk (A)": {
+                  "unit": "A",
+                  "rmse": 0.0034574630858924473,
+                  "nrmse_pct": 0.6152410043242031,
+                  "mae": 0.0021123018107026908,
+                  "crps": 0.0016589817389017945,
+                  "picp": 0.9384615384615385,
+                  "k_covered": 122,
+                  "n_test": 130,
+                  "ci95": [
+                    0.8823447665861507,
+                    0.9730603038740709
+                  ],
+                  "nominal_in_ci": true,
+                  "mpiw": 0.01066617208309875,
+                  "qce": 0.06963562753036436
+                }
+              }
+            }
+          },
+          "random": {
+            "pooled_model": {
+              "per_output": {
+                "dep_rate_A_per_s": {
+                  "unit": "angstrom/second",
+                  "picp": 0.9,
+                  "k_covered": 117,
+                  "n_test": 130,
+                  "ci95": [
+                    0.8350683267206863,
+                    0.9456713071727957
+                  ],
+                  "nominal_in_ci": true,
+                  "mpiw": 0.26383660372503465
+                },
+                "Ipk (A)": {
+                  "unit": "A",
+                  "picp": 0.8692307692307693,
+                  "k_covered": 113,
+                  "n_test": 130,
+                  "ci95": [
+                    0.798899232944449,
+                    0.9219402507362385
+                  ],
+                  "nominal_in_ci": true,
+                  "mpiw": 0.020692345587759668
+                }
+              },
+              "pooled": {
+                "picp": 0.8846153846153846,
+                "k_covered": 230,
+                "n_trials": 260,
+                "ci95": [
+                  0.8393926798705639,
+                  0.9207815899967124
+                ],
+                "nominal_in_ci": true
+              }
+            },
+            "baseline": {
+              "pooled": {
+                "picp": 0.8730769230769231,
+                "k_covered": 227,
+                "n_trials": 260,
+                "ci95": [
+                  0.8263922508319549,
+                  0.9109970791366565
+                ],
+                "nominal_in_ci": true
+              },
+              "per_output": {
+                "dep_rate_A_per_s": {
+                  "unit": "angstrom/second",
+                  "rmse": 0.17030561960547416,
+                  "nrmse_pct": 8.810271718140118,
+                  "mae": 0.06218099047136216,
+                  "crps": 0.04773701465004014,
+                  "picp": 0.8769230769230769,
+                  "k_covered": 114,
+                  "n_test": 130,
+                  "ci95": [
+                    0.807835887591724,
+                    0.9279869124984215
+                  ],
+                  "nominal_in_ci": true,
+                  "mpiw": 0.18944135183647082,
+                  "qce": 0.025506072874493933
+                },
+                "Ipk (A)": {
+                  "unit": "A",
+                  "rmse": 0.0029937398432661076,
+                  "nrmse_pct": 0.5453255204965288,
+                  "mae": 0.0021022071040704927,
+                  "crps": 0.001621940725077963,
+                  "picp": 0.8692307692307693,
+                  "k_covered": 113,
+                  "n_test": 130,
+                  "ci95": [
+                    0.798899232944449,
+                    0.9219402507362385
+                  ],
+                  "nominal_in_ci": true,
+                  "mpiw": 0.008791116843426755,
+                  "qce": 0.06315789473684207
+                }
+              }
+            }
+          }
+        }
+      },
+      "ti_120w_short_pw": {
+        "material": "ti",
+        "parameterization": "prr",
+        "split_sizes": {
+          "train": 294,
+          "cal": 98,
+          "test": 98
+        },
+        "splits": {
+          "temporal": {
+            "pooled_model": {
+              "per_output": {
+                "dep_rate_A_per_s": {
+                  "unit": "angstrom/second",
+                  "picp": 0.9285714285714286,
+                  "k_covered": 91,
+                  "n_test": 98,
+                  "ci95": [
+                    0.8583547530103554,
+                    0.9708010203591716
+                  ],
+                  "nominal_in_ci": true,
+                  "mpiw": 0.2208862869099819
+                },
+                "Ipk (A)": {
+                  "unit": "A",
+                  "picp": 0.9489795918367347,
+                  "k_covered": 93,
+                  "n_test": 98,
+                  "ci95": [
+                    0.8849416000694784,
+                    0.9832285840290199
+                  ],
+                  "nominal_in_ci": true,
+                  "mpiw": 0.04163933788500648
+                }
+              },
+              "pooled": {
+                "picp": 0.9387755102040817,
+                "k_covered": 184,
+                "n_trials": 196,
+                "ci95": [
+                  0.895495934729186,
+                  0.9679674218216554
+                ],
+                "nominal_in_ci": true
+              }
+            },
+            "baseline": {
+              "pooled": {
+                "picp": 0.9387755102040817,
+                "k_covered": 184,
+                "n_trials": 196,
+                "ci95": [
+                  0.895495934729186,
+                  0.9679674218216554
+                ],
+                "nominal_in_ci": true
+              },
+              "per_output": {
+                "dep_rate_A_per_s": {
+                  "unit": "angstrom/second",
+                  "rmse": 0.0604432777829601,
+                  "nrmse_pct": 9.518085526872765,
+                  "mae": 0.04821765150972134,
+                  "crps": 0.03417851781514283,
+                  "picp": 0.9591836734693877,
+                  "k_covered": 94,
+                  "n_test": 98,
+                  "ci95": [
+                    0.8987821811112336,
+                    0.9887686824398149
+                  ],
+                  "nominal_in_ci": true,
+                  "mpiw": 0.2355138835491944,
+                  "qce": 0.04253490870032221
+                },
+                "Ipk (A)": {
+                  "unit": "A",
+                  "rmse": 0.025971845527581593,
+                  "nrmse_pct": 4.6146429553502015,
+                  "mae": 0.009248032299365931,
+                  "crps": 0.01066886493655462,
+                  "picp": 0.9183673469387755,
+                  "k_covered": 90,
+                  "n_test": 98,
+                  "ci95": [
+                    0.8454749494815671,
+                    0.964097000470202
+                  ],
+                  "nominal_in_ci": true,
+                  "mpiw": 0.03454291832860737,
+                  "qce": 0.1713211600429645
+                }
+              }
+            }
+          },
+          "random": {
+            "pooled_model": {
+              "per_output": {
+                "dep_rate_A_per_s": {
+                  "unit": "angstrom/second",
+                  "picp": 0.9285714285714286,
+                  "k_covered": 91,
+                  "n_test": 98,
+                  "ci95": [
+                    0.8583547530103554,
+                    0.9708010203591716
+                  ],
+                  "nominal_in_ci": true,
+                  "mpiw": 0.2118361582466723
+                },
+                "Ipk (A)": {
+                  "unit": "A",
+                  "picp": 0.9387755102040817,
+                  "k_covered": 92,
+                  "n_test": 98,
+                  "ci95": [
+                    0.8714921557405245,
+                    0.9772025473957623
+                  ],
+                  "nominal_in_ci": true,
+                  "mpiw": 0.07883293763402752
+                }
+              },
+              "pooled": {
+                "picp": 0.9336734693877551,
+                "k_covered": 183,
+                "n_trials": 196,
+                "ci95": [
+                  0.8892501164154962,
+                  0.9642141210250137
+                ],
+                "nominal_in_ci": true
+              }
+            },
+            "baseline": {
+              "pooled": {
+                "picp": 0.9132653061224489,
+                "k_covered": 179,
+                "n_trials": 196,
+                "ci95": [
+                  0.8647615195453305,
+                  0.9486608154531861
+                ],
+                "nominal_in_ci": true
+              },
+              "per_output": {
+                "dep_rate_A_per_s": {
+                  "unit": "angstrom/second",
+                  "rmse": 0.06285402731061235,
+                  "nrmse_pct": 8.791859391659633,
+                  "mae": 0.04954512690546787,
+                  "crps": 0.03504199080873589,
+                  "picp": 0.9183673469387755,
+                  "k_covered": 90,
+                  "n_test": 98,
+                  "ci95": [
+                    0.8454749494815671,
+                    0.964097000470202
+                  ],
+                  "nominal_in_ci": true,
+                  "mpiw": 0.23023769217589604,
+                  "qce": 0.022019334049409235
+                },
+                "Ipk (A)": {
+                  "unit": "A",
+                  "rmse": 0.023471948257597797,
+                  "nrmse_pct": 4.659438165850914,
+                  "mae": 0.009478860441277884,
+                  "crps": 0.01061370505013035,
+                  "picp": 0.9081632653061225,
+                  "k_covered": 89,
+                  "n_test": 98,
+                  "ci95": [
+                    0.8328133504122911,
+                    0.9571416325975936
+                  ],
+                  "nominal_in_ci": true,
+                  "mpiw": 0.059836404872834065,
+                  "qce": 0.15692803437164338
+                }
+              }
+            }
+          }
+        }
+      },
+      "ti_200w_high_pw": {
+        "material": "ti",
+        "parameterization": "prr",
+        "split_sizes": {
+          "train": 361,
+          "cal": 120,
+          "test": 120
+        },
+        "splits": {
+          "temporal": {
+            "pooled_model": {
+              "per_output": {
+                "dep_rate_A_per_s": {
+                  "unit": "angstrom/second",
+                  "picp": 0.8166666666666667,
+                  "k_covered": 98,
+                  "n_test": 120,
+                  "ci95": [
+                    0.7356934288317283,
+                    0.8813935784431961
+                  ],
+                  "nominal_in_ci": false,
+                  "mpiw": 0.17236216365668094
+                },
+                "Ipk (A)": {
+                  "unit": "A",
+                  "picp": 0.85,
+                  "k_covered": 102,
+                  "n_test": 120,
+                  "ci95": [
+                    0.7733328565873717,
+                    0.90861042747177
+                  ],
+                  "nominal_in_ci": true,
+                  "mpiw": 0.031796700443600966
+                }
+              },
+              "pooled": {
+                "picp": 0.8333333333333334,
+                "k_covered": 200,
+                "n_trials": 240,
+                "ci95": [
+                  0.780038526773561,
+                  0.8781817334530091
+                ],
+                "nominal_in_ci": false
+              }
+            },
+            "baseline": {
+              "pooled": {
+                "picp": 0.8166666666666667,
+                "k_covered": 196,
+                "n_trials": 240,
+                "ci95": [
+                  0.7618086408344017,
+                  0.8635159849243971
+                ],
+                "nominal_in_ci": false
+              },
+              "per_output": {
+                "dep_rate_A_per_s": {
+                  "unit": "angstrom/second",
+                  "rmse": 0.060976639570360085,
+                  "nrmse_pct": 14.674929942708557,
+                  "mae": 0.051906499105006984,
+                  "crps": 0.036148198766722255,
+                  "picp": 0.8083333333333333,
+                  "k_covered": 97,
+                  "n_test": 120,
+                  "ci95": [
+                    0.7264176172626801,
+                    0.8744482751435358
+                  ],
+                  "nominal_in_ci": false,
+                  "mpiw": 0.16886547238267502,
+                  "qce": 0.07763157894736845
+                },
+                "Ipk (A)": {
+                  "unit": "A",
+                  "rmse": 0.003963151805693169,
+                  "nrmse_pct": 0.7715862315287767,
+                  "mae": 0.0029422172908918254,
+                  "crps": 0.002115889116976325,
+                  "picp": 0.825,
+                  "k_covered": 99,
+                  "n_test": 120,
+                  "ci95": [
+                    0.7450199724342718,
+                    0.8882856569062535
+                  ],
+                  "nominal_in_ci": false,
+                  "mpiw": 0.009038751582392883,
+                  "qce": 0.1214912280701755
+                }
+              }
+            }
+          },
+          "random": {
+            "pooled_model": {
+              "per_output": {
+                "dep_rate_A_per_s": {
+                  "unit": "angstrom/second",
+                  "picp": 0.9416666666666667,
+                  "k_covered": 113,
+                  "n_test": 120,
+                  "ci95": [
+                    0.8835016203543854,
+                    0.9762279762094809
+                  ],
+                  "nominal_in_ci": true,
+                  "mpiw": 0.18308823073560895
+                },
+                "Ipk (A)": {
+                  "unit": "A",
+                  "picp": 0.85,
+                  "k_covered": 102,
+                  "n_test": 120,
+                  "ci95": [
+                    0.7733328565873717,
+                    0.90861042747177
+                  ],
+                  "nominal_in_ci": true,
+                  "mpiw": 0.02797305162301183
+                }
+              },
+              "pooled": {
+                "picp": 0.8958333333333334,
+                "k_covered": 215,
+                "n_trials": 240,
+                "ci95": [
+                  0.8500767992012184,
+                  0.931446249150148
+                ],
+                "nominal_in_ci": true
+              }
+            },
+            "baseline": {
+              "pooled": {
+                "picp": 0.95,
+                "k_covered": 228,
+                "n_trials": 240,
+                "ci95": [
+                  0.9142894831394027,
+                  0.9739007131487578
+                ],
+                "nominal_in_ci": false
+              },
+              "per_output": {
+                "dep_rate_A_per_s": {
+                  "unit": "angstrom/second",
+                  "rmse": 0.04919340417631688,
+                  "nrmse_pct": 12.36230110301555,
+                  "mae": 0.040827660288747084,
+                  "crps": 0.028133932137580645,
+                  "picp": 0.9416666666666667,
+                  "k_covered": 113,
+                  "n_test": 120,
+                  "ci95": [
+                    0.8835016203543854,
+                    0.9762279762094809
+                  ],
+                  "nominal_in_ci": true,
+                  "mpiw": 0.163758417227781,
+                  "qce": 0.027192982456140307
+                },
+                "Ipk (A)": {
+                  "unit": "A",
+                  "rmse": 0.0032647753621371455,
+                  "nrmse_pct": 0.6577956486535698,
+                  "mae": 0.002203838781782092,
+                  "crps": 0.001669011540438582,
+                  "picp": 0.9583333333333334,
+                  "k_covered": 115,
+                  "n_test": 120,
+                  "ci95": [
+                    0.9054412000240628,
+                    0.9863346158832105
+                  ],
+                  "nominal_in_ci": false,
+                  "mpiw": 0.014689590512864418,
+                  "qce": 0.04780701754385961
+                }
+              }
+            }
+          }
+        }
+      },
+      "al_250w_low_duty": {
+        "material": "al",
+        "parameterization": "duty",
+        "split_sizes": {
+          "train": 241,
+          "cal": 80,
+          "test": 80
+        },
+        "splits": {
+          "temporal": {
+            "pooled_model": {
+              "per_output": {
+                "dep_rate_A_per_s": {
+                  "unit": "angstrom/second",
+                  "picp": 0.8625,
+                  "k_covered": 69,
+                  "n_test": 80,
+                  "ci95": [
+                    0.7672791291752744,
+                    0.9293121672961213
+                  ],
+                  "nominal_in_ci": true,
+                  "mpiw": 1.0517750317544654
+                },
+                "Ipk (A)": {
+                  "unit": "A",
+                  "picp": 0.8875,
+                  "k_covered": 71,
+                  "n_test": 80,
+                  "ci95": [
+                    0.7971534080830098,
+                    0.9472484868543125
+                  ],
+                  "nominal_in_ci": true,
+                  "mpiw": 0.08242573281558169
+                }
+              },
+              "pooled": {
+                "picp": 0.875,
+                "k_covered": 140,
+                "n_trials": 160,
+                "ci95": [
+                  0.8135668103703722,
+                  0.9219471886087791
+                ],
+                "nominal_in_ci": true
+              }
+            },
+            "baseline": {
+              "pooled": {
+                "picp": 0.875,
+                "k_covered": 140,
+                "n_trials": 160,
+                "ci95": [
+                  0.8135668103703722,
+                  0.9219471886087791
+                ],
+                "nominal_in_ci": true
+              },
+              "per_output": {
+                "dep_rate_A_per_s": {
+                  "unit": "angstrom/second",
+                  "rmse": 0.35701331290320315,
+                  "nrmse_pct": 10.2067484017384,
+                  "mae": 0.25646818947759636,
+                  "crps": 0.1902452793724751,
+                  "picp": 0.875,
+                  "k_covered": 70,
+                  "n_test": 80,
+                  "ci95": [
+                    0.7821108659305637,
+                    0.9383979034415657
+                  ],
+                  "nominal_in_ci": true,
+                  "mpiw": 1.047084302825059,
+                  "qce": 0.06315789473684207
+                },
+                "Ipk (A)": {
+                  "unit": "A",
+                  "rmse": 0.026844686505520104,
+                  "nrmse_pct": 1.839246350992287,
+                  "mae": 0.01953516660463377,
+                  "crps": 0.014654921659337124,
+                  "picp": 0.875,
+                  "k_covered": 70,
+                  "n_test": 80,
+                  "ci95": [
+                    0.7821108659305637,
+                    0.9383979034415657
+                  ],
+                  "nominal_in_ci": true,
+                  "mpiw": 0.08560153895756653,
+                  "qce": 0.0914473684210526
+                }
+              }
+            }
+          },
+          "random": {
+            "pooled_model": {
+              "per_output": {
+                "dep_rate_A_per_s": {
+                  "unit": "angstrom/second",
+                  "picp": 0.8375,
+                  "k_covered": 67,
+                  "n_test": 80,
+                  "ci95": [
+                    0.7381631061748871,
+                    0.9105383582774708
+                  ],
+                  "nominal_in_ci": true,
+                  "mpiw": 0.9279694279022344
+                },
+                "Ipk (A)": {
+                  "unit": "A",
+                  "picp": 0.8625,
+                  "k_covered": 69,
+                  "n_test": 80,
+                  "ci95": [
+                    0.7672791291752744,
+                    0.9293121672961213
+                  ],
+                  "nominal_in_ci": true,
+                  "mpiw": 0.07113983002175198
+                }
+              },
+              "pooled": {
+                "picp": 0.85,
+                "k_covered": 136,
+                "n_trials": 160,
+                "ci95": [
+                  0.7850816974709137,
+                  0.9014661102605646
+                ],
+                "nominal_in_ci": true
+              }
+            },
+            "baseline": {
+              "pooled": {
+                "picp": 0.875,
+                "k_covered": 140,
+                "n_trials": 160,
+                "ci95": [
+                  0.8135668103703722,
+                  0.9219471886087791
+                ],
+                "nominal_in_ci": true
+              },
+              "per_output": {
+                "dep_rate_A_per_s": {
+                  "unit": "angstrom/second",
+                  "rmse": 0.37911206418143,
+                  "nrmse_pct": 12.122488434460964,
+                  "mae": 0.28503230088277576,
+                  "crps": 0.20667595258238033,
+                  "picp": 0.8375,
+                  "k_covered": 67,
+                  "n_test": 80,
+                  "ci95": [
+                    0.7381631061748871,
+                    0.9105383582774708
+                  ],
+                  "nominal_in_ci": true,
+                  "mpiw": 0.9213784005118827,
+                  "qce": 0.07697368421052629
+                },
+                "Ipk (A)": {
+                  "unit": "A",
+                  "rmse": 0.02577671776703262,
+                  "nrmse_pct": 1.7942742790621447,
+                  "mae": 0.01904710196788419,
+                  "crps": 0.01388977613227907,
+                  "picp": 0.9125,
+                  "k_covered": 73,
+                  "n_test": 80,
+                  "ci95": [
+                    0.8279916615801152,
+                    0.9640936410104413
+                  ],
+                  "nominal_in_ci": true,
+                  "mpiw": 0.0890610561966467,
+                  "qce": 0.028947368421052628
+                }
+              }
+            }
+          }
+        }
+      },
+      "ti_250w_low_duty": {
+        "material": "ti",
+        "parameterization": "duty",
+        "split_sizes": {
+          "train": 241,
+          "cal": 80,
+          "test": 80
+        },
+        "splits": {
+          "temporal": {
+            "pooled_model": {
+              "per_output": {
+                "dep_rate_A_per_s": {
+                  "unit": "angstrom/second",
+                  "picp": 0.8875,
+                  "k_covered": 71,
+                  "n_test": 80,
+                  "ci95": [
+                    0.7971534080830098,
+                    0.9472484868543125
+                  ],
+                  "nominal_in_ci": true,
+                  "mpiw": 0.4137862873177589
+                },
+                "Ipk (A)": {
+                  "unit": "A",
+                  "picp": 0.8125,
+                  "k_covered": 65,
+                  "n_test": 80,
+                  "ci95": [
+                    0.7096721043523088,
+                    0.8910863118524706
+                  ],
+                  "nominal_in_ci": false,
+                  "mpiw": 0.06660053899087534
+                }
+              },
+              "pooled": {
+                "picp": 0.85,
+                "k_covered": 136,
+                "n_trials": 160,
+                "ci95": [
+                  0.7850816974709137,
+                  0.9014661102605646
+                ],
+                "nominal_in_ci": true
+              }
+            },
+            "baseline": {
+              "pooled": {
+                "picp": 0.8875,
+                "k_covered": 142,
+                "n_trials": 160,
+                "ci95": [
+                  0.8280375288321168,
+                  0.9319463455364979
+                ],
+                "nominal_in_ci": true
+              },
+              "per_output": {
+                "dep_rate_A_per_s": {
+                  "unit": "angstrom/second",
+                  "rmse": 0.14445415906541292,
+                  "nrmse_pct": 13.132220647759333,
+                  "mae": 0.10660544118395146,
+                  "crps": 0.07826718379753518,
+                  "picp": 0.9,
+                  "k_covered": 72,
+                  "n_test": 80,
+                  "ci95": [
+                    0.8124348925365684,
+                    0.9558290598463709
+                  ],
+                  "nominal_in_ci": true,
+                  "mpiw": 0.4684536587794167,
+                  "qce": 0.06776315789473682
+                },
+                "Ipk (A)": {
+                  "unit": "A",
+                  "rmse": 0.03491083118935955,
+                  "nrmse_pct": 2.6307883000521115,
+                  "mae": 0.022447278988980746,
+                  "crps": 0.017596887609810645,
+                  "picp": 0.875,
+                  "k_covered": 70,
+                  "n_test": 80,
+                  "ci95": [
+                    0.7821108659305637,
+                    0.9383979034415657
+                  ],
+                  "nominal_in_ci": true,
+                  "mpiw": 0.10147094240583732,
+                  "qce": 0.06118421052631582
+                }
+              }
+            }
+          },
+          "random": {
+            "pooled_model": {
+              "per_output": {
+                "dep_rate_A_per_s": {
+                  "unit": "angstrom/second",
+                  "picp": 0.8875,
+                  "k_covered": 71,
+                  "n_test": 80,
+                  "ci95": [
+                    0.7971534080830098,
+                    0.9472484868543125
+                  ],
+                  "nominal_in_ci": true,
+                  "mpiw": 0.36828249307892036
+                },
+                "Ipk (A)": {
+                  "unit": "A",
+                  "picp": 0.8875,
+                  "k_covered": 71,
+                  "n_test": 80,
+                  "ci95": [
+                    0.7971534080830098,
+                    0.9472484868543125
+                  ],
+                  "nominal_in_ci": true,
+                  "mpiw": 0.07067130460571017
+                }
+              },
+              "pooled": {
+                "picp": 0.8875,
+                "k_covered": 142,
+                "n_trials": 160,
+                "ci95": [
+                  0.8280375288321168,
+                  0.9319463455364979
+                ],
+                "nominal_in_ci": true
+              }
+            },
+            "baseline": {
+              "pooled": {
+                "picp": 0.9,
+                "k_covered": 144,
+                "n_trials": 160,
+                "ci95": [
+                  0.8426882641923475,
+                  0.9417533123564462
+                ],
+                "nominal_in_ci": true
+              },
+              "per_output": {
+                "dep_rate_A_per_s": {
+                  "unit": "angstrom/second",
+                  "rmse": 0.13168210414502526,
+                  "nrmse_pct": 12.969529100908394,
+                  "mae": 0.09717830224302895,
+                  "crps": 0.07149731371117732,
+                  "picp": 0.9,
+                  "k_covered": 72,
+                  "n_test": 80,
+                  "ci95": [
+                    0.8124348925365684,
+                    0.9558290598463709
+                  ],
+                  "nominal_in_ci": true,
+                  "mpiw": 0.3945458643478551,
+                  "qce": 0.05921052631578945
+                },
+                "Ipk (A)": {
+                  "unit": "A",
+                  "rmse": 0.02369332756625906,
+                  "nrmse_pct": 1.764727883680993,
+                  "mae": 0.01674854571570995,
+                  "crps": 0.013185520423881705,
+                  "picp": 0.9,
+                  "k_covered": 72,
+                  "n_test": 80,
+                  "ci95": [
+                    0.8124348925365684,
+                    0.9558290598463709
+                  ],
+                  "nominal_in_ci": true,
+                  "mpiw": 0.08864418850240932,
+                  "qce": 0.07236842105263154
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "gate_flips_pooling_fixed": [
+      "ti_200w_high_pw/random"
+    ],
+    "gate_flips_pooling_broke": []
+  }
+}

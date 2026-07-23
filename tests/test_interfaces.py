@@ -30,6 +30,9 @@ def test_predictive_distribution_canonical_fields_in_order():
 
 
 def test_recipe_candidate_canonical_fields():
+    # The five §3.3 canonical fields are binding and come FIRST, in order; a sixth,
+    # `calibration_status`, is the F1 (audit 2026-07-21) provenance extension. Both the
+    # canonical set AND the extension are pinned here so future drift in either is caught.
     names = [f.name for f in dataclasses.fields(RecipeCandidate)]
     assert names == [
         "recipe",
@@ -37,7 +40,11 @@ def test_recipe_candidate_canonical_fields():
         "predicted_outcome_interval",
         "feasibility_flag",
         "support_score",
+        "calibration_status",
     ]
+    # the provenance tag defaults to the UNCALIBRATED label (raw-σ pessimism only), so a
+    # candidate built without it is never silently presented as conformally accepted.
+    assert RecipeCandidate.__dataclass_fields__["calibration_status"].default == "model-feasible"
 
 
 def test_infeasible_is_explicit_verdict():

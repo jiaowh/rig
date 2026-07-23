@@ -24,7 +24,15 @@ import pytest
 
 torch = pytest.importorskip("torch")
 
-from rig.baselines.mfl import MFLLedger, ModelFeedbackLearning, fd_jacobian, spectral_norm
+# E402: this import MUST follow the importorskip guard above — rig.baselines.mfl
+# imports torch at module level, so an unguarded top-of-file import would turn
+# every torch-less environment's skip into a collection error.
+from rig.baselines.mfl import (  # noqa: E402
+    MFLLedger,
+    ModelFeedbackLearning,
+    fd_jacobian,
+    spectral_norm,
+)
 
 # make the example runner importable for the scorer test (test 6).
 _BAKEOFF_DIR = Path(__file__).resolve().parents[1] / "examples" / "mfl_bakeoff"
@@ -62,7 +70,6 @@ def _z_norm_err(mfl: ModelFeedbackLearning, machine, targets_z: np.ndarray) -> n
 
 
 def test_mfl_recovers_known_linear_inverse():
-    rng = np.random.default_rng(0)
     A = np.array([[1.3, -0.4], [0.2, 0.9]])  # well-conditioned, invertible
     b = np.array([0.5, -1.0])
 

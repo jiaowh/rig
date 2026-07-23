@@ -1,0 +1,1030 @@
+{
+  "meta": {
+    "machine": "InSilicoMachine(MBE)",
+    "pathology": "metrology_noise=True (as M2); no drift/hidden-state (out of scope)",
+    "ground_truth": "noise-free machine physics (clean InSilicoMachine) at the returned recipe \u2014 never the surrogate",
+    "ikeys": [
+      "T_heater",
+      "film_thickness"
+    ],
+    "okeys": [
+      "T_center",
+      "bow_cooldown_um"
+    ],
+    "spec_outputs": [
+      "T_center",
+      "bow_cooldown_um"
+    ],
+    "n_train": 1024,
+    "generator": {
+      "n_members": 5,
+      "transforms": 4,
+      "hidden": [
+        128,
+        128
+      ],
+      "max_epochs": 400,
+      "region_hw": [
+        0.25,
+        2.5
+      ]
+    },
+    "solver_policy": "binding \u00a78: kappa=z_epi=2.0, delta_frac=0.02",
+    "smoke": false,
+    "seeds": {
+      "train_design": 0,
+      "data_machine": 1000,
+      "gen": 0,
+      "gate": 0,
+      "gate_sim": 7,
+      "solver": 0,
+      "refs": 20
+    }
+  },
+  "gate": {
+    "passed": true,
+    "sbc_passed": true,
+    "tarp_passed": true,
+    "sbc_p_values": [
+      0.9015,
+      0.394
+    ],
+    "tarp_max_calibration_error": 0.02499999999999991,
+    "n_sim": 200,
+    "n_posterior": 100,
+    "enforced": true
+  },
+  "budget": {
+    "cold_heavy_starts": 48,
+    "cold_light_starts": 1,
+    "d2_light_starts": 9,
+    "cost_ratio_starts_d2_over_heavy": 0.1875
+  },
+  "selection": {
+    "rule": "cold_light pre-probe; first k_miss MISS + first k_hit HIT in pool order (corners first, then Sobol). Selection uses cold_light ONLY.",
+    "tol_std_frac": 0.5,
+    "pool_size": 24,
+    "n_miss_in_pool": 10,
+    "n_hit_in_pool": 14,
+    "classification": [
+      {
+        "idx": 0,
+        "reference_recipe": {
+          "T_heater": 1164.0,
+          "film_thickness": 3.92e-07
+        },
+        "box": {
+          "T_center": [
+            803.9876545697132,
+            882.2250141084126
+          ],
+          "bow_cooldown_um": [
+            -1.4407792680055353e-05,
+            3.8515712816938945e-05
+          ]
+        },
+        "preprobe_class": "HIT",
+        "preprobe_status": "FEASIBLE"
+      },
+      {
+        "idx": 1,
+        "reference_recipe": {
+          "T_heater": 1164.0,
+          "film_thickness": 4.808e-06
+        },
+        "box": {
+          "T_center": [
+            803.9876545697132,
+            882.2250141084126
+          ],
+          "bow_cooldown_um": [
+            0.00012138375747871757,
+            0.00017430726297571185
+          ]
+        },
+        "preprobe_class": "HIT",
+        "preprobe_status": "FEASIBLE"
+      },
+      {
+        "idx": 2,
+        "reference_recipe": {
+          "T_heater": 1486.0,
+          "film_thickness": 3.92e-07
+        },
+        "box": {
+          "T_center": [
+            1053.251316584645,
+            1131.4886761233445
+          ],
+          "bow_cooldown_um": [
+            -9.340079396306924e-06,
+            4.3583426100687374e-05
+          ]
+        },
+        "preprobe_class": "HIT",
+        "preprobe_status": "FEASIBLE"
+      },
+      {
+        "idx": 3,
+        "reference_recipe": {
+          "T_heater": 1486.0,
+          "film_thickness": 4.808e-06
+        },
+        "box": {
+          "T_center": [
+            1053.251316584645,
+            1131.4886761233445
+          ],
+          "bow_cooldown_um": [
+            0.0001835408122446932,
+            0.00023646431774168749
+          ]
+        },
+        "preprobe_class": "MISS",
+        "preprobe_status": "INFEASIBLE"
+      },
+      {
+        "idx": 4,
+        "reference_recipe": {
+          "T_heater": 1178.5347457509488,
+          "film_thickness": 1.187269635498524e-06
+        },
+        "box": {
+          "T_center": [
+            814.9183015738002,
+            893.1556611124996
+          ],
+          "bow_cooldown_um": [
+            1.0736094190604969e-05,
+            6.365959968759927e-05
+          ]
+        },
+        "preprobe_class": "MISS",
+        "preprobe_status": "INFEASIBLE"
+      },
+      {
+        "idx": 5,
+        "reference_recipe": {
+          "T_heater": 1345.4665041994303,
+          "film_thickness": 4.400214697420598e-06
+        },
+        "box": {
+          "T_center": [
+            942.7306323121996,
+            1020.967991850899
+          ],
+          "bow_cooldown_um": [
+            0.00014085141047678993,
+            0.00019377491597378425
+          ]
+        },
+        "preprobe_class": "MISS",
+        "preprobe_status": "INFEASIBLE"
+      },
+      {
+        "idx": 6,
+        "reference_recipe": {
+          "T_heater": 1433.9810171164572,
+          "film_thickness": 2.5086949363350867e-06
+        },
+        "box": {
+          "T_center": [
+            1012.058310561599,
+            1090.2956701002984
+          ],
+          "bow_cooldown_um": [
+            7.785953174545332e-05,
+            0.0001307830372424476
+          ]
+        },
+        "preprobe_class": "HIT",
+        "preprobe_status": "FEASIBLE"
+      },
+      {
+        "idx": 7,
+        "reference_recipe": {
+          "T_heater": 1266.9879046268761,
+          "film_thickness": 3.4909210398793224e-06
+        },
+        "box": {
+          "T_center": [
+            882.1386805491949,
+            960.3760400878942
+          ],
+          "bow_cooldown_um": [
+            9.527585765330865e-05,
+            0.00014819936315030297
+          ]
+        },
+        "preprobe_class": "HIT",
+        "preprobe_status": "FEASIBLE"
+      },
+      {
+        "idx": 8,
+        "reference_recipe": {
+          "T_heater": 1284.754136716947,
+          "film_thickness": 1.5011870548129083e-06
+        },
+        "box": {
+          "T_center": [
+            895.7799294992177,
+            974.0172890379171
+          ],
+          "bow_cooldown_um": [
+            2.695866012118136e-05,
+            7.988216561817566e-05
+          ]
+        },
+        "preprobe_class": "HIT",
+        "preprobe_status": "FEASIBLE"
+      },
+      {
+        "idx": 9,
+        "reference_recipe": {
+          "T_heater": 1490.0419080164284,
+          "film_thickness": 2.9328770026564604e-06
+        },
+        "box": {
+          "T_center": [
+            1056.4651601836465,
+            1134.7025197223459
+          ],
+          "bow_cooldown_um": [
+            0.0001021169350895315,
+            0.00015504044058652582
+          ]
+        },
+        "preprobe_class": "HIT",
+        "preprobe_status": "FEASIBLE"
+      },
+      {
+        "idx": 10,
+        "reference_recipe": {
+          "T_heater": 1404.2600392363966,
+          "film_thickness": 4.0415764898061754e-07
+        },
+        "box": {
+          "T_center": [
+            988.6687338431914,
+            1066.9060933818907
+          ],
+          "bow_cooldown_um": [
+            -1.0138622694546371e-05,
+            4.2784882802447926e-05
+          ]
+        },
+        "preprobe_class": "HIT",
+        "preprobe_status": "FEASIBLE"
+      },
+      {
+        "idx": 11,
+        "reference_recipe": {
+          "T_heater": 1199.0390877239406,
+          "film_thickness": 4.367628566920758e-06
+        },
+        "box": {
+          "T_center": [
+            830.3947274094257,
+            908.6320869481251
+          ],
+          "bow_cooldown_um": [
+            0.0001139596145332304,
+            0.00016688312003022469
+          ]
+        },
+        "preprobe_class": "MISS",
+        "preprobe_status": "INFEASIBLE"
+      },
+      {
+        "idx": 12,
+        "reference_recipe": {
+          "T_heater": 1230.3572196047753,
+          "film_thickness": 2.2494862437248234e-06
+        },
+        "box": {
+          "T_center": [
+            854.158087379829,
+            932.3954469185284
+          ],
+          "bow_cooldown_um": [
+            4.868066512687857e-05,
+            0.00010160417062387287
+          ]
+        },
+        "preprobe_class": "HIT",
+        "preprobe_status": "FEASIBLE"
+      },
+      {
+        "idx": 13,
+        "reference_recipe": {
+          "T_heater": 1369.9558466207236,
+          "film_thickness": 3.685978704690934e-06
+        },
+        "box": {
+          "T_center": [
+            961.8106012942882,
+            1040.0479608329877
+          ],
+          "bow_cooldown_um": [
+            0.0001173221419048107,
+            0.00017024564740180498
+          ]
+        },
+        "preprobe_class": "HIT",
+        "preprobe_status": "FEASIBLE"
+      },
+      {
+        "idx": 14,
+        "reference_recipe": {
+          "T_heater": 1458.5555375553668,
+          "film_thickness": 8.52200347185135e-07
+        },
+        "box": {
+          "T_center": [
+            1031.4788804771256,
+            1109.716240015825
+          ],
+          "bow_cooldown_um": [
+            9.81892630005686e-06,
+            6.274243179705116e-05
+          ]
+        },
+        "preprobe_class": "HIT",
+        "preprobe_status": "FEASIBLE"
+      },
+      {
+        "idx": 15,
+        "reference_recipe": {
+          "T_heater": 1318.8954313285649,
+          "film_thickness": 4.820547020435334e-06
+        },
+        "box": {
+          "T_center": [
+            922.1197842441751,
+            1000.3571437828745
+          ],
+          "bow_cooldown_um": [
+            0.00015168756844855387,
+            0.0002046110739455482
+          ]
+        },
+        "preprobe_class": "MISS",
+        "preprobe_status": "INFEASIBLE"
+      },
+      {
+        "idx": 16,
+        "reference_recipe": {
+          "T_heater": 1254.6414909418672,
+          "film_thickness": 7.352810055017472e-07
+        },
+        "box": {
+          "T_center": [
+            872.685745291984,
+            950.9231048306833
+          ],
+          "bow_cooldown_um": [
+            -1.1846248704195755e-06,
+            5.1738880626574725e-05
+          ]
+        },
+        "preprobe_class": "MISS",
+        "preprobe_status": "INFEASIBLE"
+      },
+      {
+        "idx": 17,
+        "reference_recipe": {
+          "T_heater": 1443.5122685041279,
+          "film_thickness": 3.953018280863762e-06
+        },
+        "box": {
+          "T_center": [
+            1019.5820222361403,
+            1097.8193817748397
+          ],
+          "bow_cooldown_um": [
+            0.00013943641440460026,
+            0.0001923599199015946
+          ]
+        },
+        "preprobe_class": "MISS",
+        "preprobe_status": "INFEASIBLE"
+      },
+      {
+        "idx": 18,
+        "reference_recipe": {
+          "T_heater": 1357.6446793042123,
+          "film_thickness": 1.757035753130913e-06
+        },
+        "box": {
+          "T_center": [
+            952.2088847527057,
+            1030.446244291405
+          ],
+          "bow_cooldown_um": [
+            4.120761840791868e-05,
+            9.413112390491298e-05
+          ]
+        },
+        "preprobe_class": "HIT",
+        "preprobe_status": "FEASIBLE"
+      },
+      {
+        "idx": 19,
+        "reference_recipe": {
+          "T_heater": 1168.8405963592231,
+          "film_thickness": 2.7441273123025895e-06
+        },
+        "box": {
+          "T_center": [
+            807.6242338555395,
+            885.8615933942389
+          ],
+          "bow_cooldown_um": [
+            5.845042748421705e-05,
+            0.00011137393298121135
+          ]
+        },
+        "preprobe_class": "HIT",
+        "preprobe_status": "FEASIBLE"
+      },
+      {
+        "idx": 20,
+        "reference_recipe": {
+          "T_heater": 1152.7443970553577,
+          "film_thickness": 1.9515714466571807e-06
+        },
+        "box": {
+          "T_center": [
+            795.5461854490399,
+            873.7835449877392
+          ],
+          "bow_cooldown_um": [
+            3.267191506329445e-05,
+            8.559542056028875e-05
+          ]
+        },
+        "preprobe_class": "MISS",
+        "preprobe_status": "INFEASIBLE"
+      },
+      {
+        "idx": 21,
+        "reference_recipe": {
+          "T_heater": 1358.0188169144094,
+          "film_thickness": 2.7839577317237854e-06
+        },
+        "box": {
+          "T_center": [
+            952.5003875699673,
+            1030.7377471086668
+          ],
+          "bow_cooldown_um": [
+            8.079971823137459e-05,
+            0.00013372322372836887
+          ]
+        },
+        "preprobe_class": "HIT",
+        "preprobe_status": "FEASIBLE"
+      },
+      {
+        "idx": 22,
+        "reference_recipe": {
+          "T_heater": 1447.239620378241,
+          "film_thickness": 5.547980666160584e-07
+        },
+        "box": {
+          "T_center": [
+            1022.5272625880871,
+            1100.7646221267864
+          ],
+          "bow_cooldown_um": [
+            -3.0950546551223266e-06,
+            4.982845084187197e-05
+          ]
+        },
+        "preprobe_class": "MISS",
+        "preprobe_status": "INFEASIBLE"
+      },
+      {
+        "idx": 23,
+        "reference_recipe": {
+          "T_heater": 1242.0266797300428,
+          "film_thickness": 3.917866760492325e-06
+        },
+        "box": {
+          "T_center": [
+            863.0503812158157,
+            941.2877407545151
+          ],
+          "bow_cooldown_um": [
+            0.00010624356954042133,
+            0.00015916707503741561
+          ]
+        },
+        "preprobe_class": "MISS",
+        "preprobe_status": "INFEASIBLE"
+      }
+    ]
+  },
+  "metrology_sigma": {
+    "T_center": 2.3355759979991064,
+    "bow_cooldown_um": 4.5917277337093886e-07
+  },
+  "targets": [
+    {
+      "target_idx": 3,
+      "reference_recipe": {
+        "T_heater": 1486.0,
+        "film_thickness": 4.808e-06
+      },
+      "box": {
+        "T_center": [
+          1053.251316584645,
+          1131.4886761233445
+        ],
+        "bow_cooldown_um": [
+          0.0001835408122446932,
+          0.00023646431774168749
+        ]
+      },
+      "preprobe_class": "MISS",
+      "cold_heavy": {
+        "status": "FEASIBLE",
+        "feasible": true,
+        "n_candidates": 1,
+        "top_hit": true,
+        "any_hit": true,
+        "top_conf": 0.9999828826755638,
+        "top_recipe": {
+          "T_heater": 1455.830184030437,
+          "film_thickness": 4.506521203197969e-06
+        },
+        "top_outcome": [
+          1068.4402454312565,
+          0.00019136152275655086
+        ],
+        "all_hits": [
+          true
+        ]
+      },
+      "cold_light": {
+        "status": "INFEASIBLE",
+        "feasible": false,
+        "n_candidates": 0,
+        "top_hit": false,
+        "any_hit": false,
+        "top_conf": null,
+        "distance_to_feasible": 227.31597459618635,
+        "reason": "genuinely unreachable: the predicted mean itself is outside the spec box for T_center, bow_cooldown_um (margin -225\u03c3). More data will not move it in \u2014 relax the",
+        "top_recipe": {
+          "T_heater": 1325.0,
+          "film_thickness": 2.6000000000000005e-06
+        },
+        "top_outcome": null
+      },
+      "d2_light": {
+        "status": "FEASIBLE",
+        "feasible": true,
+        "n_candidates": 2,
+        "top_hit": true,
+        "any_hit": true,
+        "top_conf": 0.9999999999999147,
+        "top_recipe": {
+          "T_heater": 1465.028557493451,
+          "film_thickness": 4.493685503954515e-06
+        },
+        "top_outcome": [
+          1075.7249197383735,
+          0.00019248028536867365
+        ],
+        "all_hits": [
+          true,
+          true
+        ]
+      },
+      "cold_heavy_top_hit": true,
+      "cold_light_top_hit": false,
+      "d2_light_top_hit": true
+    },
+    {
+      "target_idx": 4,
+      "reference_recipe": {
+        "T_heater": 1178.5347457509488,
+        "film_thickness": 1.187269635498524e-06
+      },
+      "box": {
+        "T_center": [
+          814.9183015738002,
+          893.1556611124996
+        ],
+        "bow_cooldown_um": [
+          1.0736094190604969e-05,
+          6.365959968759927e-05
+        ]
+      },
+      "preprobe_class": "MISS",
+      "cold_heavy": {
+        "status": "FEASIBLE",
+        "feasible": true,
+        "n_candidates": 4,
+        "top_hit": true,
+        "any_hit": true,
+        "top_conf": 1.0,
+        "top_recipe": {
+          "T_heater": 1165.174623566315,
+          "film_thickness": 1.8200565950510294e-06
+        },
+        "top_outcome": [
+          843.9884469910827,
+          5.605193549855943e-05
+        ],
+        "all_hits": [
+          true,
+          true,
+          true,
+          true
+        ]
+      },
+      "cold_light": {
+        "status": "INFEASIBLE",
+        "feasible": false,
+        "n_candidates": 0,
+        "top_hit": false,
+        "any_hit": false,
+        "top_conf": null,
+        "distance_to_feasible": 21.91427166556837,
+        "reason": "no on-manifold recipe found: every restart fell below the \u00a78.2 support floor (-2.08). The spec box likely lies outside the trained recipe region \u2014 expand suppor",
+        "top_recipe": {
+          "T_heater": 1150.1173725456633,
+          "film_thickness": 2.0160968062623909e-07
+        },
+        "top_outcome": null
+      },
+      "d2_light": {
+        "status": "FEASIBLE",
+        "feasible": true,
+        "n_candidates": 4,
+        "top_hit": true,
+        "any_hit": true,
+        "top_conf": 1.0,
+        "top_recipe": {
+          "T_heater": 1186.4273501631194,
+          "film_thickness": 1.791402674090213e-06
+        },
+        "top_outcome": [
+          859.9864604667595,
+          5.6690878514752855e-05
+        ],
+        "all_hits": [
+          true,
+          true,
+          true,
+          true
+        ]
+      },
+      "cold_heavy_top_hit": true,
+      "cold_light_top_hit": false,
+      "d2_light_top_hit": true
+    },
+    {
+      "target_idx": 5,
+      "reference_recipe": {
+        "T_heater": 1345.4665041994303,
+        "film_thickness": 4.400214697420598e-06
+      },
+      "box": {
+        "T_center": [
+          942.7306323121996,
+          1020.967991850899
+        ],
+        "bow_cooldown_um": [
+          0.00014085141047678993,
+          0.00019377491597378425
+        ]
+      },
+      "preprobe_class": "MISS",
+      "cold_heavy": {
+        "status": "FEASIBLE",
+        "feasible": true,
+        "n_candidates": 4,
+        "top_hit": true,
+        "any_hit": true,
+        "top_conf": 1.0,
+        "top_recipe": {
+          "T_heater": 1328.901998012434,
+          "film_thickness": 4.956609253498004e-06
+        },
+        "top_outcome": [
+          968.989154637303,
+          0.0001851701720100333
+        ],
+        "all_hits": [
+          true,
+          true,
+          true,
+          true
+        ]
+      },
+      "cold_light": {
+        "status": "INFEASIBLE",
+        "feasible": false,
+        "n_candidates": 0,
+        "top_hit": false,
+        "any_hit": false,
+        "top_conf": null,
+        "distance_to_feasible": 121.84210277258552,
+        "reason": "genuinely unreachable: the predicted mean itself is outside the spec box for bow_cooldown_um (margin -120\u03c3). More data will not move it in \u2014 relax the target (n",
+        "top_recipe": {
+          "T_heater": 1325.0,
+          "film_thickness": 2.6000000000000005e-06
+        },
+        "top_outcome": null
+      },
+      "d2_light": {
+        "status": "FEASIBLE",
+        "feasible": true,
+        "n_candidates": 2,
+        "top_hit": true,
+        "any_hit": true,
+        "top_conf": 1.0,
+        "top_recipe": {
+          "T_heater": 1329.5459401521632,
+          "film_thickness": 3.990700341360741e-06
+        },
+        "top_outcome": [
+          969.4883958757814,
+          0.00014918876691420325
+        ],
+        "all_hits": [
+          true,
+          true
+        ]
+      },
+      "cold_heavy_top_hit": true,
+      "cold_light_top_hit": false,
+      "d2_light_top_hit": true
+    },
+    {
+      "target_idx": 0,
+      "reference_recipe": {
+        "T_heater": 1164.0,
+        "film_thickness": 3.92e-07
+      },
+      "box": {
+        "T_center": [
+          803.9876545697132,
+          882.2250141084126
+        ],
+        "bow_cooldown_um": [
+          -1.4407792680055353e-05,
+          3.8515712816938945e-05
+        ]
+      },
+      "preprobe_class": "HIT",
+      "cold_heavy": {
+        "status": "FEASIBLE",
+        "feasible": true,
+        "n_candidates": 3,
+        "top_hit": true,
+        "any_hit": true,
+        "top_conf": 1.0,
+        "top_recipe": {
+          "T_heater": 1150.1173725456633,
+          "film_thickness": 1.036958033382095e-06
+        },
+        "top_outcome": [
+          832.6975866275938,
+          3.1311676251672545e-05
+        ],
+        "all_hits": [
+          true,
+          true,
+          true
+        ]
+      },
+      "cold_light": {
+        "status": "FEASIBLE",
+        "feasible": true,
+        "n_candidates": 1,
+        "top_hit": true,
+        "any_hit": true,
+        "top_conf": 0.9999999641815787,
+        "top_recipe": {
+          "T_heater": 1188.6032954561335,
+          "film_thickness": 1.0359693263457377e-06
+        },
+        "top_outcome": [
+          861.6284114533366,
+          3.287450524245225e-05
+        ],
+        "all_hits": [
+          true
+        ]
+      },
+      "d2_light": {
+        "status": "FEASIBLE",
+        "feasible": true,
+        "n_candidates": 3,
+        "top_hit": true,
+        "any_hit": true,
+        "top_conf": 0.9999999927887284,
+        "top_recipe": {
+          "T_heater": 1159.5967997684747,
+          "film_thickness": 1.073725793498212e-06
+        },
+        "top_outcome": [
+          839.8016045208797,
+          3.2828172539184286e-05
+        ],
+        "all_hits": [
+          true,
+          true,
+          true
+        ]
+      },
+      "cold_heavy_top_hit": true,
+      "cold_light_top_hit": true,
+      "d2_light_top_hit": true
+    },
+    {
+      "target_idx": 1,
+      "reference_recipe": {
+        "T_heater": 1164.0,
+        "film_thickness": 4.808e-06
+      },
+      "box": {
+        "T_center": [
+          803.9876545697132,
+          882.2250141084126
+        ],
+        "bow_cooldown_um": [
+          0.00012138375747871757,
+          0.00017430726297571185
+        ]
+      },
+      "preprobe_class": "HIT",
+      "cold_heavy": {
+        "status": "FEASIBLE",
+        "feasible": true,
+        "n_candidates": 4,
+        "top_hit": true,
+        "any_hit": true,
+        "top_conf": 1.0,
+        "top_recipe": {
+          "T_heater": 1166.4792976236977,
+          "film_thickness": 4.184679711114412e-06
+        },
+        "top_outcome": [
+          844.9684821511601,
+          0.00012909283883840052
+        ],
+        "all_hits": [
+          true,
+          true,
+          true,
+          true
+        ]
+      },
+      "cold_light": {
+        "status": "FEASIBLE",
+        "feasible": true,
+        "n_candidates": 1,
+        "top_hit": true,
+        "any_hit": true,
+        "top_conf": 1.0,
+        "top_recipe": {
+          "T_heater": 1154.570431954854,
+          "film_thickness": 4.2589257648953e-06
+        },
+        "top_outcome": [
+          836.032969750592,
+          0.00012935814486232593
+        ],
+        "all_hits": [
+          true
+        ]
+      },
+      "d2_light": {
+        "status": "FEASIBLE",
+        "feasible": true,
+        "n_candidates": 2,
+        "top_hit": true,
+        "any_hit": true,
+        "top_conf": 0.9999999993638096,
+        "top_recipe": {
+          "T_heater": 1190.2077140371182,
+          "film_thickness": 4.032057550392695e-06
+        },
+        "top_outcome": [
+          862.8395656993072,
+          0.0001282083224764202
+        ],
+        "all_hits": [
+          true,
+          true
+        ]
+      },
+      "cold_heavy_top_hit": true,
+      "cold_light_top_hit": true,
+      "d2_light_top_hit": true
+    },
+    {
+      "target_idx": 2,
+      "reference_recipe": {
+        "T_heater": 1486.0,
+        "film_thickness": 3.92e-07
+      },
+      "box": {
+        "T_center": [
+          1053.251316584645,
+          1131.4886761233445
+        ],
+        "bow_cooldown_um": [
+          -9.340079396306924e-06,
+          4.3583426100687374e-05
+        ]
+      },
+      "preprobe_class": "HIT",
+      "cold_heavy": {
+        "status": "FEASIBLE",
+        "feasible": true,
+        "n_candidates": 2,
+        "top_hit": true,
+        "any_hit": true,
+        "top_conf": 1.0,
+        "top_recipe": {
+          "T_heater": 1482.0129349220108,
+          "film_thickness": 8.17861408407086e-07
+        },
+        "top_outcome": [
+          1089.2015737016668,
+          3.559105829466024e-05
+        ],
+        "all_hits": [
+          true,
+          true
+        ]
+      },
+      "cold_light": {
+        "status": "FEASIBLE",
+        "feasible": true,
+        "n_candidates": 1,
+        "top_hit": true,
+        "any_hit": true,
+        "top_conf": 0.9997480616984709,
+        "top_recipe": {
+          "T_heater": 1454.108209950642,
+          "film_thickness": 8.768446947043017e-07
+        },
+        "top_outcome": [
+          1067.0776298465726,
+          3.7172898505633335e-05
+        ],
+        "all_hits": [
+          true
+        ]
+      },
+      "d2_light": {
+        "status": "FEASIBLE",
+        "feasible": true,
+        "n_candidates": 3,
+        "top_hit": true,
+        "any_hit": true,
+        "top_conf": 0.999999999343159,
+        "top_recipe": {
+          "T_heater": 1461.494392721113,
+          "film_thickness": 8.530991722145696e-07
+        },
+        "top_outcome": [
+          1072.9248557461385,
+          3.6419862058017647e-05
+        ],
+        "all_hits": [
+          true,
+          true,
+          true
+        ]
+      },
+      "cold_heavy_top_hit": true,
+      "cold_light_top_hit": true,
+      "d2_light_top_hit": true
+    }
+  ],
+  "m3_verdict": {
+    "gate_pass": true,
+    "n_targets": 6,
+    "gt_hits_cold_heavy": 6,
+    "gt_hits_cold_light": 3,
+    "gt_hits_d2_light": 6,
+    "d2_ge_heavy": true,
+    "d2_gt_light": true
+  },
+  "timing": {
+    "seconds_per_arm": {
+      "cold_heavy": 72.609,
+      "cold_light": 2.452,
+      "d2_light": 16.605
+    },
+    "cost_ratio_walltime_d2_over_heavy": 0.2287,
+    "total_seconds": 384.467
+  }
+}

@@ -43,8 +43,31 @@ rolling-coverage minimum (full windows only) is recorded as the section
 5.6 concrete drift-detector statistic. The RANDOM stream doubles as the
 exchangeable CONTROL where ACI should roughly match the static path.
 (Method-currency note: section 20.2 makes conformal-PID the online
-endpoint with bare ACI a component; this wires and validates the D4 ACI
-component only.)
+endpoint with bare ACI a component; this ACI paragraph documents the D4
+component -- the conformal-PID endpoint is the THIRD path, next.)
+
+Conformal-PID path (section 20.2 ENDPOINT) -- a THIRD evaluation alongside
+static and ACI, the online endpoint that SUPERSEDES bare ACI (which stays the
+validated D4 component). Same online protocol (a FRESH SplitConformalCalibrator
+on the SAME calibration slice; test rows streamed in split order; the interval
+at the CURRENT state scored BEFORE observe(x, y)), but a ConformalPIDController
+tracks the score THRESHOLD q_t DIRECTLY -- a proportional quantile-tracker
+(q_{t+1} = q_t + eta*(err_t - alpha)) plus the paper's log-time tan integrator
+(decaying-step and scorecaster OFF by default) -- and builds the band as
+mean +/- q_t * sigma_total(x), the same input-adaptive shape the split
+calibrator uses, so the three paths are directly comparable. What conformal-PID
+GUARANTEES: long-run coverage under ARBITRARY distribution shift (Angelopoulos,
+Candes & Tibshirani 2023, NeurIPS; decaying-step variant Angelopoulos, Barber &
+Bates 2024, ICML). What it does NOT guarantee: finite-sample exactness -- so the
+exact-binomial-CI row on the realized online coverage is DIRECTIONAL, same
+status as the static/ACI gate. Because q_t is a real number and never a quantile
+index that can overflow to +inf, EVERY interval is finite by construction:
+n_infinite_width is 0, not merely disclosed as it is for ACI -- the anti-
+infinite-width property is the endpoint's selling point over bare ACI. All
+hyperparameters are the ConformalPIDController LIBRARY DEFAULTS (eta=0.1,
+KI=2.0, Csat=7.0, window=50), identical across ALL campaigns and splits, fixed
+BEFORE seeing any per-campaign outcome -- no tuning-to-pass. The RANDOM stream
+is again the exchangeable CONTROL.
 
 Extras (full 6-campaign run only): a support/OOD directional check across the
 four PRR-space campaigns (mean epistemic sigma on a model's own held-out rows
@@ -93,6 +116,20 @@ from pathlib import Path
 import numpy as np
 from scipy import stats
 
+from rig.calibration.conformal import (
+    ACIController,
+    ConformalForwardModel,
+    SplitConformalCalibrator,
+)
+from rig.calibration.pid import ConformalPIDController
+from rig.forward import GPForwardModel, records_to_arrays
+from rig.interfaces import Infeasible
+from rig.inverse.pessimistic import PessimisticInverseSolver
+from rig.metrics import uq
+from rig.schema import ureg  # the ONE shared pint registry -- never a second one
+from rig_adapters.tabular.ingest import ingest_csv
+from rig_adapters.tabular.spec import load_spec
+
 # The section 8 solver's diagnostic strings contain Greek (kappa/sigma) and
 # section signs; force UTF-8 so a cp1252 Windows console does not crash on them.
 if hasattr(sys.stdout, "reconfigure"):
@@ -101,20 +138,9 @@ if hasattr(sys.stdout, "reconfigure"):
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))  # prepare_empa.py lives beside this script
 
-from prepare_empa import CAMPAIGNS, DEP_RATE_COLUMN, Campaign
-
-from rig.calibration.conformal import (
-    ACIController,
-    ConformalForwardModel,
-    SplitConformalCalibrator,
-)
-from rig.forward import GPForwardModel, records_to_arrays
-from rig.interfaces import Infeasible
-from rig.inverse.pessimistic import PessimisticInverseSolver
-from rig.metrics import uq
-from rig.schema import ureg  # the ONE shared pint registry -- never a second one
-from rig_adapters.tabular.ingest import ingest_csv
-from rig_adapters.tabular.spec import load_spec
+# prepare_empa.py lives beside this script, so its import must follow the
+# sys.path insert above (structural -- hence the E402 suppression here only).
+from prepare_empa import CAMPAIGNS, DEP_RATE_COLUMN, Campaign  # noqa: E402
 
 SEED = 0
 ALPHA = 0.10  # conformal miscoverage target -> nominal 90% coverage
@@ -422,6 +448,169 @@ def print_aci_table(label: str, aci: dict, output_keys: list[str]) -> None:
     )
 
 
+def pid_eval(
+    model: GPForwardModel,
+    Xc: np.ndarray,
+    Yc: np.ndarray,
+    Xt: np.ndarray,
+    Yt: np.ndarray,
+    output_keys: list[str],
+    units: list[str],
+) -> dict:
+    """section 20.2 conformal-PID ONLINE evaluation -- the drift ENDPOINT.
+
+    section 20.2 designates conformal-PID / decaying-step online CP as the
+    online endpoint that SUPERSEDES bare ACI (which becomes a component). Same
+    online protocol as aci_eval (a FRESH SplitConformalCalibrator on the SAME
+    calibration slice; test rows streamed in split order; interval at the CURRENT
+    state scored FIRST, THEN observe(x, y) -- an observation never influences its
+    own interval), but the controller tracks the score THRESHOLD q_t DIRECTLY
+    (P + I terms; decaying-step and scorecaster OFF) instead of the miscoverage
+    level alpha_t. Because q_t is a real number and the band is
+    mean +/- q_t * sigma_total(x), EVERY interval is finite by construction:
+    n_infinite_width is 0, not merely disclosed (contrast the ACI path, which
+    can auto-hit via unbounded intervals when alpha_t < 1/(n_scores+1)).
+
+    ONLY alpha_target is passed to ConformalPIDController; every other
+    hyperparameter (eta, KI, Csat, window, step, integrate) is the library
+    default, uniform across all campaigns/splits, fixed before any per-campaign
+    outcome was seen (see the module docstring -- no tuning-to-pass). No RNG
+    anywhere in this path.
+    """
+    t0 = time.perf_counter()
+    cal = SplitConformalCalibrator(alpha=ALPHA)
+    cal.fit(model, Xc, Yc)
+    controller = ConformalPIDController(cal, alpha_target=ALPHA)  # library defaults only
+
+    n_test, m = Yt.shape
+    hits = np.zeros((n_test, m), dtype=bool)
+    widths = np.empty((n_test, m))
+    q_used = np.empty((n_test, m))
+    alpha_eff = np.empty((n_test, m))
+    rolling = np.empty((n_test, m))
+    window = controller.window  # the library-default window (read-only)
+    for t in range(n_test):
+        x, y = Xt[t], Yt[t]
+        q_used[t] = controller.q_t  # threshold at the CURRENT (pre-update) state
+        alpha_eff[t] = controller.effective_alpha()
+        itv = controller.interval(x)  # (m, 2) at the CURRENT (pre-update) threshold
+        lo, hi = itv[..., 0].reshape(-1), itv[..., 1].reshape(-1)
+        widths[t] = hi - lo
+        miss = ((y < lo) | (y > hi)).astype(float)
+        err = controller.observe(x, y)  # scores the SAME pre-update interval
+        if not np.array_equal(err, miss):  # bookkeeping guard -- must never fire
+            raise RuntimeError(f"PID hit/miss bookkeeping mismatch at t={t}: {err} vs {miss}")
+        hits[t] = err == 0.0
+        rolling[t] = controller.rolling_coverage
+
+    per_output: dict[str, dict] = {}
+    full = rolling[window - 1 :]  # rolling coverage over FULL windows only
+    for j, key in enumerate(output_keys):
+        k = int(hits[:, j].sum())
+        ci_lo, ci_hi = binom_ci(k, n_test)
+        finite_w = widths[np.isfinite(widths[:, j]), j]
+        per_output[key] = {
+            "unit": units[j],
+            "picp": float(k / n_test),
+            "k_covered": k,
+            "n_test": n_test,
+            "ci95": [ci_lo, ci_hi],
+            "nominal_in_ci": bool(ci_lo <= NOMINAL <= ci_hi),
+            "mean_width": float(finite_w.mean()) if finite_w.size else None,
+            # 0 by construction for PID (the threshold is a real number, never a
+            # quantile index that can overflow to +inf) -- still recorded, the
+            # honest contract, and a red flag if it is ever nonzero.
+            "n_infinite_width": int(n_test - finite_w.size),
+            "q_threshold": {
+                "used_min": float(q_used[:, j].min()),
+                "used_max": float(q_used[:, j].max()),
+                "used_mean": float(q_used[:, j].mean()),
+                "final": float(controller.q_t[j]),
+            },
+            "effective_alpha": {
+                "used_min": float(alpha_eff[:, j].min()),
+                "used_max": float(alpha_eff[:, j].max()),
+                "used_mean": float(alpha_eff[:, j].mean()),
+                "final": float(controller.effective_alpha()[j]),
+            },
+            "rolling_coverage": {
+                "window": window,
+                "min_full_window": float(full[:, j].min()) if full.size else None,
+                "final": float(rolling[-1, j]),
+            },
+        }
+    k_pool = int(hits.sum())
+    n_pool = int(hits.size)
+    p_lo, p_hi = binom_ci(k_pool, n_pool)
+    return {
+        "protocol": (
+            "online section 20.2 conformal-PID (endpoint): fresh split calibrator on the SAME "
+            "calibration slice; test rows streamed in split order; interval at the current "
+            "threshold q_t scored BEFORE observe(x, y); q_t tracked directly (finite by "
+            "construction, so n_infinite_width is 0)"
+        ),
+        "hyperparameters": {
+            "alpha_target": float(controller.alpha_target),
+            "eta": float(controller.eta),
+            "KI": float(controller.KI),
+            "Csat": float(controller.Csat),
+            "window": int(window),
+            "step": controller.step,
+            "integrate": bool(controller.integrate),
+            "scorecaster": controller.scorecaster is not None,
+            "provenance": (
+                "ConformalPIDController library defaults (P+I quantile-tracker + log-time tan "
+                "integrator; decaying-step OFF, scorecaster OFF), uniform across all campaigns "
+                "and splits, fixed before any per-campaign outcome was seen"
+            ),
+        },
+        "per_output": per_output,
+        # CAVEAT (same as static/ACI): pooled trials share test rows across outputs.
+        "pooled": {
+            "picp": float(k_pool / n_pool),
+            "k_covered": k_pool,
+            "n_trials": n_pool,
+            "ci95": [p_lo, p_hi],
+            "nominal_in_ci": bool(p_lo <= NOMINAL <= p_hi),
+        },
+        "wall_seconds": round(time.perf_counter() - t0, 1),
+    }
+
+
+def print_pid_table(label: str, pid: dict, output_keys: list[str]) -> None:
+    n_test = pid["per_output"][output_keys[0]]["n_test"]
+    print(f"\n{label}  (n_test={n_test} streamed; interval BEFORE observe; PID library defaults)")
+    hdr = (
+        f"{'output':<20}{'unit':>7}{'PICP':>7}{'95% CI':>17}{'gate':>6}"
+        f"{'mean W':>9}{'q_final':>9}{'roll_min':>9}"
+    )
+    print(hdr)
+    print("-" * len(hdr))
+    for key in output_keys:
+        m = pid["per_output"][key]
+        ci = f"[{m['ci95'][0]:.3f},{m['ci95'][1]:.3f}]"
+        gate = "PASS" if m["nominal_in_ci"] else "FAIL"
+        width = "inf" if m["mean_width"] is None else f"{m['mean_width']:.4f}"
+        roll = m["rolling_coverage"]["min_full_window"]
+        roll_s = "n/a" if roll is None else f"{roll:.3f}"
+        print(
+            f"{key:<20}{UNIT_LABEL.get(key, m['unit']):>7}{m['picp']:>7.3f}{ci:>17}{gate:>6}"
+            f"{width:>9}{m['q_threshold']['final']:>9.4f}{roll_s:>9}"
+        )
+        if m["n_infinite_width"]:  # must be impossible for PID -- flag loudly if not
+            print(
+                f"  NB {m['n_infinite_width']} INFINITE-width step(s) -- IMPOSSIBLE for PID "
+                "(threshold tracked directly, not a quantile index); investigate"
+            )
+    p = pid["pooled"]
+    ci = f"[{p['ci95'][0]:.3f},{p['ci95'][1]:.3f}]"
+    gate = "PASS" if p["nominal_in_ci"] else "FAIL"
+    print(
+        f"{'POOLED (2 outputs)':<20}{'':>7}{p['picp']:>7.3f}{ci:>17}{gate:>6}"
+        "   (CI optimistic: outputs share test rows)"
+    )
+
+
 def run_campaign(campaign: Campaign, idx: int, gp_restarts: int) -> tuple[dict, dict]:
     """Ingest + both splits + metrics for one campaign. Returns (summary, artifacts)."""
     spec, result, degenerate = ingest_campaign(campaign)
@@ -435,9 +624,7 @@ def run_campaign(campaign: Campaign, idx: int, gp_restarts: int) -> tuple[dict, 
     X, Y_si = records_to_arrays(records, input_keys, output_keys)
     # ingest SI-canonicalizes outcomes (angstrom/s -> m/s x1e-10; A -> A x1);
     # report everything back in the readable declared units.
-    si_per_raw = np.array(
-        [float(ureg.Quantity(1.0, u).to_base_units().magnitude) for u in units]
-    )
+    si_per_raw = np.array([float(ureg.Quantity(1.0, u).to_base_units().magnitude) for u in units])
     Y = Y_si / si_per_raw
 
     n = len(records)
@@ -447,8 +634,10 @@ def run_campaign(campaign: Campaign, idx: int, gp_restarts: int) -> tuple[dict, 
     banner(f"CAMPAIGN {campaign.slug}  ({spec.process_id})")
     print(f"rows ingested      : {n}  (+{len(result.rejects)} rejected; expected)")
     print(f"provenance.source  : {records[0].provenance.source}")
-    order = "BatchNr (verified run order)" if not degenerate else (
-        "FILE ORDER -- BatchNr degenerate (all 1); temporal split UNVERIFIED here"
+    order = (
+        "BatchNr (verified run order)"
+        if not degenerate
+        else ("FILE ORDER -- BatchNr degenerate (all 1); temporal split UNVERIFIED here")
     )
     print(f"temporal order key : {order}")
     print(f"split sizes        : train={n_train}  calibration={n_cal}  test={n_test}")
@@ -464,34 +653,57 @@ def run_campaign(campaign: Campaign, idx: int, gp_restarts: int) -> tuple[dict, 
         "split_sizes": {"train": n_train, "cal": n_cal, "test": n_test},
         "splits": {},
     }
-    artifacts: dict = {"spec": spec, "X_all": X, "Y_all": Y, "input_keys": input_keys,
-                       "output_keys": output_keys, "units": units}
+    artifacts: dict = {
+        "spec": spec,
+        "X_all": X,
+        "Y_all": Y,
+        "input_keys": input_keys,
+        "output_keys": output_keys,
+        "units": units,
+    }
 
     # -- temporal split: contiguous blocks in run order (the M1 gate form) ----
     # NB ingest synthesized timestamps (no timestamp column); the split is over
     # the REAL BatchNr run order read from extra, not those synthetic stamps.
     idx_all = np.arange(n)
     splits = {
-        "temporal": (idx_all[:n_train], idx_all[n_train : n_train + n_cal],
-                     idx_all[n_train + n_cal :]),
+        "temporal": (
+            idx_all[:n_train],
+            idx_all[n_train : n_train + n_cal],
+            idx_all[n_train + n_cal :],
+        ),
     }
     # -- random contrast split: same sizes, seeded permutation -----------------
     rng = np.random.default_rng(SEED + idx)
     perm = rng.permutation(n)
-    splits["random"] = (perm[:n_train], perm[n_train : n_train + n_cal],
-                        perm[n_train + n_cal :])
+    splits["random"] = (perm[:n_train], perm[n_train : n_train + n_cal], perm[n_train + n_cal :])
 
     for name, (fit_idx, cal_idx, test_idx) in splits.items():
         t0 = time.perf_counter()
         metrics, model, id_epi = fit_and_eval(
-            X[fit_idx], Y[fit_idx], X[cal_idx], Y[cal_idx], X[test_idx], Y[test_idx],
-            input_keys, output_keys, units, gp_restarts,
+            X[fit_idx],
+            Y[fit_idx],
+            X[cal_idx],
+            Y[cal_idx],
+            X[test_idx],
+            Y[test_idx],
+            input_keys,
+            output_keys,
+            units,
+            gp_restarts,
         )
         metrics["wall_seconds"] = round(time.perf_counter() - t0, 1)
         # D4/section 5.6 ACI ONLINE path -- ADDITIONAL evaluation on the same
         # fitted GP + same calibration slice; the static block above is the
         # baseline and stays byte-identical in the JSON.
         metrics["aci"] = aci_eval(
+            model, X[cal_idx], Y[cal_idx], X[test_idx], Y[test_idx], output_keys, units
+        )
+        # section 20.2 conformal-PID ONLINE path -- the drift ENDPOINT that
+        # supersedes bare ACI (which stays as the validated component). ADDITIONAL
+        # evaluation on the SAME fitted GP + SAME calibration slice; the static and
+        # ACI blocks above are the baseline and stay byte-identical in the JSON.
+        metrics["pid"] = pid_eval(
             model, X[cal_idx], Y[cal_idx], X[test_idx], Y[test_idx], output_keys, units
         )
         summary["splits"][name] = metrics
@@ -509,13 +721,22 @@ def run_campaign(campaign: Campaign, idx: int, gp_restarts: int) -> tuple[dict, 
         if name == "temporal" and degenerate:
             aci_label = "ACI ONLINE, FILE-ORDER stream (order key UNVERIFIED -- see above)"
         print_aci_table(aci_label, metrics["aci"], output_keys)
+        pid_label = {
+            "temporal": "PID ONLINE, TEMPORAL stream (section 20.2 endpoint; run order)",
+            "random": "PID ONLINE, RANDOM stream (exchangeable control -- expect ~static)",
+        }[name]
+        if name == "temporal" and degenerate:
+            pid_label = "PID ONLINE, FILE-ORDER stream (order key UNVERIFIED -- see above)"
+        print_pid_table(pid_label, metrics["pid"], output_keys)
         artifacts[f"model_{name}"] = model
         artifacts[f"fit_idx_{name}"] = fit_idx
         artifacts[f"test_idx_{name}"] = test_idx
         artifacts[f"id_epi_{name}"] = id_epi
     ns = summary["splits"]["temporal"]["noise_std"]
-    print(f"\nfitted aleatoric noise_std (temporal fit): "
-          + ", ".join(f"{k}={v:.4f} {UNIT_LABEL.get(k, '')}" for k, v in ns.items()))
+    print(
+        "\nfitted aleatoric noise_std (temporal fit): "
+        + ", ".join(f"{k}={v:.4f} {UNIT_LABEL.get(k, '')}" for k, v in ns.items())
+    )
     return summary, artifacts
 
 
@@ -548,15 +769,17 @@ def ood_check(artifacts: dict[str, dict]) -> dict:
             ood_support = float(np.mean(model.support_score(Xo)))
             ok = bool(np.all(ood_epi > id_epi))
             n_pass += ok
-            pairs.append({
-                "model": src,
-                "queried_on": tgt,
-                "id_mean_epi": [float(v) for v in id_epi],
-                "ood_mean_epi": [float(v) for v in ood_epi],
-                "id_mean_support": id_support,
-                "ood_mean_support": ood_support,
-                "ood_epi_greater_both_outputs": ok,
-            })
+            pairs.append(
+                {
+                    "model": src,
+                    "queried_on": tgt,
+                    "id_mean_epi": [float(v) for v in id_epi],
+                    "ood_mean_epi": [float(v) for v in ood_epi],
+                    "id_mean_support": id_support,
+                    "ood_mean_support": ood_support,
+                    "ood_epi_greater_both_outputs": ok,
+                }
+            )
     result = {
         "design": "random-split model; ID = own held-out random-test rows; OOD = all rows of the other campaign",
         "output_order": list(artifacts[PRR_SLUGS[0]]["output_keys"]),
@@ -566,18 +789,24 @@ def ood_check(artifacts: dict[str, dict]) -> dict:
         "caveat": "shared 5-D PRR knob space, but different material (Al/Ti) and power tier -- cross-campaign shift, not adversarial far-OOD",
     }
     banner("SUPPORT / OOD DIRECTIONAL CHECK (4 PRR-space campaigns, 12 ordered pairs)")
-    hdr = (f"{'model':<18}{'queried on':<18}{'ID epi (dep,Ipk)':>20}{'OOD epi (dep,Ipk)':>20}"
-           f"{'ID supp':>9}{'OOD supp':>10}{'OOD>ID':>8}")
+    hdr = (
+        f"{'model':<18}{'queried on':<18}{'ID epi (dep,Ipk)':>20}{'OOD epi (dep,Ipk)':>20}"
+        f"{'ID supp':>9}{'OOD supp':>10}{'OOD>ID':>8}"
+    )
     print(hdr)
     print("-" * len(hdr))
     for p in pairs:
         ide = f"{p['id_mean_epi'][0]:.4f},{p['id_mean_epi'][1]:.3f}"
         oode = f"{p['ood_mean_epi'][0]:.4f},{p['ood_mean_epi'][1]:.3f}"
-        print(f"{p['model']:<18}{p['queried_on']:<18}{ide:>20}{oode:>20}"
-              f"{p['id_mean_support']:>9.2f}{p['ood_mean_support']:>10.2f}"
-              f"{'yes' if p['ood_epi_greater_both_outputs'] else 'NO':>8}")
-    print(f"\ndirectional pass: {n_pass}/{len(pairs)} ordered pairs "
-          "(epistemic sigma larger on the other campaign's recipes, both outputs)")
+        print(
+            f"{p['model']:<18}{p['queried_on']:<18}{ide:>20}{oode:>20}"
+            f"{p['id_mean_support']:>9.2f}{p['ood_mean_support']:>10.2f}"
+            f"{'yes' if p['ood_epi_greater_both_outputs'] else 'NO':>8}"
+        )
+    print(
+        f"\ndirectional pass: {n_pass}/{len(pairs)} ordered pairs "
+        "(epistemic sigma larger on the other campaign's recipes, both outputs)"
+    )
     print("caveat: " + result["caveat"])
     return result
 
@@ -627,31 +856,45 @@ def inverse_demo(art: dict, solver_restarts: int | None) -> dict:
     )
 
     banner(f"PESSIMISTIC INVERSE DEMO on {DEMO_SLUG} (implementation-plan section 8)")
-    print("NB recipe values are SI (section 3.5): PW / pos Delay / pos PW are in "
-          "SECONDS despite the '(us)' in the names (1 us = 1e-6 s); PRR in Hz, "
-          "pos Setpoint in V. Targets are in angstrom/s (the declared output unit).")
+    print(
+        "NB recipe values are SI (section 3.5): PW / pos Delay / pos PW are in "
+        "SECONDS despite the '(us)' in the names (1 us = 1e-6 s); PRR in Hz, "
+        "pos Setpoint in V. Targets are in angstrom/s (the declared output unit)."
+    )
 
-    demo: dict = {"campaign": DEMO_SLUG, "model": "random-split train model",
-                  "target_output": DEP_RATE_COLUMN, "unit": "angstrom/second"}
+    demo: dict = {
+        "campaign": DEMO_SLUG,
+        "model": "random-split train model",
+        "target_output": DEP_RATE_COLUMN,
+        "unit": "angstrom/second",
+    }
 
     # The section 8.4 arithmetic that separates regimes 1 and 2: a band can
     # only ever be pessimistic-feasible if it is wider than the credited
     # aleatoric floor 2*kappa*sigma_ale (necessary, not sufficient).
     sigma_ale = float(model.noise_std_[0])
     min_width = 2.0 * solver.kappa * sigma_ale
-    print(f"\ncredited-band floor: 2*kappa*sigma_ale = 2*{solver.kappa:.1f}*{sigma_ale:.4f} "
-          f"= {min_width:.4f} Ang/s -- any narrower target band is INFEASIBLE by construction")
+    print(
+        f"\ncredited-band floor: 2*kappa*sigma_ale = 2*{solver.kappa:.1f}*{sigma_ale:.4f} "
+        f"= {min_width:.4f} Ang/s -- any narrower target band is INFEASIBLE by construction"
+    )
 
     # -- query 1: populated but TOO-TIGHT band (honest abstention demo) -------
     n_lo, n_hi = (float(q) for q in np.quantile(dep_train, [0.60, 0.90]))
     narrow_expected = "INFEASIBLE" if (n_hi - n_lo) < min_width else "FEASIBLE"
-    print(f"\nquery 1 (populated, over-tight): dep rate in [{n_lo:.4f}, {n_hi:.4f}] Ang/s "
-          f"(train [0.60, 0.90] quantile band; width {n_hi - n_lo:.4f} < floor "
-          f"{min_width:.4f}) -- expect {narrow_expected} with a spec-relaxation diagnosis")
+    print(
+        f"\nquery 1 (populated, over-tight): dep rate in [{n_lo:.4f}, {n_hi:.4f}] Ang/s "
+        f"(train [0.60, 0.90] quantile band; width {n_hi - n_lo:.4f} < floor "
+        f"{min_width:.4f}) -- expect {narrow_expected} with a spec-relaxation diagnosis"
+    )
     out_n = solver.solve({"targets": {DEP_RATE_COLUMN: (n_lo, n_hi)}, "max_candidates": 3})
-    qn: dict = {"targets": [n_lo, n_hi], "quantiles": [0.60, 0.90],
-                "band_width": n_hi - n_lo, "credited_floor_2_kappa_sigma_ale": min_width,
-                "expected": narrow_expected}
+    qn: dict = {
+        "targets": [n_lo, n_hi],
+        "quantiles": [0.60, 0.90],
+        "band_width": n_hi - n_lo,
+        "credited_floor_2_kappa_sigma_ale": min_width,
+        "expected": narrow_expected,
+    }
     if isinstance(out_n, Infeasible):
         qn["observed"] = "INFEASIBLE"
         qn["reason"] = out_n.reason
@@ -668,8 +911,10 @@ def inverse_demo(art: dict, solver_restarts: int | None) -> dict:
 
     # -- query 2: clearly-populated AND credit-wide band -> expect FEASIBLE ---
     q_lo, q_hi = (float(q) for q in np.quantile(dep_train, [0.10, 0.90]))
-    print(f"\nquery 2 (populated, credit-wide): dep rate in [{q_lo:.4f}, {q_hi:.4f}] Ang/s "
-          "(train [0.10, 0.90] quantile band) -- expect FEASIBLE")
+    print(
+        f"\nquery 2 (populated, credit-wide): dep rate in [{q_lo:.4f}, {q_hi:.4f}] Ang/s "
+        "(train [0.10, 0.90] quantile band) -- expect FEASIBLE"
+    )
     out = solver.solve({"targets": {DEP_RATE_COLUMN: (q_lo, q_hi)}, "max_candidates": 3})
     q1: dict = {"targets": [q_lo, q_hi], "quantiles": [0.10, 0.90], "expected": "FEASIBLE"}
     if isinstance(out, Infeasible):
@@ -691,29 +936,37 @@ def inverse_demo(art: dict, solver_restarts: int | None) -> dict:
             nn_dep = float(Y_all[nn, 0])
             nn_in_band = bool(q_lo <= nn_dep <= q_hi)
             iv = {k: (float(a), float(b)) for k, (a, b) in cand.predicted_outcome_interval.items()}
-            q1["candidates"].append({
-                "recipe_si": {k: float(v) for k, v in cand.recipe.items()},
-                "confidence": float(cand.confidence),
-                "support_score": float(cand.support_score),
-                "credited_interval": iv,
-                "nn_distance_normalized": float(d[nn]),
-                "nn_measured_dep_rate": nn_dep,
-                "nn_in_target_band": nn_in_band,
-            })
+            q1["candidates"].append(
+                {
+                    "recipe_si": {k: float(v) for k, v in cand.recipe.items()},
+                    "confidence": float(cand.confidence),
+                    "support_score": float(cand.support_score),
+                    "credited_interval": iv,
+                    "nn_distance_normalized": float(d[nn]),
+                    "nn_measured_dep_rate": nn_dep,
+                    "nn_in_target_band": nn_in_band,
+                }
+            )
             rc = {k: f"{v:.4g}" for k, v in cand.recipe.items()}
             print(f"  #{i}: recipe(SI)={rc}")
-            print(f"       confidence={cand.confidence:.3f}  support={cand.support_score:.3f}  "
-                  f"credited dep interval={iv[DEP_RATE_COLUMN][0]:.3f}..{iv[DEP_RATE_COLUMN][1]:.3f} Ang/s")
-            print(f"       nearest measured run: dist={d[nn]:.3f} (normalized), measured "
-                  f"dep rate={nn_dep:.4f} Ang/s, in target band: {nn_in_band}")
+            print(
+                f"       confidence={cand.confidence:.3f}  support={cand.support_score:.3f}  "
+                f"credited dep interval={iv[DEP_RATE_COLUMN][0]:.3f}..{iv[DEP_RATE_COLUMN][1]:.3f} Ang/s"
+            )
+            print(
+                f"       nearest measured run: dist={d[nn]:.3f} (normalized), measured "
+                f"dep rate={nn_dep:.4f} Ang/s, in target band: {nn_in_band}"
+            )
     q1["as_expected"] = q1["observed"] == q1["expected"]
     demo["query_populated"] = q1
 
     # -- query 3: strictly above the observed max -> must abstain -------------
     y_max = float(Y_all[:, 0].max())
     t_lo, t_hi = 1.5 * y_max, 2.0 * y_max
-    print(f"\nquery 3 (beyond data): dep rate in [{t_lo:.4f}, {t_hi:.4f}] Ang/s "
-          f"(observed max {y_max:.4f}) -- expect explicit INFEASIBLE, not an invented recipe")
+    print(
+        f"\nquery 3 (beyond data): dep rate in [{t_lo:.4f}, {t_hi:.4f}] Ang/s "
+        f"(observed max {y_max:.4f}) -- expect explicit INFEASIBLE, not an invented recipe"
+    )
     out2 = solver.solve({"targets": {DEP_RATE_COLUMN: (t_lo, t_hi)}, "max_candidates": 3})
     q2: dict = {"targets": [t_lo, t_hi], "observed_max": y_max, "expected": "INFEASIBLE"}
     if isinstance(out2, Infeasible):
@@ -736,12 +989,23 @@ def inverse_demo(art: dict, solver_restarts: int | None) -> dict:
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    parser.add_argument("--campaign", choices=[c.slug for c in CAMPAIGNS], default=None,
-                        help="run ONE campaign (default: all six)")
-    parser.add_argument("--smoke", action="store_true",
-                        help="reduced restarts (GP 2, solver 24) for a fast shape check")
-    parser.add_argument("--out", type=Path, default=None,
-                        help="results JSON path (default: results/m1_empa[.<slug>][.smoke].json)")
+    parser.add_argument(
+        "--campaign",
+        choices=[c.slug for c in CAMPAIGNS],
+        default=None,
+        help="run ONE campaign (default: all six)",
+    )
+    parser.add_argument(
+        "--smoke",
+        action="store_true",
+        help="reduced restarts (GP 2, solver 24) for a fast shape check",
+    )
+    parser.add_argument(
+        "--out",
+        type=Path,
+        default=None,
+        help="results JSON path (default: results/m1_empa[.<slug>][.smoke].json)",
+    )
     args = parser.parse_args(argv)
 
     np.random.seed(SEED)
@@ -758,8 +1022,10 @@ def main(argv: list[str] | None = None) -> int:
     print("dataset : Zenodo 10.5281/zenodo.18495402 (CC-BY-4.0), real Empa sputter tool")
     print("caveats : BO-clustered sampling (exchangeability approximate); temporal split")
     print("          doubles as a drift stress test; M0 venue choice is the user/PI's.")
-    print(f"mode    : {'SMOKE (reduced restarts)' if args.smoke else 'full'};"
-          f"  campaigns: {[c.slug for c in selected]}")
+    print(
+        f"mode    : {'SMOKE (reduced restarts)' if args.smoke else 'full'};"
+        f"  campaigns: {[c.slug for c in selected]}"
+    )
 
     t_start = time.perf_counter()
     summaries: dict[str, dict] = {}
@@ -792,7 +1058,11 @@ def main(argv: list[str] | None = None) -> int:
             tag0 = split_name
             if split_name == "temporal" and not s["temporal_split_meaningful"]:
                 tag0 = "temporal*"
-            for tag, p in ((tag0, sp["pooled"]), (tag0 + "+ACI", sp["aci"]["pooled"])):
+            for tag, p in (
+                (tag0, sp["pooled"]),
+                (tag0 + "+ACI", sp["aci"]["pooled"]),
+                (tag0 + "+PID", sp["pid"]["pooled"]),
+            ):
                 ci = f"[{p['ci95'][0]:.3f},{p['ci95'][1]:.3f}]"
                 gate = "PASS" if p["nominal_in_ci"] else "FAIL"
                 print(f"{slug:<20}{tag:<15}{p['picp']:>12.3f}{ci:>17}{gate:>6}")
@@ -800,6 +1070,8 @@ def main(argv: list[str] | None = None) -> int:
         print("* ti_120w_short_pw order key is UNVERIFIED file order (BatchNr degenerate)")
     print("+ACI rows: online (D4/section 5.6) realized coverage, ACI library defaults;")
     print("           asymptotic-average guarantee only -- the CI row is directional")
+    print("+PID rows: online (section 20.2 ENDPOINT) conformal-PID, PID library defaults;")
+    print("           long-run coverage under arbitrary shift, finite by construction")
 
     payload = {
         "meta": {
@@ -838,6 +1110,34 @@ def main(argv: list[str] | None = None) -> int:
                     "implementation-plan section 20.2 makes conformal-PID the online "
                     "endpoint with bare ACI a component; this validates the D4 ACI "
                     "component only"
+                ),
+            },
+            "pid": {
+                "status": (
+                    "the section 20.2 DESIGNATED online endpoint (conformal-PID; supersedes "
+                    "bare ACI, which remains the validated D4 component). ADDITIONAL online "
+                    "evaluation; the static split-conformal and ACI blocks are unchanged"
+                ),
+                "guarantee": (
+                    "long-run coverage under ARBITRARY distribution shift via direct threshold "
+                    "tracking (Angelopoulos, Candes & Tibshirani 2023, NeurIPS; decaying-step "
+                    "variant Angelopoulos, Barber & Bates 2024, ICML)"
+                ),
+                "non_guarantee": (
+                    "NOT finite-sample exact -- the binomial-CI row on realized online coverage "
+                    "is DIRECTIONAL, same status as the static/ACI gate; per-step trials are not "
+                    "i.i.d. once q_t adapts"
+                ),
+                "finite_by_construction": (
+                    "q_t is a tracked real threshold (band mean +/- q_t*sigma_total), never a "
+                    "quantile index, so n_infinite_width is 0 by construction -- the anti-"
+                    "infinite-width property that distinguishes PID from ACI's alpha_t path"
+                ),
+                "hyperparameters": (
+                    "ConformalPIDController library defaults (alpha_target=0.10, eta=0.1, KI=2.0, "
+                    "Csat=7.0, window=50, step=fixed, integrate=True, scorecaster=None), uniform "
+                    "across all campaigns and splits, fixed before any per-campaign outcome was "
+                    "seen -- no tuning-to-pass"
                 ),
             },
         },

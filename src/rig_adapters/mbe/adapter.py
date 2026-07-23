@@ -44,10 +44,15 @@ the exact metric -> OutcomeRecord mapping:
 Cost model: Kanarik defaults (implementation-plan §11.1) — c_batch = $1000,
 c_recipe = $1000/run, batch_size = 4.
 
-D7 honesty: ``physics_plugin`` is the fast Arrhenius-path evaluator;
-``independent_verifier`` is ``None`` — the reduced-order path shares physics
-lineage with the kMC, so neither may pose as the independent verifier. The
-different-physics ROM verifier is a future work package.
+D7 resolution: ``physics_plugin`` is the fast Arrhenius-path evaluator;
+``independent_verifier`` is the :class:`~rig_adapters.mbe.verifier.\
+GeometricDepositionVerifier` — a genuinely different-physics reduced-order
+model (purely-geometric Knudsen line-of-sight deposition, zero thermal/kinetic
+content, no shared code with the fast path). It bounds the flux-scale channel
+(``thickness_grown``); it deliberately does NOT bound the thermal-dominated
+``combined_nonuniformity_pct`` or the thermo-mechanical outputs. It is a
+DIFFERENT object from ``physics_plugin`` by construction, so ``validate_adapter``
+passes the D7 identity check. (Owed since Phase 0 per D7/R10; built 2026-07-22.)
 """
 
 from __future__ import annotations
@@ -66,6 +71,7 @@ from rig.interfaces import (
     sobol_seed_design,
 )
 from rig_adapters.mbe import simlink
+from rig_adapters.mbe.verifier import GeometricDepositionVerifier
 
 PROCESS_ID = "mbe"
 
@@ -169,7 +175,8 @@ def evaluate_physics(
 class _PhysicsPlugin:
     """The optional f_physics(x) prior (implementation-plan §3.1): clean-machine fast path.
 
-    A distinct object from any future verifier by construction (D7)."""
+    A distinct object from the independent verifier by construction (D7): this
+    is the fast Arrhenius/regime path; the verifier is the geometric ROM."""
 
     def __init__(self, n_nodes: int, n_phi: int) -> None:
         self._n_nodes = n_nodes
@@ -189,6 +196,9 @@ class MBEAdapter:
         self._n_nodes = n_nodes
         self._n_phi = n_phi
         self._physics_plugin = _PhysicsPlugin(n_nodes, n_phi)
+        # D7 (R10): a genuinely different-physics ROM, distinct object from the
+        # fast-path physics_plugin above so validate_adapter's identity check passes.
+        self._independent_verifier = GeometricDepositionVerifier()
 
     # -- identity -----------------------------------------------------------
     @property
@@ -228,11 +238,15 @@ class MBEAdapter:
         return self._physics_plugin
 
     @property
-    def independent_verifier(self) -> None:
-        """None: the honest D7 state — the fast path shares physics lineage
-        with the kMC, so no in-repo path qualifies as independent. The
-        different-physics ROM verifier is a future work package."""
-        return None
+    def independent_verifier(self) -> GeometricDepositionVerifier:
+        """The different-physics ROM verifier (D7/R10): a purely-geometric
+        Knudsen line-of-sight deposition model sharing NO physics lineage or
+        code with the fast Arrhenius path. Bounds the flux-scale channel
+        (``thickness_grown``); see :mod:`rig_adapters.mbe.verifier` for its
+        honest scope (it cannot bound the thermal-dominated nonuniformity or the
+        thermo-mechanical outputs). A DIFFERENT object from
+        :attr:`physics_plugin`, so ``validate_adapter`` passes the D7 check."""
+        return self._independent_verifier
 
     # -- encoders -------------------------------------------------------------
     def encode_recipe(self, recipe: Mapping[str, Any]) -> np.ndarray:

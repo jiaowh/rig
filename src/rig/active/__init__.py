@@ -14,10 +14,22 @@ from rig.active.acquisition import (
     qlognehvi_phase2,
 )
 from rig.active.batch import select_batch
+from rig.active.campaign import (
+    CampaignOutcome,
+    CampaignResult,
+    CandidateCertification,
+    ConfirmationCampaign,
+    NothingToQualify,
+)
 from rig.active.loop import ActiveLearningLoop, Trajectory
 
 __all__ = [
     "ActiveLearningLoop",
+    "CampaignOutcome",
+    "CampaignResult",
+    "CandidateCertification",
+    "ConfirmationCampaign",
+    "NothingToQualify",
     "Trajectory",
     "anneal",
     "bald",

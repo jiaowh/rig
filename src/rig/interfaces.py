@@ -297,13 +297,35 @@ class ForwardModel(Protocol):
 
 @dataclass(frozen=True)
 class RecipeCandidate:
-    """One ranked inverse candidate (implementation-plan §3.3, §13.4 serving contract)."""
+    """One ranked inverse candidate (implementation-plan §3.3, §13.4 serving contract).
+
+    ``calibration_status`` records HOW MUCH of the §13.2 calibrated-acceptance
+    ladder this candidate cleared, so a caller can tell a raw-σ recommendation
+    apart from a conformally-accepted one (F1, audit 2026-07-21). It is the
+    honest label the audit's F1 remediation asks for ("...or label it merely
+    'model-feasible'"). Documented values:
+
+    - ``"model-feasible"`` (default) — the §8 pessimistic κ·σ margins accept it,
+      but NO conformal model was available (``self.model`` is not conformal-wrapped
+      AND no ``revalidation_model`` was given). This is a surrogate recommendation,
+      **NOT a calibrated guarantee**: the κ margin is only ever as trustworthy as
+      the surrogate's own σ, which can be optimistic — the mechanism behind the
+      deterministic d=20 false success (docs/dimensionality-2026-07-17.md).
+    - ``"conformal-checked"`` — ``self.model`` IS conformal-wrapped and the
+      candidate cleared the default-path §13.2 containment C(x) ⊆ Z* on it.
+    - ``"revalidated"`` — the candidate cleared §13.2 re-validation on an explicit
+      ``revalidation_model`` (the full-ensemble + conformal arbiter, §5.7).
+
+    The default keeps every existing construction working and preserves the five
+    canonical §3.3 field names verbatim; this is an additive provenance tag.
+    """
 
     recipe: Mapping[str, Any]
     confidence: float
     predicted_outcome_interval: Any
     feasibility_flag: bool
     support_score: float
+    calibration_status: str = "model-feasible"
 
 
 @dataclass(frozen=True)

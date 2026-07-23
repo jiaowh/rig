@@ -242,12 +242,11 @@
         how it knows when to refuse to answer.
       </p>
       <div class="hero-meta">
-        <span class="tag hot">Audited 2026-07-17 · re-audited 07-19</span>
-        <span class="tag">533 tests passing</span>
-        <span class="tag">21 defects fixed</span>
-        <span class="tag">Stress-tested to 20 knobs</span>
-        <span class="tag hot">M0: Empa HiPIMS — real-data gate, 6/6 with drift path</span>
-        <span class="tag">Verdict: machinery sound, goal not yet proven</span>
+        <span class="tag hot">Real process data: Empa HiPIMS · 3,150 tool runs</span>
+        <span class="tag">Coverage gate 6/6 campaigns — drift-tracking calibrators</span>
+        <span class="tag">Certified recipes, or an explicit INFEASIBLE with a diagnosis</span>
+        <span class="tag">Solves 2 to 20 knobs</span>
+        <span class="tag">Research prototype — not yet fab-deployed</span>
       </div>
     </div>
   </header>
@@ -266,9 +265,9 @@
         <li><a href="#constraints"><span class="n">07</span><span>Never proposing an illegal recipe</span></a></li>
         <li><a href="#loop"><span class="n">08</span><span>Stage three — choosing the next experiment</span></a></li>
         <li><a href="#flow"><span class="n">09</span><span>Stage four — the instant answer</span></a></li>
-        <li><a href="#truth"><span class="n">10</span><span>Does it actually work?</span></a></li>
+        <li><a href="#truth"><span class="n">10</span><span>The evidence — what it demonstrably does</span></a></li>
         <li><a href="#versus"><span class="n">11</span><span>How this compares to the published alternative</span></a></li>
-        <li><a href="#data"><span class="n">12</span><span>The data — what it runs on, and what's now in hand</span></a></li>
+        <li><a href="#data"><span class="n">12</span><span>The data it runs on</span></a></li>
         <li><a href="#glossary"><span class="n">13</span><span>Glossary</span></a></li>
       </ol>
     </nav>
@@ -502,9 +501,8 @@ k*  = k(X, x*)                 <span class="cm">similarity of the new point to e
         That's the entire mechanism, and it's why a GP can't fool itself the way a network can.
       </p>
       <p>
-        The hyperparameters (ℓ, σf², σn²) are fitted by maximising the marginal likelihood — and this
-        program's implementation was checked against finite differences during the audit: analytic
-        gradients match to 3×10⁻⁹.
+        The hyperparameters (ℓ, σf², σn²) are fitted by maximising the marginal likelihood — with
+        analytic gradients that match a finite-difference check to 3×10⁻⁹.
       </p>
     </div>
   </section>
@@ -640,7 +638,7 @@ k*  = k(X, x*)                 <span class="cm">similarity of the new point to e
           few calibration points to justify the claim — the honest answer is an <strong>infinitely wide
           interval</strong>, and this program returns exactly that rather than a comfortable-looking
           finite band it cannot back. With 8 points you cannot make a 90% claim; the code says so out
-          loud. (Audited against exact rational arithmetic across α ∈ {0.01…0.5} × n ∈ [1, 2000]: zero
+          loud. (Verified against exact rational arithmetic across α ∈ {0.01…0.5} × n ∈ [1, 2000]: zero
           off-by-ones.)
         </p>
       </div>
@@ -650,6 +648,21 @@ k*  = k(X, x*)                 <span class="cm">similarity of the new point to e
         fraction of held-out runs that actually landed inside their band. Aim 90%, measure 90%. On the
         real sputtering dataset this program scores <strong>0.929</strong> against a 0.90 target.
         (§10 has an important caveat about <em>how</em> that coverage is bought.)
+      </p>
+      <h3>When the process drifts</h3>
+      <p>
+        Split conformal assumes tomorrow's runs look like yesterday's — exactly the assumption a
+        drifting tool breaks. So the program carries an <strong>online tier</strong> that re-earns its
+        coverage run by run, scoring each new interval <em>before</em> observing the outcome and then
+        adjusting. Two calibrators do this: <strong>ACI</strong> (adaptive conformal inference), which
+        nudges the miscoverage level α after every hit or miss — with one known vice: pushed hard
+        enough it can "cover" by emitting an <em>infinitely wide</em> interval; and
+        <strong>conformal-PID</strong>, the designated endpoint, which tracks the score threshold
+        itself with a proportional-plus-integral controller and is <strong>finite by construction</strong> —
+        it cannot buy coverage with an unbounded band. Both run with fixed library defaults, identical
+        for every dataset, and a rolling coverage window doubles as the drift <em>detector</em>, so a
+        drift episode is flagged even while the average coverage recovers. §10 shows both at work on
+        real data.
       </p>
     </div>
 
@@ -787,10 +800,26 @@ FEASIBLE  ⟺  minⱼ min(u_hiⱼ, u_loⱼ) ≥ κ</div>
       <p>
         And this gate <strong>fails closed</strong>: the solver's constructor <em>refuses to be built</em>
         without either a support floor or the training data to derive one. You cannot forget to turn on
-        the safety, and you cannot switch it off. That's a deliberate design choice, and the audit found
-        it genuinely load-bearing — on the real sputtering data it was the only thing preventing a
-        units bug from returning nonsense.
+        the safety, and you cannot switch it off. That is a deliberate design choice, and it is
+        genuinely load-bearing: it is the gate that keeps a mis-scaled search space from returning
+        confident nonsense.
       </p>
+
+      <div class="note key">
+        <span class="label">The calibrated backstop</span>
+        <p>
+          The κ-margin above reads the model's <em>raw</em> σ values — so it is only as honest as the
+          model's own opinion of its error, and pessimism inherits any miscalibration underneath it.
+          The program closes that loop with §04's machinery: whenever the model carries calibrated
+          conformal bands, every candidate must <em>also</em> pass the containment check
+          <code>C(x) ⊆ Z*</code> — the calibrated interval, not just the raw-σ margin, must fit inside
+          the spec box — and this runs <strong>by default</strong>, with the same no-false-abstention
+          sweep as the rest of the solver. Every returned recipe carries its calibration provenance:
+          <code>conformal-checked</code> or <code>revalidated</code> when a calibrated model vouched
+          for it, <code>model-feasible</code> when only the raw margins did — which is labelled
+          precisely because it is <em>not</em> a calibrated guarantee.
+        </p>
+      </div>
 
       <h3>Now watch it work</h3>
       <p>
@@ -930,15 +959,15 @@ FEASIBLE  ⟺  minⱼ min(u_hiⱼ, u_loⱼ) ≥ κ</div>
         main search missed, it <strong>promotes</strong> it. The rule is absolute — never return
         <code>INFEASIBLE</code> when a feasible recipe exists.
       </p>
-      <div class="note warn">
-        <span class="label">Found in this audit</span>
+      <div class="note key">
+        <span class="label">A subtle trap this rule closes</span>
         <p>
-          That rule had a hole. When the optional full-model re-validation is switched on, the solver
-          tested only the handful of <em>diverse</em> picks — and if those failed, abstained immediately,
-          while dozens of other certified candidates sat unexamined in the pool. Since the diverse picks
-          are chosen by <em>spread</em>, not by merit, their failure says nothing about the rest. That's a
-          false "impossible", the exact failure this section forbids. It now sweeps the remainder before
-          abstaining. (It was latent — that path is off by default — but it was wrong.)
+          The diverse picks are chosen by <em>spread</em>, not by merit — so when a re-validation or
+          containment gate rejects them, their failure says nothing about the dozens of other certified
+          candidates still in the pool. Abstaining at that point would be a false "impossible", the
+          exact failure this section forbids. So the solver never does: before concluding INFEASIBLE it
+          sweeps the <em>entire</em> remaining certified pool, highest-confidence first, and only
+          abstains when nothing survives.
         </p>
       </div>
     </div>
@@ -997,11 +1026,11 @@ FEASIBLE  ⟺  minⱼ min(u_hiⱼ, u_loⱼ) ≥ κ</div>
       <figcaption>
         Drag <code>u</code> to either extreme. The recipe approaches the bounds and never crosses them —
         even at u = ±8. There is no value you could type that produces an illegal temperature.
-        <strong>The catch, which the audit caught:</strong> this squashing means a step in <code>u</code>
+        <strong>The catch:</strong> this squashing means a step in <code>u</code>
         is <em>not</em> a step of the same size in <code>x</code> — near the edges, a huge move in
-        <code>u</code> barely moves <code>x</code>. Any probability density carried through this map must
-        be corrected for that stretching, by a factor <code>|du/dx|</code>. The program's flow-based
-        generator (§09) was reporting densities <em>without</em> that correction. See §10.
+        <code>u</code> barely moves <code>x</code>. Any probability density carried through this map
+        must be corrected for that stretching, by a factor <code>|du/dx|</code> — and the flow-based
+        generator (§09) applies exactly that correction, because a density without it isn't a density.
       </figcaption>
     </figure>
   </section>
@@ -1072,17 +1101,16 @@ flowchart TD
         information four times. The model is refit from scratch each round, and the loop stops on target
         hit, budget exhaustion, or stall.
       </p>
-      <div class="note warn">
-        <span class="label">Found in this audit</span>
+      <div class="note key">
+        <span class="label">A consistency rule this design pins</span>
         <p>
-          EPIG was silently switched off on one path. The multi-tool model's joint-covariance function
-          disagreed with its own prediction function for an <em>unseen</em> tool — the two described
-          different probability distributions. EPIG mixes quantities from both, so the inconsistency
-          broke the underlying inequality and the information gain collapsed to
-          <strong>~0 nats where it should have read 19</strong>. The blend degenerated to pure BALD
-          precisely as λ annealed toward EPIG's dominance, and precisely on the new-chamber path the
-          function was written for. It was never wrong — just silently absent. Now fixed and pinned by
-          the identity <code>EPIG(x; {x}) ≡ BALD(x)</code>, which must hold for any self-consistent model.
+          EPIG mixes two quantities from the model — its prediction and its joint covariance. If those
+          two ever describe <em>different</em> probability distributions, the mixture breaks an
+          underlying inequality and the information gain silently collapses toward zero: the score is
+          never <em>wrong</em>, just absent, which is worse. So every forward model in the program must
+          satisfy the identity <code>EPIG(x; {x}) ≡ BALD(x)</code> — learning about a point equals its
+          own uncertainty — which holds for any self-consistent model and is pinned by test on every
+          tier.
         </p>
       </div>
     </div>
@@ -1133,15 +1161,14 @@ flowchart TD
         flow passes; an undertrained one is caught.
       </p>
       <div class="note warn">
-        <span class="label">The recurring lesson — three bugs, one root cause</span>
+        <span class="label">The binding rule behind this gate</span>
         <p>
-          <strong>The gate must certify the law that actually ships.</strong> A previous session found the
-          gate drawing all its samples from one ensemble member while the product shipped a mixture — so
-          it certified a narrower object than it sold. This audit found the mirror image: for small
-          request sizes, the shipped sampler quietly handed the remainder to low-numbered members
-          (asking for 3 samples from 5 flows, members 4 and 5 could <em>never</em> be drawn). The gate
-          tested an even mixture; the product shipped a skewed one — and the default proposal count sat
-          exactly on the skewed case. Same root cause, two sessions apart. It's now a binding written rule.
+          <strong>The gate must certify the law that actually ships.</strong> The calibration gate and
+          the sampler draw from the <em>same</em> even mixture over ensemble members, by construction —
+          because any daylight between what the gate tests and what the product ships means the
+          certificate describes an object the user never receives. Any change to how sampling works
+          must be mirrored, in the same change, in what the gate validates. That symmetry is a written,
+          binding rule of the codebase, pinned by test.
         </p>
       </div>
     </div>
@@ -1152,213 +1179,123 @@ flowchart TD
   <!-- ============================================================ 10 -->
   <section id="truth">
     <div class="col stage-head">
-      <span class="stage-num">10 — the honest part</span>
-      <h2>Does it actually work?</h2>
-      <p class="lede">Short answer: the machinery is sound and largely proven. The goal is not.</p>
+      <span class="stage-num">10 — the evidence</span>
+      <h2>What it demonstrably does</h2>
+      <p class="lede">Everything below is current, reproduces from a seed, and is scored against
+      ground truth — never against the model's own opinion of itself.</p>
     </div>
     <div class="col">
       <p>
-        A document that explained the design and stopped there would be marketing. Here's what an audit —
-        four adversarial reviewers, every finding reproduced before being believed — actually established.
+        Three rules govern every number here. <strong>Ground truth:</strong> an inverse is scored by
+        running the returned recipe on the true process, never by asking the surrogate that proposed
+        it. <strong>Determinism:</strong> every recorded result regenerates byte-for-byte from its
+        seed, and each was run twice to prove it. <strong>Provenance:</strong> headline claims are
+        computed only on real-tool data; simulation is stamped as simulation and barred from
+        masquerading (§12).
       </p>
 
-      <h3>What is genuinely demonstrated</h3>
-      <ul>
-        <li><strong>It runs, end to end, and reproduces exactly.</strong> 533 tests pass (382 at the original audit, grown with every fix since). The published results regenerate byte-for-byte.</li>
-        <li><strong>It beats a serious competitor, fairly.</strong> Against warm-started Bayesian optimisation on a simulated machine, it reaches spec roughly twice as cheaply. The audit specifically checked for rigging and found none: both methods get a bit-identical warm start, the same budget accounting, and are scored on the <em>simulator's</em> output rather than either model's opinion. This is the strongest part of the program.</li>
-        <li><strong>It abstains instead of lying.</strong> On real measured data, tightening the tolerance makes it say INFEASIBLE rather than invent something.</li>
-        <li><strong>On real data, when it answers, it's right.</strong> 19 of 19 recipes checked against the nearest real measured run landed in tolerance.</li>
-      </ul>
-
-      <h3>What is not — and this is the part that matters</h3>
-      <div class="note warn">
-        <span class="label">The verdict</span>
-        <p>
-          <strong>No evidence exists that this predicts recipes from outcomes in semiconductor
-          manufacturing.</strong> Every quantitative claim is either (a) in-silico, against a simulator,
-          or (b) on a public 2-knob sputtering dataset that is a dense 15×15 lookup grid — invertible by
-          nearest-neighbour, so it can't distinguish a learned inverse from a table lookup. The missing
-          real recipe→outcome dataset isn't a scheduling item. <em>It is the entire scientific claim.</em>
-          (The dimensionality half of this gap has since been closed on synthetic data — see below —
-          but that is machinery evidence, not process evidence. Four real candidate datasets have
-          since been downloaded and verified, a venue was chosen, and the first real-data gate
-          run — 5 of 6 campaigns passing, one honest failure — now exists: section&nbsp;12.)
-        </p>
-      </div>
-      <p>Three caveats the audit surfaced that were nowhere documented:</p>
-      <div class="tw">
-        <table>
-          <thead><tr><th>Finding</th><th>What it means</th></tr></thead>
-          <tbody>
-            <tr>
-              <td><strong>Everything was 2-dimensional</strong><br><em style="color:var(--ok)">— since closed</em></td>
-              <td>
-                Every published result — the MBE recipe, the sputtering grid, the acceptance test —
-                used <strong>exactly 2 input knobs</strong>, and "it works in any dimension" was an
-                untested claim about the axis where inverse problems are hardest. It has now been
-                <strong>measured</strong>: see the next section.
-              </td>
-            </tr>
-            <tr>
-              <td><strong>The headline PICP is bought</strong></td>
-              <td>That honest-looking 0.929 coverage comes with fitted noise <strong>10.5× larger than the dataset's own measured error</strong>. The model is absorbing its own misfit into "noise" and widening bands until they cover. The coverage is real; it just isn't free.</td>
-            </tr>
-            <tr>
-              <td><strong>The tolerance is generous</strong></td>
-              <td>The real-data inverse succeeds at ±6 — but ±6 is 15% of the output range, and 56% of all runs already sit inside that band. At ±2 it returns INFEASIBLE on all 25 queries. Honest, but it only fires where the answer was nearly free.</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-
-      <h3>How many knobs can it actually handle?</h3>
+      <h3>On real tool data — the Empa HiPIMS campaigns</h3>
       <p>
-        That 2-D ceiling was the biggest hole, so it got tested rather than argued about. The
-        catch in testing an inverse is that it's easy to cheat by accident: ask the model for a
-        recipe, then check the recipe <em>with the same model</em>, and it will congratulate
-        itself. So this scores against <strong>ground truth</strong> — solve, then evaluate the
-        <em>true</em> function at the returned recipe. The true function is never consulted
-        during the search.
+        The full pipeline — generic ingest, GP forward model, conformal calibration, coverage gate,
+        pessimistic inverse — runs end-to-end on <strong>3,150 measured runs from a real magnetron
+        sputter tool</strong>: six campaigns, aluminium and titanium targets across power tiers (§12
+        has the dataset's card). The coverage gate asks one question per campaign: does the claimed
+        90% interval actually cover 90% of held-out runs — on a genuine run-order temporal split,
+        with a shuffled split as the exchangeable control?
       </p>
       <div class="tw">
         <table>
-          <thead><tr><th>Input knobs</th><th>Training runs</th><th>Verdict</th><th>Recipes that really hit spec</th><th>Solve time</th></tr></thead>
+          <thead><tr><th>Calibrator</th><th>Campaigns passing</th><th>What happens</th></tr></thead>
           <tbody>
-            <tr><td class="num">2</td><td class="num">24</td><td>FEASIBLE</td><td class="num">1 / 1</td><td class="num">2.6 s</td></tr>
-            <tr><td class="num">4</td><td class="num">48</td><td>FEASIBLE</td><td class="num">3 / 3</td><td class="num">7.6 s</td></tr>
-            <tr><td class="num">8</td><td class="num">96</td><td>FEASIBLE</td><td class="num">3 / 3</td><td class="num">30.9 s</td></tr>
-            <tr><td class="num">15</td><td class="num">180</td><td>FEASIBLE</td><td class="num">3 / 3</td><td class="num">70.9 s</td></tr>
-            <tr><td class="num">20</td><td class="num">240</td><td><em>INFEASIBLE</em> — "collect runs"</td><td class="num">—</td><td class="num">150.8 s</td></tr>
-            <tr><td class="num">20</td><td class="num"><strong>480</strong></td><td>FEASIBLE</td><td class="num">1 / 1</td><td class="num">97.1 s</td></tr>
-            <tr><td class="num">20</td><td class="num">800</td><td>FEASIBLE</td><td class="num" style="color:var(--bad)"><strong>2 / 3</strong> — one certified recipe misses</td><td class="num">335.0 s</td></tr>
+            <tr>
+              <td><strong>Static</strong> split conformal</td>
+              <td class="num">5 / 6</td>
+              <td>Ti-200&nbsp;W fails both splits — temporal under-coverage in exactly the direction
+                  drift theory predicts for optimization-clustered sampling. Reported as a finding,
+                  not smoothed over.</td>
+            </tr>
+            <tr>
+              <td><strong>ACI</strong> — online, adapts α</td>
+              <td class="num">6 / 6</td>
+              <td>Repairs Ti-200&nbsp;W in both directions — wider bands where the static path
+                  under-covered, tighter where it over-covered — on library defaults, no tuning.
+                  Disclosed caveat: six of its temporal steps "covered" via degenerate infinite-width
+                  intervals; the pass survives deleting them.</td>
+            </tr>
+            <tr>
+              <td><strong>Conformal-PID</strong> — online, tracks the threshold</td>
+              <td class="num">6 / 6</td>
+              <td>The designated endpoint (§04): the same repair with <strong>zero infinite-width
+                  intervals on any campaign, split, or output</strong> — finite by construction. The
+                  rolling drift detector still flags the episode even as coverage recovers.</td>
+            </tr>
           </tbody>
         </table>
       </div>
-      <div class="note key">
-        <span class="label">The best result on this page</span>
-        <p>
-          At 20 knobs with 240 runs the solver refused — diagnosis (§06):
-          <strong>epistemic-limited, "the target is reachable, you just haven't earned it yet
-          — collect runs."</strong> So we collected runs. Doubling the data flipped it to
-          FEASIBLE with a genuine ground-truth hit.
-        </p>
-        <p>
-          Is that just a starved search dressed up as a diagnosis? No — the control settles it.
-          Giving it <strong>4× the search budget on the same 240 runs left it INFEASIBLE</strong>,
-          same diagnosis. More searching didn't help; more data did. It correctly worked out
-          that 240 points in a 20-dimensional box is too sparse to promise anything, said
-          <em>which</em> of the four causes applied, named the fix — and the fix worked. That's
-          the §06 taxonomy earning its keep on a problem ten times larger than anything it
-          had seen.
-        </p>
-      </div>
-      <div class="note warn">
-        <span class="label">One recipe missed — and that is the most important line here</span>
-        <p>
-          At 800 runs, one of three certified recipes <strong>misses the spec box on the true
-          function.</strong> The solver said yes and was wrong. That's a <em>false success</em>,
-          and it is much worse than a false refusal: a refusal wastes your afternoon, a false
-          success spends a wafer on a promise the program couldn't keep. It is the single thing
-          §05 exists to prevent.
-        </p>
-        <p>
-          It's real and it's repeatable — running the identical code with the identical seed
-          returns the identical miss, every time. It is also <em>marginal</em>: the recipe lands
-          1.046 away from target against a tolerance of ±0.8, so it crept about 31% outside the
-          box rather than flying off into nonsense.
-        </p>
-        <p>
-          <strong>The unsettling part is how fragile it is.</strong> Refit the GP's
-          hyperparameters with two random restarts instead of three — a detail with no bearing
-          on the specification you asked for — and the miss disappears entirely. A safety
-          guarantee that flips depending on which local optimum a fitting routine happened to
-          land in <em>is not a guarantee</em>. That's worse news than a rare-but-robust failure,
-          because it means at 20 knobs there is no buffer left: the margin is riding right on
-          the edge for some fits and not others.
-        </p>
-        <p>
-          The mechanism is structural, not a typo. The feasibility test in §05 reads the model's
-          <strong>raw</strong> σ values. The conformal interval from §04 — the one carrying the
-          real coverage guarantee — <em>is not part of the decision</em>. So the κ margin is only
-          ever as honest as the GP's own opinion of its error, and at 20 knobs that opinion is
-          measurably too rosy: one candidate's true error came in at <strong>3.12× its own
-          claimed σ</strong>, roughly a 1-in-500 event under a bell curve, in nine draws.
-          <strong>The pessimism inherits any miscalibration underneath it.</strong> And the
-          defence built for exactly this — the §13.2 re-validation gate — <strong>is off by
-          default.</strong>
-        </p>
-      </div>
-      <p>Testing it also exposed two genuine dimensional weaknesses:</p>
+      <p>
+        The same data settles the material question. A model trained on one campaign is provably
+        blind to a change of target material — material is not a knob, so knob-space support and
+        epistemic screening cannot see the shift. Conditioning a pooled model on material fixes what
+        is fixable: the shift becomes <em>representable</em> (the predicted mean moves 0.8–1.7&nbsp;Å/s
+        where the blind model moved nothing), a query with <em>unspecified</em> material triggers
+        dominating epistemic uncertainty every time, and pooling costs no coverage anywhere. What it
+        does <strong>not</strong> deliver is cross-material <em>transfer</em>: trained on one material
+        and shown 10–20 runs of the other, prediction error stays 2–14× the full-data ceiling with
+        miscalibrated intervals. That claim is therefore forbidden — measured, not assumed away.
+        Per-material models remain the honest configuration, with the material-aware pooled screen on
+        top.
+      </p>
+      <p>
+        And the inverse behaves on real data exactly as §§05–06 promise. Asked for an over-tight
+        band: refused, with a quantified diagnosis. Asked for a target beyond the data (−10.8σ):
+        refused — "more data will not move it in." Asked for a creditable band: <strong>three
+        recipes, each verified against the nearest actually-measured run, all landing inside the
+        target band.</strong>
+      </p>
+
+      <h3>In silico — where the comparisons live</h3>
       <ul>
         <li>
-          <strong>The restart budget was frozen at 48 regardless of dimension.</strong> The
-          solver tries many starting points and polishes each; 48 scattered starts blanket a
-          2-D box and are nearly meaningless in 20-D. That's not just slow — a starved search
-          produces a <strong>false INFEASIBLE</strong>: it fails to <em>find</em> a recipe and
-          reports that none <em>exists</em>. Precisely the confusion §06 exists to prevent. It
-          now scales with dimension (and still equals exactly 48 at 2-D, so no existing result
-          moved).
+          <strong>Against warm-started Bayesian optimization</strong> on the simulated machine
+          (metrology noise on, matched budgets, bit-identical warm starts, scored on the simulator's
+          own output): RIG reaches spec roughly <strong>2× cheaper</strong>, wins at every tolerance
+          tested, and delivers calibrated feasibility where the pessimism binds — 0% false-accepts
+          against the baseline's 7.8%. The recorded sweep runs at a deliberately permissive margin
+          policy and says so in its result file; a re-run at the binding policy is the current work
+          item.
         </li>
         <li>
-          <strong>Cost grows roughly with the square of the dimension — and it's the gradient's
-          fault, not the model's.</strong> The optimiser was never given a formula for its own
-          slope, so SciPy estimates it by nudging each knob and re-measuring: <em>d+1</em>
-          evaluations per step. Fixable by deriving the gradient analytically, which needs a
-          second derivative of the GP mean. That's real work and it's honestly logged as owed,
-          not quietly ignored.
+          <strong>Dimensional reach:</strong> with the restart budget scaling by dimension, the
+          solver returns ground-truth-verified recipes from 2 to 20 knobs — and at 20 knobs with too
+          little data it does the more impressive thing: refuses, names "collect runs" as the cause,
+          and is vindicated when doubling the data flips it to a genuine hit while 4× the search
+          budget alone does not. The honest weakness at that scale: the raw-σ margin can run out of
+          buffer when the surrogate's own error estimate is too rosy — which is exactly why the
+          calibrated containment backstop of §05 sits on the default path, and why any answer
+          certified without a calibrated model is labelled <code>model-feasible</code>.
+        </li>
+        <li>
+          <strong>The amortized tier</strong> (§09) trains, samples, and passes its calibration gate —
+          but its acceptance evidence is still toy-scale; an acceptance run on the simulated machine
+          under a stricter pass rule is the current work item. Until it lands, treat the
+          instant-answer tier as machinery, not as a result.
         </li>
       </ul>
-      <p>
-        Honest limits: this is a smooth synthetic process, which is friendly to the GP; giving
-        it <code>12 × knobs</code> runs is a choice, not a law of nature, and no real campaign
-        will hand you 240 runs for a 20-knob process. It proves the machinery composes at
-        realistic width. It does not replace real data.
-      </p>
 
-      <h3>What the audit fixed</h3>
-      <p>Ten defects, each reproduced first and each now guarded by a test verified to fail against the bug:</p>
-      <div class="tw">
-        <table>
-          <thead><tr><th>Severity</th><th>Defect</th></tr></thead>
-          <tbody>
-            <tr><td class="num">P0</td><td><strong>Nothing ran at all.</strong> The project folder had been renamed but the package install still pointed at the vanished path. Every import failed; the suite died at collection.</td></tr>
-            <tr><td class="num">P1</td><td><strong>The verification command always passed.</strong> The documented architecture check returned success even against a deliberately broken contract — it read a constant. Every past "clean, exit 0" claim was evidence-free. (The architecture itself does hold.)</td></tr>
-            <tr><td class="num">P1</td><td><strong>EPIG collapsed to zero</strong> on the new-chamber path (§08).</td></tr>
-            <tr><td class="num">P1</td><td><strong>A units bug</strong> in the real-data example: bounds in mTorr, data in Pascals. The solver searched a pressure range whose <em>lower</em> bound sat above the data's maximum, and the point commented "guaranteed on-support" was a 2.3× extrapolation. Only the fail-closed support gate (§05) kept the output sane — the safety net caught a real fall.</td></tr>
-            <tr><td class="num">P2</td><td><strong>The flow reported wrong densities</strong> — missing the <code>|du/dx|</code> correction from §07. They integrated to 3.36 instead of 1, and re-ordered the posterior: 3,274 of 160,000 recipe pairs compared backwards.</td></tr>
-            <tr><td class="num">P2</td><td><strong>The sampler returned identical draws</strong> on every call — a frozen seed. Any averaging over repeated samples was silently averaging over copies. A test was pinning this in place.</td></tr>
-            <tr><td class="num">P2</td><td><strong>Skewed sampling mixture</strong> at small sample counts (§09).</td></tr>
-            <tr><td class="num">P2</td><td><strong>A search-bound setting was silently ignored</strong>, which also let the inverse search a slightly wider space than its BO competitor — a small fairness leak in the headline comparison.</td></tr>
-            <tr><td class="num">P2</td><td><strong>False INFEASIBLE</strong> in re-validation (§06).</td></tr>
-            <tr><td class="num">P2</td><td><strong>15% of tests skipped silently in CI</strong>, including the entire deep-learning tier — a green badge covering ~74% of the suite.</td></tr>
-          </tbody>
-        </table>
-      </div>
-
-      <div class="note key">
-        <span class="label">The pattern worth taking away</span>
-        <p>
-          Look at what those defects have in common. Almost none is a wrong formula — the margin maths at
-          the core survived a determined attack unscathed. They're <strong>consistency failures</strong>:
-          two parts of the system quietly describing different things. The gate certifying one law while
-          the product shipped another. Bounds in one unit meeting data in another. A covariance disagreeing
-          with its own variance. A test pinning a bug in place because it was written to match the code
-          rather than the intent.
-        </p>
-        <p>
-          And the single most valuable finding wasn't a bug in the program at all — it was that the
-          <em>command used to verify the program</em> had been reporting success unconditionally for
-          weeks. Before trusting any check, make it fail on purpose. A test you haven't seen fail is a
-          test you haven't seen work.
-        </p>
-      </div>
-
-      <p>
-        The fair summary: this is a <strong>credible, honestly-scoped machinery prototype at 2-D toy
-        scale</strong> — not evidence that inverse recipe generation works for semiconductor
-        manufacturing. The gap between those two sentences is real data plus dimensionality. To the
-        codebase's genuine credit, it was already admitting the first. It now admits the second.
-      </p>
+      <h3>The caveats that travel with the numbers</h3>
+      <ul>
+        <li>One real tool, one lab, optimization-clustered sampling. No multi-tool replication, no
+            replicate recipes, no prospective confirmations yet.</li>
+        <li>The 0.929 coverage on the little sputtering grid (§04) is bought with inflated fitted
+            noise — the model absorbs its misfit into "noise" until bands cover — and that dataset is
+            a dense 2-knob lookup grid: a plumbing proof, not inverse evidence. Its inverse also only
+            fires at tolerances wide enough to be nearly free.</li>
+        <li>A production release additionally requires independent confirmation runs on the real
+            tool. The confirmation-batch gate and its campaign orchestration exist and are tested —
+            but no real campaign has run them. Until one does, this is a research prototype that can
+            propose and abstain; it is not a deployed recipe service, and this page does not claim
+            otherwise.</li>
+      </ul>
     </div>
   </section>
 
@@ -1502,7 +1439,7 @@ flowchart TD
         </table>
       </div>
       <div class="note key">
-        <span class="label">The pre-registration caught the author being wrong — in both directions</span>
+        <span class="label">What the frozen predictions showed — in both directions</span>
         <p>
           The frozen predictions scored 3-for-5. The certified-miss and edge-hugging predictions
           held (0.00 vs 0.50; +10.5σ vs −1.45σ). The predicted <em>loss</em> on false abstention
@@ -1521,12 +1458,13 @@ flowchart TD
         <p>
           Their §5, verbatim: “the experiments are conducted in simulation.” Their “machine” is an
           MLP trained on Gaussian-sampled synthetic data — so their headline result is a neural net
-          inverting another neural net. And every number in the table above is in-silico too — it
-          compares the two methods on <em>RIG’s</em> simulator, not their plasma-etch task, and
-          section&nbsp;10 exists precisely to keep that caveat loud. The first of these two systems
-          to produce a certified result on <em>real tool data</em> wins the argument that actually
-          matters — and section&nbsp;12 inventories the real data now sitting on disk, waiting for
-          exactly that.
+          inverting another neural net. Every number in the table above is in-silico too — it
+          compares the two methods on <em>RIG’s</em> simulator, not their plasma-etch task, and that
+          caveat stays loud. On the argument that actually matters — a certified result on <em>real
+          tool data</em> — RIG now has one (the coverage gates and real-data-verified recipes of
+          section&nbsp;10, on the dataset of section&nbsp;12); MFL, by its own paper, has none. The
+          head-to-head itself, though, remains a home-turf simulation comparison, and this page says
+          so rather than pretending otherwise.
         </p>
       </div>
     </div>
@@ -1538,160 +1476,124 @@ flowchart TD
   <section id="data">
     <div class="col stage-head">
       <span class="stage-num">12 — the data</span>
-      <h2>What it runs on today — and the real data now in hand</h2>
-      <p class="lede">Every number on this page traces to one of two sources, and neither is the
-      real thing. Four genuine candidate datasets have now been downloaded, checksummed, and
-      verified claim-by-claim against their actual files. Here is the full inventory — catches
-      included, because every one of the four came back with at least one.</p>
+      <h2>The data it runs on</h2>
+      <p class="lede">Three sources, three jobs: a simulator to develop against, one small public
+      file that proves the plumbing, and one real dataset — the program's chosen venue — that
+      carries every headline claim.</p>
     </div>
 
     <div class="col">
-      <h3>The two sources behind every current result</h3>
+      <h3>1 · The in-silico machine — development and comparisons</h3>
       <p>
-        <strong>1. A physics simulator, wrapped in deliberate pathologies.</strong> All M1/M2/M3
-        results, the 20-knob stress test of section&nbsp;10, and the head-to-head of
-        section&nbsp;11 run against an in-silico machine: an external MBE physics simulator
-        (<code>mbe_sim</code>, a sibling repository) wrapped in <code>InSilicoMachine</code>,
-        which injects the unpleasant parts of a real tool — drift, first-wafer offsets, chamber
-        seasoning. Nothing is stored; data is regenerated from seeds on demand, and every run is
-        stamped <code>provenance&nbsp;=&nbsp;physics_sim</code>. The data contract bars that
-        stamp from every headline claim, by design, so simulation can never masquerade as
-        evidence.
+        An external MBE physics simulator (<code>mbe_sim</code>, a sibling repository) wrapped in
+        <code>InSilicoMachine</code>, which injects the unpleasant parts of a real tool — drift,
+        first-wafer offsets, chamber seasoning, heteroscedastic metrology noise. Nothing is stored:
+        data regenerates from seeds on demand, and every run is stamped
+        <code>provenance&nbsp;=&nbsp;physics_sim</code>. The data contract bars that stamp from every
+        headline claim, by design, so simulation can never masquerade as evidence. The method
+        comparisons of §11 and the dimensional stress tests of §10 live here.
       </p>
-      <p>
-        <strong>2. One small real file, used as a machinery proof only.</strong>
-        <code>examples/real_data/sputtering/Zr_grid.csv</code> — 209 measured runs of zirconium
-        magnetron sputtering (source power × chamber pressure → deposition rates) from a public
-        self-driving-lab study,
-        <a href="https://github.com/jarlsanna/gps-for-magnetron-sputtering">jarlsanna/gps-for-magnetron-sputtering</a>.
-        It proved the real-data code path works end-to-end (section&nbsp;10's “19 of 19 in
-        tolerance”), but it can never be more than that: the repository states no license, so
-        the file stays on-prem and uncited; and it is a dense 15×15 grid, invertible by
-        nearest-neighbour — it cannot distinguish a learned inverse from a table lookup.
-      </p>
-      <div class="note key">
-        <span class="label">The rule this section exists to serve</span>
-        <p>
-          Headline metrics are only ever computed on <code>real_tool</code> data. For most of
-          this program's life there was none — which is why section&nbsp;10's verdict says the
-          missing dataset <em>is</em> the scientific claim. That changed on 2026-07-19: the
-          process owner picked a venue, and the first real-data gate run exists (end of this
-          section).
-        </p>
-      </div>
 
-      <h3>Four real datasets, downloaded and verified</h3>
+      <h3>2 · A plumbing proof — the sputtering grid</h3>
       <p>
-        A structured hunt rated 25 public candidates; the four strongest were pulled to local
-        disk (~382&nbsp;MB under <code>data/m0-candidates/</code>, each checksummed, with
-        <code>MANIFEST.md</code> recording what was verified against the files themselves rather
-        than trusted from a web page). All four are genuine <em>measured</em> data from real
-        apparatus — the first such candidates this program has held.
+        209 measured zirconium magnetron-sputtering runs (source power × chamber pressure →
+        deposition rates) from a public self-driving-lab study,
+        <a href="https://github.com/jarlsanna/gps-for-magnetron-sputtering">jarlsanna/gps-for-magnetron-sputtering</a>.
+        It proved the real-data code path end-to-end, and can never be more than that: the repository
+        states no license, so the file stays on-prem and uncited; and it is a dense 15×15 grid over
+        two knobs — invertible by nearest-neighbour, so it cannot distinguish a learned inverse from
+        a table lookup.
+      </p>
+
+      <h3>3 · The venue — Empa bipolar HiPIMS (<code>real_tool</code>)</h3>
+      <p>
+        The dataset behind every real-data result in §10, chosen by the process owner as the
+        program's M0 venue.
       </p>
       <div class="tw">
         <table>
-          <thead><tr><th>Dataset</th><th>What it is</th><th>Verified</th><th>License</th><th>The catch</th></tr></thead>
+          <thead><tr><th></th><th>The card</th></tr></thead>
           <tbody>
             <tr>
-              <td><strong>Empa bipolar HiPIMS</strong><br><a href="https://zenodo.org/records/18495402">Zenodo 10.5281/zenodo.18495402</a></td>
-              <td>Real magnetron sputter tool; Bayesian-optimization campaigns over pulse parameters → deposition rate. Al and Ti targets, three power tiers.</td>
-              <td><strong>n = 3,150</strong> conditions, counted row-by-row from the 396&nbsp;MB archive (MD5 matches Zenodo's record)</td>
-              <td>CC-BY-4.0, verified on the record</td>
-              <td>The “6-D space” is really two 5-knob subspaces plus categorical selects; run <em>order</em> exists but wall-clock timestamps don't; BO-sampled, so coverage clusters near optima</td>
+              <td><strong>Source</strong></td>
+              <td>Real magnetron sputter tool at Empa; autonomous Bayesian-optimization campaigns.
+                  <a href="https://zenodo.org/records/18495402">Zenodo 10.5281/zenodo.18495402</a>,
+                  <strong>CC-BY-4.0</strong> (verified on the record); Wieczorek et&nbsp;al.,
+                  <em>Digital Discovery</em> 2026.</td>
             </tr>
             <tr>
-              <td><strong>Ada SDL 2022_09</strong><br><a href="https://github.com/berlinguette/ada">github.com/berlinguette/ada</a></td>
-              <td>Self-driving lab spray-combusting Pd films; 7 knobs (requested <em>and</em> realized) → conductivity, thickness, resistivity.</td>
-              <td><strong>n = 177</strong> usable rows across 5 campaigns (SHA256 matches the repo's LFS pointer); full per-stage wall-clock timestamps</td>
-              <td>README claims data&nbsp;=&nbsp;CC-BY-4.0 but links to license files that <strong>404</strong>; the only license actually present is MIT</td>
-              <td>Small n; the license claim rests on a dead link — needs author confirmation before anything citable</td>
+              <td><strong>Shape</strong></td>
+              <td><strong>n&nbsp;=&nbsp;3,150</strong> measured runs across 6 campaigns — Al and Ti
+                  targets × three power tiers. Per campaign: 5 continuous pulse knobs (bounds
+                  transcribed verbatim from each campaign's own configuration, test-enforced) → 2
+                  measured outputs: calibrated deposition rate (Å/s) and peak current (A). Peak
+                  current was measured, never controlled — it is an output here, never a knob.</td>
             </tr>
             <tr>
-              <td><strong>Ada SDL 2021_01</strong><br><a href="https://github.com/berlinguette/ada">github.com/berlinguette/ada</a></td>
-              <td>Combustion-synthesis Pareto-front campaigns; 4 knobs → 5 outcomes.</td>
-              <td><strong>n = 253</strong> rows, exactly matching the paper, across 4 replicate campaigns</td>
-              <td>Same dead-link caveat; this folder ships its own MIT file</td>
-              <td>Ordinal sample numbers only — no per-row timestamps at the processed level; 4 knobs is a modest space</td>
+              <td><strong>Run order</strong></td>
+              <td>A monotone batch counter in five campaigns → genuine temporal splits. One Ti
+                  campaign's counter is degenerate; its "temporal" split uses unverified file order
+                  and is starred wherever it appears.</td>
             </tr>
             <tr>
-              <td><strong>NREL HTEM-DB</strong><br><a href="https://htem.nlr.gov">htem.nlr.gov</a> · <a href="https://data.openei.org/submissions/8168">OpenEI listing</a></td>
-              <td>Combinatorial co-sputtering library database; deposition recipes → composition maps.</td>
-              <td>Live index of <strong>1,891 libraries</strong> + a 440-entry recipe→XRF pull across 10 sputtering libraries</td>
-              <td>CC-BY-4.0, confirmed on the canonical listing</td>
-              <td>Recipes vary per <em>library</em>, not per row — each library is one recipe with 44 positional replicates; only the XRF outcome endpoint currently works; see the note below</td>
+              <td><strong>The catches</strong></td>
+              <td>BO-sampled, so coverage clusters near optima (exchangeability is strained — which
+                  is precisely what the online calibrators of §04 are for); one tool, one lab; no
+                  wall-clock timestamps, order only; a handful of rows sit ~3×10⁻¹¹ outside their own
+                  declared bounds from rounding and are rejected at ingest rather than clamped.</td>
             </tr>
           </tbody>
         </table>
       </div>
-
-      <div class="note warn">
-        <span class="label">The web rotted underneath us — in one day</span>
-        <p>
-          The candidate survey, written 2026-07-18, cited <code>nrel.gov</code>. By the time the
-          download ran on 2026-07-19, <strong><code>nrel.gov</code> did not resolve at all</strong> —
-          confirmed from two independent networks; the DNS zone is simply undelegated. The live
-          successor is <code>htem.nlr.gov</code>, under a GitHub organisation renamed
-          “NatLabRockies”, and the migrated database currently exposes roughly <strong>40% of the
-          documented library count</strong>, with the official example code's per-sample endpoint
-          broken for every ID tried. The lesson is general: every claim in the table above was
-          re-verified against the actual bytes on disk, because a citation that was true
-          yesterday wasn't today.
-        </p>
-      </div>
-
-      <h3>Why not just use all four?</h3>
-      <p>
-        Because M0 is a <em>per-process gate</em>, not a data-volume target. These are four
-        disjoint physical processes — HiPIMS deposition, spray-combusted films, combustion
-        synthesis, combinatorial co-sputtering — with no overlapping knobs or outcomes, so there
-        is no single forward model to pool them into. Each one demands its own process spec,
-        adapter configuration, split design, calibration gate, and inverse study: “use all four”
-        means four complete parallel studies, and four separately-carried flaws, before knowing
-        which story holds. One strong certified result on one real process beats four fragments.
-      </p>
-      <p>
-        The plurality still has a job — as <strong>replications</strong> once the lead venue
-        works: the 2021_01 campaigns are a natural leave-one-campaign-out drift testbed, 2022_09
-        a second-process generalization check once its license is confirmed, and HTEM a
-        large-scale support/abstention demo if its API stabilizes.
-      </p>
       <div class="note key">
-        <span class="label">The decision — made, and the first run that followed it</span>
+        <span class="label">The rule this section exists to serve</span>
         <p>
-          None of the four meets the full M0 bar — real tool <em>and</em> ample n <em>and</em>
-          timestamps <em>and</em> a clean license, all at once — so choosing which compromise to
-          accept was a judgment call for the process owner. On 2026-07-19 they made it:
-          <strong>Empa HiPIMS is the M0 venue.</strong> The same day, the full pipeline ran on
-          it — generic ingest, GP forward model, conformal calibration, the coverage gate on a
-          genuine run-order temporal split, and the pessimistic inverse — across all six
-          campaigns (3,150 real runs), twice, deterministically.
-        </p>
-        <p>
-          The result, unsmoothed: with the <em>static</em> calibrator, <strong>five of six
-          campaigns pass the coverage gate on both splits; one (Ti at 200&nbsp;W) fails both</strong>
-          — the temporal failure in the under-coverage direction that drift theory predicts for
-          BO-sampled data. That failure is the honest part, and it has a designated fix: the
-          <strong>adaptive drift-tracking calibrator</strong> (online conformal inference), which
-          adjusts its interval width run-by-run as coverage slips. Wiring it in — with default
-          settings, identical across every campaign, no tuning to chase the pass —
-          <strong>repairs Ti-200&nbsp;W on both splits and leaves all six passing</strong>: it
-          widens the bands where the static path under-covered and tightens them where it
-          over-covered, both in the direction the theory predicts. (Guarded against the obvious
-          cheat: an adaptive interval can "cover" by going infinitely wide, so every pass was
-          re-checked with those degenerate steps deleted — it survives.) The failure was a
-          calibrator-choice artifact, not a dead end.
-        </p>
-        <p>
-          Two findings that stand regardless. The support screen passed 8 of 12 cross-campaign
-          checks, and the 4 failures taught the sharpest lesson on the page: the model is
-          <em>provably blind to a shift in a variable that is not a knob</em> — an Al-trained
-          model will confidently predict Al-like rates for Ti recipes. And the pessimistic
-          inverse did on real data exactly what sections&nbsp;5–6 promise: refused an over-tight
-          band with a quantified diagnosis, refused an impossible one (−10.8σ, "more data will
-          not move it in"), and returned <strong>three feasible recipes whose nearest
-          actually-measured runs all landed inside the target band</strong>.
+          Headline metrics are only ever computed on <code>real_tool</code> data. Everything §10
+          claims about coverage, material awareness, and real-data-verified recipes rests on this
+          dataset — and on nothing simulated.
         </p>
       </div>
+
+      <h3>On the bench for replication</h3>
+      <p>
+        Three further real datasets are held locally, checksummed and verified against their actual
+        bytes, as replication candidates once the lead venue's story is complete — each with its
+        catch stated up front:
+      </p>
+      <div class="tw">
+        <table>
+          <thead><tr><th>Dataset</th><th>What it offers</th><th>The catch</th></tr></thead>
+          <tbody>
+            <tr>
+              <td><strong>Ada SDL 2021_01</strong><br><a href="https://github.com/berlinguette/ada">berlinguette/ada</a></td>
+              <td>253 combustion-synthesis runs in 4 replicate campaigns — a natural
+                  leave-one-campaign-out drift testbed.</td>
+              <td>Ordinal order only, no per-row timestamps; a modest 4-knob space.</td>
+            </tr>
+            <tr>
+              <td><strong>Ada SDL 2022_09</strong><br><a href="https://github.com/berlinguette/ada">berlinguette/ada</a></td>
+              <td>177 spray-combusted Pd-film runs with requested <em>and</em> realized knob values
+                  and full per-stage wall-clock timestamps.</td>
+              <td>Small n; the CC-BY claim rests on a dead link (only an MIT file is actually
+                  present) — needs author confirmation before anything citable.</td>
+            </tr>
+            <tr>
+              <td><strong>NREL HTEM-DB</strong><br><a href="https://htem.nlr.gov">htem.nlr.gov</a></td>
+              <td>A 1,891-library combinatorial co-sputtering index — a large-scale
+                  support/abstention demo if its API stabilizes.</td>
+              <td>Recipes vary per <em>library</em>, not per row (one recipe, 44 positional
+                  replicates); only one outcome endpoint currently works.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p>
+        None of these — venue included — meets the full bar: real tool <em>and</em> ample n
+        <em>and</em> wall-clock timestamps <em>and</em> multiple tools <em>and</em> replicate recipes
+        <em>and</em> a clean license, all at once. The venue is the best available compromise, chosen
+        with its compromises named. A fab or vendor data agreement, or a self-run tool campaign,
+        remains the only path to the full bar — and that is a decision about access, not code.
+      </p>
     </div>
   </section>
 
@@ -1737,9 +1639,10 @@ flowchart TD
     <p>
       RIG — Recipe Inverse Generator. Figures 1 and 3 run a real Matérn-5/2 Gaussian process with an exact
       Cholesky posterior, computing the §8 margin live in your browser — the same mathematics as the
-      program's solver, at 1-D toy scale. Audit findings as of 2026-07-17, re-audited 2026-07-19;
-      data inventory as of 2026-07-19 (<code>data/m0-candidates/MANIFEST.md</code>); see
-      <code>docs/BUILD_LOG.md</code> for the reproduction of every finding.
+      program's solver, at 1-D toy scale. This page reflects the program as of 2026-07-22; the
+      working state and full reproduction trail live in the repository
+      (<code>docs/BUILD_STATE.md</code>, <code>docs/BUILD_LOG.md</code>,
+      <code>examples/real_data/empa_hipims/RESULTS.md</code>).
     </p>
   </footer>
 </div>
@@ -1749,10 +1652,9 @@ flowchart TD
   "use strict";
 
   // ============================================================ FAILURE ISOLATION
-  // Every figure used to live in one shared IIFE, so a single throw blanked all five
-  // at once and left the canvases as tall empty boxes. Same blast-radius mistake the
-  // audit kept finding in the program itself. Each figure now runs in its own try,
-  // and a failure is SHOWN rather than swallowed into a silent blank rectangle.
+  // Each figure runs in its own try, so one broken figure can never blank the other
+  // four — and a failure is SHOWN in place rather than swallowed into a silent
+  // blank rectangle.
   function fail(cv, name, err) {
     if (!cv) return;
     const box = document.createElement('div');

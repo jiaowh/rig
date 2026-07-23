@@ -6,10 +6,12 @@ from rig.calibration.conformal import (
     JackknifePlusCalibrator,
     SplitConformalCalibrator,
 )
+from rig.calibration.pid import ConformalPIDController
 
 __all__ = [
     "ACIController",
     "ConformalForwardModel",
+    "ConformalPIDController",
     "JackknifePlusCalibrator",
     "SplitConformalCalibrator",
 ]

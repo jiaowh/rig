@@ -113,6 +113,7 @@ def df_path(campaign: Campaign) -> Path:
     """Full path of a campaign's df_campaign JSON (raw outcome table)."""
     return DATA_DIR / f"{campaign.stem}__df_campaign_{campaign.df_key}.json"
 
+
 # The 5 continuous knobs per parameterization, in tidy (renamed) CSV spelling.
 PRR_INPUTS = ("PRR (Hz)", "PW (us)", "pos Delay (us)", "pos PW (us)", "pos Setpoint (V)")
 DUTY_INPUTS = ("Duty Cycle (ratio)", "PW (us)", "pos Delay (us)", "pos PW (us)", "pos Setpoint (V)")

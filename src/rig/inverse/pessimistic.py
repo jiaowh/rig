@@ -5,6 +5,48 @@ per-query solver loop (§8.6). It is risk-averse *by construction*: the
 optimizer is never rewarded for driving recipes into regions where the
 surrogate is confidently wrong.
 
+§8 fidelity ledger — implemented vs approximated vs owed (F5, audit 2026-07-21)
+-------------------------------------------------------------------------------
+The plan's §8 objective is realized here as an HONEST MVP: correct in direction,
+but several channels are explicit approximations of a stronger torch-tier form.
+Stated plainly so an API reader is not misled about the guarantee:
+
+- **Joint spec-hit probability → per-output independence PRODUCT.** ``confidence``
+  is ``Π_j P_j`` under a per-output GP-independence assumption (§8.1 fast path); the
+  joint-residual-covariance MC is WP-E. Correlated / tight multi-output specs do NOT
+  inherit the stronger joint guarantee.
+- **Worst ensemble member → ``z_epi·σ_epi`` proxy.** The min over ensemble members
+  (WP-E deep ensemble) is stood in for by displacing the mean ``z_epi·σ_epi`` toward
+  each boundary (§8.1). One epistemic channel, not a worst-of-K.
+- **Input-box worst case → first-order ℓ∞ Taylor δ (default), OR opt-in PGD
+  (WP-E, 2026-07-22 — IMPLEMENTED, opt-in).** The default per-output δ term is the
+  exact first-order ``Σ_i |J_ji|·Δ_i`` (§8.5), the plan's blessed fallback.
+  ``delta_mode="pgd"`` REPLACES it with a projected ℓ∞ gradient-ascent inner loop over
+  the tolerance box ``x ± Δ`` (§8.5's ``max_{δ∈Δ}``, PGD step ``Δ/4``): it reproduces
+  the Taylor term on a locally LINEAR μ and exceeds it when curvature helps the
+  adversary, but is a LOWER bound on the true box worst case (a non-exhaustive local
+  search) — so, like Taylor, it is NOT a certificate; it is ≥-honest vs Taylor exactly
+  where μ is locally convex-ish. Default ``"taylor"`` is byte-for-byte unchanged. See
+  :meth:`PessimisticInverseSolver._pgd_delta`.
+- **Off-manifold screen → Mahalanobis support floor (default), + opt-in flow
+  typicality (WP-E, 2026-07-22 — IMPLEMENTED, opt-in).** ``log p̂(x)`` is realized as
+  the negative-Mahalanobis ``support_score`` + hard floor (§8.2), the cheap GP-tier
+  stand-in. Passing ``typicality=`` a fitted
+  :class:`~rig.inverse.typicality.FlowTypicalityScore` adds a normalizing-flow
+  typicality-set screen (``−|log p_flow(x) − E_train[log p_flow]|`` ≥ its own floor)
+  ALONGSIDE — never replacing — the Mahalanobis floor: the §8.2 upgrade that closes the
+  multimodal hole the UNIMODAL Mahalanobis cannot see, while keeping the fail-closed
+  cheap fallback. Screen-only (deliberately not in the soft ``λ_m`` reward); default
+  ``None`` is byte-for-byte unchanged.
+- **Calibrated conformal acceptance → NOW default-on when the model is conformal-
+  wrapped (F1, 2026-07-22).** The §13.2 ``C(x) ⊆ Z*`` gate runs by default whenever
+  ``self.model`` carries a ``conformal_set``; a surviving candidate is then
+  ``calibration_status="conformal-checked"`` (or ``"revalidated"`` via an explicit
+  ``revalidation_model``). When NO conformal model is present the κ·σ margins are the
+  ONLY acceptance test and candidates are labelled ``"model-feasible"`` — a surrogate
+  recommendation, explicitly NOT a calibrated guarantee (the d=20 false-success
+  mechanism; see the class docstring and :class:`~rig.interfaces.RecipeCandidate`).
+
 Design note — how each §8 pessimism channel maps onto the GP backbone
 ---------------------------------------------------------------------
 The plan's §8.1 objective is
@@ -27,8 +69,10 @@ gate):
   standalone ``κ·U_epi`` (the double-count the plan removed).
 - **Input tolerance δ** (§8.5): ``Σ_i |J_ji|·Δ_i`` is the exact first-order
   Taylor of ``max_{δ∈Δ} L(x+δ)`` over an anisotropic ℓ∞ box — the analytic
-  sensitivity penalty the plan blesses as the fallback when PGD (torch, WP-E)
-  is not available. We already have an analytic GP Jacobian, so we use it.
+  sensitivity penalty the plan blesses as the default. We already have an analytic
+  GP Jacobian, so we use it. ``delta_mode="pgd"`` swaps in the projected-gradient
+  inner max (:meth:`_pgd_delta`) — the plan's ``max_{δ∈Δ}`` — which catches curvature
+  the linearization at ``x`` alone misses.
 - **Aleatoric credited band** (§8.4): ``κ`` is the credited-*band* multiplier;
   a recipe is **feasible** iff after the worst-case displacement it is at
   least ``κ`` aleatoric-σ inside every boundary: ``min_j min(u_hi_j,u_lo_j) ≥ κ``.
@@ -42,7 +86,16 @@ gate):
   percentile of train scores). The hard reject is the defense against the
   §8.2 failure mode where ``σ_epi`` is spuriously small in a far-OOD hole, so
   the solver FAILS CLOSED: a ``support_floor`` (or ``X_train`` to derive it)
-  is required, never silently skipped.
+  is required, never silently skipped. The optional ``typicality`` screen (an
+  opt-in :class:`~rig.inverse.typicality.FlowTypicalityScore`, §8.2's normalizing-flow
+  upgrade) is a SECOND hard reject applied alongside this floor — a candidate must
+  clear BOTH — and closes the multimodal hole the unimodal Mahalanobis has (the flow
+  scores a point in an empty inter-mode gap as atypical where the Mahalanobis distance
+  to the pooled mean does not). It is screen-only: deliberately NOT added to the soft
+  ``λ_m`` reward, because the flow density is not differentiable through the
+  analytic-gradient path and a torch forward pass per L-BFGS-B step is too costly for
+  the hot loop. ``typicality=None`` (the default) leaves the objective and every
+  existing number byte-for-byte unchanged.
 
 Constraint-by-construction (§8.3): box + simplex hold for every ``u`` via
 :class:`rig.transforms.RecipeTransform`. Hard-to-change / tool factors are
@@ -189,7 +242,7 @@ from __future__ import annotations
 import warnings
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import numpy as np
 from scipy.linalg import cho_solve, solve_triangular
@@ -210,6 +263,13 @@ from rig.interfaces import (
 )
 from rig.transforms import _U_CLIP as _RT_U_CLIP
 from rig.transforms import RecipeTransform
+
+if TYPE_CHECKING:
+    # typing-only: the flow-typicality screen lives in a torch/zuko module, imported
+    # lazily by `rig.inverse.__init__`. Referencing it only here keeps `import rig`
+    # (and this eagerly-imported module) torch-free — the runtime code duck-types the
+    # object (`.score(x)`, `.floor`), never importing the class.
+    from rig.inverse.typicality import FlowTypicalityScore
 
 # absolute tolerance on the "≥ κ σ_ale margin" feasibility comparison, so a
 # recipe sitting EXACTLY on the κ bar is not flipped to infeasible by float
@@ -512,6 +572,20 @@ class PessimisticInverseSolver:
     """Per-query pessimistic inverse (implementation-plan §8). Implements
     :class:`rig.interfaces.InverseSolver`.
 
+    Fidelity & calibration status (F1/F5, audit 2026-07-21)
+    -------------------------------------------------------
+    The objective is an honest MVP of §8 — see the module docstring's fidelity
+    ledger for exactly which channels are approximated (joint → per-output product,
+    worst-member → ``z_epi·σ_epi``, PGD → first-order δ, flow typicality →
+    Mahalanobis). Calibrated acceptance is now DEFAULT-ON: when ``model`` is
+    conformal-wrapped the §13.2 ``C(x) ⊆ Z*`` gate runs on every FEASIBLE candidate,
+    which then carries ``calibration_status="conformal-checked"``; with an explicit
+    ``revalidation_model`` it is ``"revalidated"``. With NO conformal model available
+    the returned candidates are ``"model-feasible"`` — accepted on the raw-σ κ margins
+    ALONE, a surrogate recommendation and **not a calibrated guarantee** (the κ margin
+    inherits any miscalibration in the surrogate's σ — the d=20 false-success
+    mechanism).
+
     Parameters
     ----------
     model
@@ -535,12 +609,38 @@ class PessimisticInverseSolver:
         Input-tolerance box half-width as a fraction of each variable's range
         (Gage R&R / tool repeatability, §8.5). Default 0.02. Set 0 to disable
         the ``‖J‖`` term (skips the Jacobian call).
+    delta_mode
+        How the §8.5 input-tolerance worst case is computed. ``"taylor"`` (default,
+        byte-for-byte unchanged) uses the first-order ``Σ_i|J_ji|·Δ_i``. ``"pgd"``
+        (opt-in, WP-E) REPLACES it per output with a projected ℓ∞ gradient-ascent inner
+        max over the box ``x ± Δ`` (:meth:`_pgd_delta`) — deterministic, ``pgd_steps``
+        steps of ``Δ/4``, using the model's ``jacobian`` for gradients. PGD catches
+        curvature the linearization at ``x`` misses (a tighter, more pessimistic margin
+        where μ is locally convex) but is a LOWER bound on the true worst case, not a
+        certificate. Incompatible with ``analytic_grad=True`` (the analytic gradient
+        forms δ from the Taylor/Hessian form; mixing them would optimize one objective
+        and certify against another) — that combination raises at construction.
+    pgd_steps
+        Number of projected-gradient steps per output/direction when
+        ``delta_mode="pgd"`` (default 10; the plan's §8.5 budget is 5-7). Ignored for
+        ``"taylor"``.
     lambda_m
         Soft manifold-reward weight on ``support_score`` (§8.1). Default 0.3.
     support_floor / X_train
         Hard manifold reject threshold (§8.2). Provide the float directly, OR
         ``X_train`` to derive it as the 5th percentile of train support scores.
         One of the two is REQUIRED (fail-closed anti-reward-hacking).
+    typicality
+        Optional fitted :class:`~rig.inverse.typicality.FlowTypicalityScore` (opt-in,
+        WP-E, §8.2 normalizing-flow upgrade). When given, it is an ADDITIONAL hard
+        manifold screen applied ALONGSIDE the Mahalanobis floor (never replacing it):
+        a candidate must clear BOTH ``support_score ≥ support_floor`` AND
+        ``typicality.score(x) ≥ typicality.floor``. This closes the multimodal hole a
+        unimodal Mahalanobis distance cannot see (§8.2, Nalisnick et al. 2019). It is
+        screen-only — deliberately NOT folded into the soft ``λ_m`` reward (not
+        differentiable through the analytic-gradient path; a torch forward pass per
+        L-BFGS-B step is too costly for the hot loop). Default ``None`` leaves every
+        existing number unchanged. An unfitted screen raises at construction.
     constraints
         The process's declared :class:`~rig.constraints.ConstraintSet` (§8.3), or
         ``None`` (default) for the historical, byte-for-byte-unchanged path: no
@@ -589,9 +689,12 @@ class PessimisticInverseSolver:
         kappa: float = 2.0,
         z_epi: float = 2.0,
         delta_frac: float = 0.02,
+        delta_mode: str = "taylor",
+        pgd_steps: int = 10,
         lambda_m: float = 0.3,
         support_floor: float | None = None,
         X_train: np.ndarray | None = None,
+        typicality: FlowTypicalityScore | None = None,
         constraints: ConstraintSet | None = None,
         constraint_penalty: float = 10.0,
         revalidation_model: ForwardModel | None = None,
@@ -616,6 +719,12 @@ class PessimisticInverseSolver:
         self.kappa = float(kappa)
         self.z_epi = float(z_epi)
         self.delta_frac = float(delta_frac)
+        self.delta_mode = str(delta_mode)
+        if self.delta_mode not in ("taylor", "pgd"):
+            raise ValueError(f"delta_mode must be 'taylor' or 'pgd', got {delta_mode!r}")
+        self.pgd_steps = int(pgd_steps)
+        if self.delta_mode == "pgd" and self.pgd_steps < 1:
+            raise ValueError(f"pgd_steps must be >= 1 when delta_mode='pgd', got {pgd_steps}")
         self.lambda_m = float(lambda_m)
         self.max_iter = int(max_iter)
         self.u_bound = float(u_bound)
@@ -650,6 +759,23 @@ class PessimisticInverseSolver:
         # opt-in analytic objective gradient. `None` ⇒ the FD path, untouched.
         self.analytic_grad = bool(analytic_grad)
         self._terms = self._bind_gradients() if self.analytic_grad else None
+        if self.delta_mode == "pgd" and self.analytic_grad:
+            raise ValueError(
+                "delta_mode='pgd' and analytic_grad=True are incompatible: the analytic "
+                "gradient path forms the §8.5 δ term from the first-order Taylor "
+                "Σ|J|·Δ and its Hessian (the PGD inner max has no closed-form "
+                "derivative), so L-BFGS-B would descend the Taylor objective while "
+                "_evaluate certified feasibility against the PGD one — an inconsistent "
+                "solve. Pick one: PGD (finite-difference search) or analytic_grad."
+            )
+
+        # opt-in §8.2 normalizing-flow typicality screen. Duck-typed (.score/.floor) so
+        # this torch-free module never imports it. Touch `.floor` now to fail loud on an
+        # unfitted screen at CONSTRUCTION, mirroring the support_floor fail-closed
+        # contract, rather than deep in the solve.
+        self.typicality = typicality
+        if typicality is not None:
+            _ = float(typicality.floor)
 
         # hard manifold floor (§8.2) — fail closed.
         self._X_train = None if X_train is None else np.asarray(X_train, dtype=float)
@@ -895,8 +1021,11 @@ class PessimisticInverseSolver:
         sig_epi = np.atleast_1d(np.asarray(dist.epistemic_sigma, dtype=float))
         s = self.z_epi * sig_epi
         if self.delta_frac > 0.0:
-            J = np.atleast_2d(np.asarray(model.jacobian(x), dtype=float))  # (m,d)
-            s = s + np.abs(J) @ self._delta_raw
+            if self.delta_mode == "pgd":
+                s = s + self._pgd_delta(x, model)  # §8.5 inner max by projected ascent
+            else:
+                J = np.atleast_2d(np.asarray(model.jacobian(x), dtype=float))  # (m,d)
+                s = s + np.abs(J) @ self._delta_raw  # first-order Taylor (default)
         support = float(model.support_score(x))
 
         # numerically safe credited band: floor the aleatoric σ used as the
@@ -910,6 +1039,56 @@ class PessimisticInverseSolver:
         u_hi = (box.upper - mu_s - s_s) / sc  # +inf where upper is +inf
         u_lo = (mu_s - box.lower - s_s) / sc  # +inf where lower is -inf
         return u_hi, u_lo, mu, sig_ale, sig_epi, s, support, sc
+
+    def _pgd_delta(self, x: np.ndarray, model: ForwardModel) -> np.ndarray:
+        """§8.5 input-tolerance worst case by projected gradient ascent, per output.
+
+        For each output ``j`` this estimates ``max_{δ: |δ_i| ≤ Δ_i} |μ_j(x+δ) − μ_j(x)|``
+        — the largest mean shift the tolerance box can inflict — and returns the
+        per-output ``(m,)`` displacement that REPLACES the first-order Taylor term
+        ``Σ_i|J_ji|·Δ_i`` in the margin when ``delta_mode="pgd"``. The inner max is a
+        few ℓ∞ **sign-gradient** ascent steps (step ``Δ/4``, projected back onto the
+        box), run toward BOTH boundary directions with the larger deviation kept; the
+        gradient ``∂μ_j/∂δ`` is the model's own analytic ``jacobian`` (so the GP tier
+        needs no torch; a torch backend's autograd would serve the same role here).
+
+        Honesty and direction — stated so a reader is not misled about the guarantee:
+
+        * Started at ``δ=0`` with step ``Δ/4`` the ascent marches to a box CORNER, and
+          on a locally LINEAR μ it evaluates μ at exactly the corner the Taylor term
+          extrapolates to — so it reproduces ``Σ_i|J_ji|·Δ_i`` to rounding (pinned by a
+          test). The two modes therefore agree on a linear response and diverge only
+          on curvature.
+        * When μ is locally CONVEX toward that corner the ACTUAL μ there exceeds the
+          linear extrapolation, so PGD returns a LARGER displacement → a tighter, more
+          pessimistic margin the linearization at ``x`` would have missed. When concave
+          it can return a SMALLER one.
+        * It is a LOWER bound on the true box worst case (a non-exhaustive local search
+          over a handful of corners of an anisotropic box), so — exactly like the Taylor
+          fallback — it is NOT a certificate. It is ≥-honest vs Taylor precisely where
+          the response is locally convex-ish.
+
+        Deterministic: fixed ``δ=0`` start, no RNG (§13.4).
+        """
+        x = np.asarray(x, dtype=float)
+        delta_box = self._delta_raw  # (d,) per-input half-widths Δ_i
+        step = 0.25 * delta_box  # §8.5 PGD step Δ/4
+        mu0 = np.atleast_1d(np.asarray(model.predict(x).mean, dtype=float))  # (m,)
+        dev = np.zeros(mu0.size)
+        for j in range(mu0.size):
+            worst = 0.0
+            for direction in (1.0, -1.0):  # ascend toward upper, then descend toward lower
+                delta = np.zeros(delta_box.size)
+                for _ in range(self.pgd_steps):
+                    jac = np.atleast_2d(np.asarray(model.jacobian(x + delta), dtype=float))
+                    grad = direction * np.sign(jac[j])  # ℓ∞ sign-gradient on μ_j
+                    delta = np.clip(delta + step * grad, -delta_box, delta_box)
+                mu_j = float(
+                    np.atleast_1d(np.asarray(model.predict(x + delta).mean, dtype=float))[j]
+                )
+                worst = max(worst, abs(mu_j - mu0[j]))
+            dev[j] = worst
+        return dev
 
     def _neg_objective(
         self,
@@ -1179,6 +1358,24 @@ class PessimisticInverseSolver:
             out.append(self._evaluate(np.clip(res.x, -self.u_bound, self.u_bound), box, out_idx))
         return out
 
+    # -- §8.2 manifold screen ---------------------------------------------------
+
+    def _on_manifold(self, r: _Restart) -> bool:
+        """The §8.2 hard manifold screen for one restart: the Mahalanobis support floor
+        AND, when configured, the opt-in flow-typicality floor. A candidate must clear
+        BOTH — the flow screen is applied ALONGSIDE the cheap fallback (§8.2), never
+        replacing it, so the fail-closed Mahalanobis reject still holds when no flow was
+        supplied. With ``typicality is None`` (the default) this is exactly the historical
+        ``r.support >= self.support_floor`` test, byte-for-byte."""
+        if r.support < self.support_floor:
+            return False
+        if (
+            self.typicality is not None
+            and float(self.typicality.score(r.x)) < self.typicality.floor
+        ):
+            return False
+        return True
+
     # -- InverseSolver protocol -------------------------------------------------
 
     def solve(self, spec: Mapping[str, Any]) -> InverseResult:
@@ -1221,8 +1418,9 @@ class PessimisticInverseSolver:
         # declared constraint is never a survivor. Identity when constraints is None.
         adm = self._admissible(restarts)
 
-        # hard manifold reject (§8.2): a survivor must be on-support.
-        on_support = [r for r in adm if r.support >= self.support_floor]
+        # hard manifold reject (§8.2): a survivor must be on-support (Mahalanobis floor
+        # AND, when configured, the opt-in flow-typicality screen — see _on_manifold).
+        on_support = [r for r in adm if self._on_manifold(r)]
         feasible = [
             r for r in on_support if r.margin >= self.kappa - _FEAS_TOL and r.confidence > 0.0
         ]
@@ -1240,7 +1438,7 @@ class PessimisticInverseSolver:
             feasible = [
                 r
                 for r in nominal_adm
-                if r.support >= self.support_floor
+                if self._on_manifold(r)
                 and r.margin >= self.kappa - _FEAS_TOL
                 and r.confidence > 0.0
             ]
@@ -1291,8 +1489,23 @@ class PessimisticInverseSolver:
                     return self._reval_infeasible(chosen[0], box, out_idx)
                 survivors.sort(key=lambda r: r.confidence, reverse=True)
                 revalidated = self._greedy_diverse(survivors, q)
-            return [self._to_candidate(r, box) for r in revalidated]
-        return [self._to_candidate(r, box) for r in chosen]
+            return [self._to_candidate(r, box, "revalidated") for r in revalidated]
+
+        # §13.2 DEFAULT-ON conformal containment (F1, 2026-07-22). No explicit
+        # revalidation_model was given — but if `self.model` is ITSELF conformal-
+        # wrapped, a FEASIBLE verdict must still clear C(x) ⊆ Z* on it. The raw-σ κ
+        # margins alone are only ever as calibrated as the surrogate's own σ, and the
+        # conformal band exists precisely to catch where that σ is optimistic — the
+        # structural cause of the deterministic d=20 false success
+        # (docs/dimensionality-2026-07-17.md: "`conformal_set` is not part of the
+        # feasibility decision at all"). `_conformal_screen` returns None when
+        # `self.model` carries no conformal_set, so every unwrapped-GP path (M2, the
+        # AL loop, the dimensionality study) is byte-for-byte unchanged bar the
+        # additive `calibration_status` tag.
+        screened = self._conformal_screen(chosen, feasible, box, out_idx, q)
+        if screened is not None:
+            return screened
+        return [self._to_candidate(r, box, "model-feasible") for r in chosen]
 
     def _reval_support_floor(self) -> float:
         """The §8.2 floor for the RE-VALIDATION model. support_score is per-model,
@@ -1359,38 +1572,115 @@ class PessimisticInverseSolver:
             ),
         )
 
-    def _conformal_set(self, x: np.ndarray, out_idx: np.ndarray) -> np.ndarray | None:
-        cs = self.revalidation_model.predict(x).conformal_set
+    def _conformal_set(
+        self, x: np.ndarray, out_idx: np.ndarray, model: ForwardModel | None = None
+    ) -> np.ndarray | None:
+        """The constrained-output rows of ``model``'s conformal interval at ``x``, or
+        ``None`` when ``model`` carries no ``conformal_set`` (it is not §5.6-wrapped).
+
+        ``model`` defaults to ``self.revalidation_model`` — the historical
+        re-validation target — so the §13.2 reval path is unchanged; the default-path
+        F1 gate (2026-07-22) passes ``self.model`` explicitly. ``None`` on both (no
+        reval model, called without an explicit one) returns ``None`` too, so callers
+        treat the gate as inactive rather than dereferencing nothing."""
+        model = model if model is not None else self.revalidation_model
+        if model is None:
+            return None
+        cs = model.predict(x).conformal_set
         if cs is None:
             return None
         return np.atleast_2d(np.asarray(cs, dtype=float))[out_idx]  # (m_spec, 2)
 
-    def _conformal_in_box(self, x: np.ndarray, box: SpecBox, out_idx: np.ndarray) -> bool:
-        """§13.2 gate C(x') ⊆ Z*: the full model's conformal interval for every
-        constrained output must sit inside the spec box. Inactive (returns True)
-        when the re-validation model is not conformal-wrapped (conformal_set None)."""
-        cs = self._conformal_set(x, out_idx)
+    def _conformal_in_box(
+        self, x: np.ndarray, box: SpecBox, out_idx: np.ndarray, model: ForwardModel | None = None
+    ) -> bool:
+        """§13.2 gate C(x) ⊆ Z*: ``model``'s conformal interval for every constrained
+        output must sit inside the spec box. Inactive (returns True) when ``model`` is
+        not conformal-wrapped (conformal_set None). ``model`` defaults to
+        ``self.revalidation_model`` (the reval path); the default-path gate passes
+        ``self.model``."""
+        cs = self._conformal_set(x, out_idx, model)
         if cs is None:
             return True
         return bool(
             np.all(cs[:, 0] >= box.lower - _FEAS_TOL) and np.all(cs[:, 1] <= box.upper + _FEAS_TOL)
         )
 
-    def _conformal_spill(self, x: np.ndarray, box: SpecBox, out_idx: np.ndarray) -> float:
-        """Max raw excursion of the conformal interval beyond the spec box over the
-        constrained outputs (the honest distance-to-feasible for a §13.2 gate
-        rejection). 0.0 when inside; +inf shouldn't arise (one-sided ∞ bounds
-        never spill)."""
-        cs = self._conformal_set(x, out_idx)
+    def _conformal_spill(
+        self, x: np.ndarray, box: SpecBox, out_idx: np.ndarray, model: ForwardModel | None = None
+    ) -> float:
+        """Max raw excursion of ``model``'s conformal interval beyond the spec box over
+        the constrained outputs (the honest distance-to-feasible for a §13.2 gate
+        rejection). 0.0 when inside; +inf shouldn't arise (one-sided ∞ bounds never
+        spill). ``model`` defaults to ``self.revalidation_model``."""
+        cs = self._conformal_set(x, out_idx, model)
         if cs is None:
             return 0.0
         below = np.where(np.isfinite(box.lower), box.lower - cs[:, 0], 0.0)
         above = np.where(np.isfinite(box.upper), cs[:, 1] - box.upper, 0.0)
         return float(np.max(np.maximum(np.maximum(below, above), 0.0)))
 
+    def _conformal_screen(
+        self,
+        chosen: list[_Restart],
+        feasible: list[_Restart],
+        box: SpecBox,
+        out_idx: np.ndarray,
+        q: int,
+    ) -> list[RecipeCandidate] | Infeasible | None:
+        """Default-path §13.2 gate against ``self.model`` (F1, 2026-07-22), used when
+        no explicit ``revalidation_model`` was supplied.
+
+        Returns ``None`` when ``self.model`` is NOT conformal-wrapped (its
+        ``conformal_set`` is ``None``) — the historical raw-σ path, byte-for-byte, so
+        the caller emits ``"model-feasible"`` candidates. When it IS wrapped, keep only
+        the chosen candidates whose calibrated interval sits inside the spec box
+        (C(x) ⊆ Z*), and — mirroring the re-validation anti-false-abstention sweep
+        (never abstain having tested only the q DIVERSE picks; ``_greedy_diverse`` cuts
+        by SPREAD, not by conformal merit) — if NONE of the chosen survive, sweep the
+        rest of the feasible pool before abstaining and re-select diversely from
+        whatever the band actually fits. A genuinely empty result is a conformal-cause
+        ``Infeasible`` (aleatoric/coverage language), never the epistemic
+        'collect runs' verdict."""
+        # one probe: an unwrapped model has no conformal_set and the gate is inert.
+        if self._conformal_set(chosen[0].x, out_idx, self.model) is None:
+            return None
+        kept = [r for r in chosen if self._conformal_in_box(r.x, box, out_idx, self.model)]
+        if not kept:
+            # identity, not `in`: _Restart carries numpy arrays (== is ambiguous).
+            picked = {id(r) for r in chosen}
+            rest = [r for r in feasible if id(r) not in picked]
+            survivors = [r for r in rest if self._conformal_in_box(r.x, box, out_idx, self.model)]
+            if not survivors:
+                return self._conformal_infeasible(chosen[0], box, out_idx)
+            survivors.sort(key=lambda r: r.confidence, reverse=True)
+            kept = self._greedy_diverse(survivors, q)
+        return [self._to_candidate(r, box, "conformal-checked") for r in kept]
+
+    def _conformal_infeasible(self, top: _Restart, box: SpecBox, out_idx: np.ndarray) -> Infeasible:
+        """Default-path §13.2 rejection (F1): the raw-σ κ margins accept the recipe,
+        but ``self.model``'s OWN calibrated conformal interval is wider than the spec
+        box (C(x) ⊄ Z*). An aleatoric/coverage verdict — the calibrated band does not
+        fit — NOT an epistemic 'collect more runs' one: more data sharpens σ_epi, not
+        the coverage band, and it was the raw σ that was too optimistic here."""
+        return Infeasible(
+            nearest_achievable=dict(top.recipe),
+            distance_to_feasible=self._conformal_spill(top.x, box, out_idx, self.model),
+            reason=(
+                "conformal-infeasible (§13.2): the pessimistic κ·σ margins accept this "
+                "recipe, but the model's calibrated conformal interval is wider than "
+                "the spec box (C(x) ⊄ Z*) — the surrogate's raw σ is more optimistic "
+                "than its own conformal coverage. Reduce process variation, relax κ, or "
+                "widen the spec tolerance; more data alone will not shrink an "
+                "irreducible-aleatoric / coverage band."
+            ),
+        )
+
     # -- result assembly --------------------------------------------------------
 
-    def _to_candidate(self, r: _Restart, box: SpecBox) -> RecipeCandidate:
+    def _to_candidate(
+        self, r: _Restart, box: SpecBox, calibration_status: str = "model-feasible"
+    ) -> RecipeCandidate:
         return RecipeCandidate(
             recipe=dict(r.recipe),
             confidence=r.confidence,
@@ -1400,6 +1690,7 @@ class PessimisticInverseSolver:
             },
             feasibility_flag=True,
             support_score=r.support,
+            calibration_status=calibration_status,
         )
 
     def _greedy_diverse(self, ranked: list[_Restart], q: int) -> list[_Restart]:
@@ -1564,6 +1855,27 @@ class PessimisticInverseSolver:
         high-epistemic regions, so a mean-feasible point there is never in
         ``restarts``); reused here so the probe runs only once per solve.
         """
+        # §8.2: a typicality-only block must be named before the support/epistemic
+        # taxonomy below, else an off-manifold abstention (every restart atypical under
+        # the flow, even where the Mahalanobis floor passes) would be mis-attributed to
+        # epistemic uncertainty or a spec conflict. Guarded by `typicality is not None`,
+        # so the default path is byte-for-byte unchanged.
+        if self.typicality is not None and not any(self._on_manifold(r) for r in restarts):
+            best = max(restarts, key=lambda r: r.margin)
+            return Infeasible(
+                nearest_achievable=dict(best.recipe),
+                distance_to_feasible=float(max(0.0, self.kappa - best.margin)),
+                reason=(
+                    "no on-manifold recipe found: every restart failed the §8.2 manifold "
+                    "screen — the Mahalanobis support floor and/or the normalizing-flow "
+                    "TYPICALITY band (atypical under the trained input density, e.g. a "
+                    "multimodal hole the unimodal support score cannot see). The spec box "
+                    "likely lies outside, or between the modes of, the trained recipe "
+                    "region — expand support via active learning (§9) rather than lowering "
+                    "the screen."
+                ),
+            )
+
         on_support = [r for r in restarts if r.support >= self.support_floor]
         if not on_support:
             best = max(restarts, key=lambda r: r.margin)

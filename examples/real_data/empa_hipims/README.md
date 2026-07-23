@@ -51,9 +51,17 @@ All commands from the repo root, on Windows with a cp1252 console — always set
 3. **Runner** — the M1 gate form. Per campaign: tabular-adapter ingest ->
    temporal (BatchNr-order 60/20/20) + seeded random splits -> GP forward
    model -> split-conformal at alpha=0.10 -> per-output + pooled coverage with
-   the exact binomial 95% CI (gate: nominal 0.90 inside the CI). Full runs add
-   the 4-campaign PRR-space OOD check and the §8 pessimistic-inverse demo on
-   `al_120w_short_pw`.
+   the exact binomial 95% CI (gate: nominal 0.90 inside the CI). Each split is
+   then re-evaluated under **two online calibrators** streamed in split order
+   (interval scored *before* `observe`): **ACI** (Adaptive Conformal Inference,
+   the D4/§5.6 drift component) and **conformal-PID** (the §20.2 online
+   *endpoint* that supersedes bare ACI — it tracks the score threshold `q_t`
+   directly, so every interval is finite by construction and `n_infinite_width`
+   is 0, never the ACI auto-hit trap). Both use library-default hyperparameters,
+   identical across all campaigns/splits (no tuning-to-pass); their
+   realized-coverage rows are *directional* (asymptotic/long-run guarantee, not
+   finite-sample exact). Full runs add the 4-campaign PRR-space OOD check and
+   the §8 pessimistic-inverse demo on `al_120w_short_pw`.
 
    ```
    # full 6-campaign gate (~4-6 min) -> results/m1_empa.json

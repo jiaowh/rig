@@ -14,6 +14,7 @@ from rig.inverse.pessimistic import (
 
 if TYPE_CHECKING:
     from rig.inverse.amortized import AmortizedInverseGenerator, CalibrationGate
+    from rig.inverse.typicality import FlowTypicalityScore
 
 __all__ = [
     "PessimisticInverseSolver",
@@ -22,13 +23,19 @@ __all__ = [
     "AmortizedRefiner",
     "AmortizedInverseGenerator",
     "CalibrationGate",
+    "FlowTypicalityScore",
 ]
 
 
 def __getattr__(name: str):
-    # Lazy so the torch extra is only required if the amortized generator is used.
+    # Lazy so the torch extra is only required if the amortized generator / flow
+    # typicality screen is actually used — `import rig` stays torch-free.
     if name in ("AmortizedInverseGenerator", "CalibrationGate"):
         from rig.inverse import amortized
 
         return getattr(amortized, name)
+    if name == "FlowTypicalityScore":
+        from rig.inverse.typicality import FlowTypicalityScore
+
+        return FlowTypicalityScore
     raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
