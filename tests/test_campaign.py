@@ -301,6 +301,55 @@ def test_determinism_two_runs_produce_identical_serialized_results():
     assert len({r.run_id for r in first.all_run_records}) == len(first.all_run_records)
 
 
+def test_repeated_run_on_one_instance_never_collides_but_replays_exactly():
+    """Multi-fire safety (fixed 2026-07-22): one instance fired twice must produce
+
+    globally unique run ids/timestamps across BOTH CampaignResults (the active
+    loop's rejected-then-later-hit path fires the same campaign repeatedly),
+    while a replayed instance reproduces the same per-call sequence exactly.
+    """
+
+    def build() -> ConfirmationCampaign:
+        return ConfirmationCampaign(
+            process_id="mbe_gaas",
+            tool_id="chamber_A",
+            seed=42,
+            machine=_true_function_machine(lambda r: 100.0),
+            gate_params=_gate_params(n_runs=6, min_in_spec_rate=0.5, confidence=0.8),
+        )
+
+    candidates = [_candidate({"x": 0.0}), _candidate({"x": 1.0})]
+
+    campaign = build()
+    first = campaign.run(list(candidates))  # same recipes at the same indices both
+    second = campaign.run(list(candidates))  # times -- the worst case for collisions
+
+    ids_first = {r.run_id for r in first.all_run_records}
+    ids_second = {r.run_id for r in second.all_run_records}
+    assert ids_first and ids_second
+    assert ids_first.isdisjoint(ids_second)
+    stamps_first = {r.timestamp for r in first.all_run_records}
+    stamps_second = {r.timestamp for r in second.all_run_records}
+    assert stamps_first.isdisjoint(stamps_second)
+    for i, rec in enumerate(first.all_run_records):
+        assert rec.extra["campaign_invocation"] == 0
+        assert second.all_run_records[i].extra["campaign_invocation"] == 1
+
+    # replay: a fresh instance fired the same way reproduces BOTH calls exactly
+    replay = build()
+    assert replay.run(list(candidates)) == first
+    assert replay.run(list(candidates)) == second
+
+    # an Infeasible call still consumes an invocation slot, so the sequence of a
+    # later call depends only on call COUNT, never on earlier calls' content
+    with_infeasible = build()
+    with_infeasible.run(
+        Infeasible(nearest_achievable={"x": 0.3}, distance_to_feasible=1.5, reason="nope")
+    )
+    third = with_infeasible.run(list(candidates))
+    assert {r.run_id for r in third.all_run_records} == ids_second
+
+
 # ---------------------------------------------------------------------------
 # Multiplicity: the Bonferroni knob tightens per-candidate confidence by alpha/q
 # ---------------------------------------------------------------------------

@@ -16,8 +16,16 @@ from rig.baselines.warm_bo import WarmStartedBO, expected_improvement
 if TYPE_CHECKING:
     from rig.baselines.botorch_bo import BoTorchBO
     from rig.baselines.mfl import ModelFeedbackLearning
+    from rig.baselines.trust_region_bo import SCBOBaseline, TuRBOBaseline
 
-__all__ = ["WarmStartedBO", "BoTorchBO", "ModelFeedbackLearning", "expected_improvement"]
+__all__ = [
+    "WarmStartedBO",
+    "BoTorchBO",
+    "SCBOBaseline",
+    "TuRBOBaseline",
+    "ModelFeedbackLearning",
+    "expected_improvement",
+]
 
 
 def __getattr__(name: str):
@@ -26,6 +34,10 @@ def __getattr__(name: str):
         from rig.baselines.botorch_bo import BoTorchBO
 
         return BoTorchBO
+    if name in ("SCBOBaseline", "TuRBOBaseline"):
+        from rig.baselines import trust_region_bo
+
+        return getattr(trust_region_bo, name)
     if name == "ModelFeedbackLearning":
         from rig.baselines.mfl import ModelFeedbackLearning
 

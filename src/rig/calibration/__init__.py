@@ -6,6 +6,12 @@ from rig.calibration.conformal import (
     JackknifePlusCalibrator,
     SplitConformalCalibrator,
 )
+from rig.calibration.mondrian import (
+    MondrianConformalCalibrator,
+    MondrianConformalForwardModel,
+    finite_quantile_floor,
+    predicted_magnitude_group_fn,
+)
 from rig.calibration.pid import ConformalPIDController
 
 __all__ = [
@@ -13,5 +19,9 @@ __all__ = [
     "ConformalForwardModel",
     "ConformalPIDController",
     "JackknifePlusCalibrator",
+    "MondrianConformalCalibrator",
+    "MondrianConformalForwardModel",
     "SplitConformalCalibrator",
+    "finite_quantile_floor",
+    "predicted_magnitude_group_fn",
 ]

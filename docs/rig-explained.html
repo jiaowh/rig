@@ -373,6 +373,39 @@
         asymmetry is the whole problem in one picture.
       </figcaption>
     </figure>
+
+    <div class="col">
+      <h3>The whole machine, in one breath</h3>
+      <p>
+        Before the details, here is the entire program end to end — worth holding onto, because every
+        section below is one link of this chain. A <strong>Gaussian process learns the process</strong>
+        from the runs you have, predicting for <em>any</em> recipe an outcome with two separate error
+        bands — noise in the world, and the model's own ignorance (§02–03). A
+        <strong>conformal layer makes those error bands empirically true</strong>, stretching them
+        against held-out runs until "90%" actually means 90 in 100 — the model's self-confidence is
+        never taken on faith (§04). A <strong>pessimistic solver searches that model</strong> for
+        recipes — not ones whose predicted <em>mean</em> hits your spec, but ones whose <em>worst
+        plausible outcome</em> still lands inside it, with margin charged for every kind of doubt; if
+        no such recipe exists, it says INFEASIBLE and tells you why (§05–07). A
+        <strong>qualification gate demands real confirmation runs</strong> before any certified recipe
+        is treated as more than a recommendation. And when the answer was "you don't have enough data
+        yet," an <strong>active-learning loop picks the next experiment</strong> to buy exactly the
+        missing knowledge (§08). A trained <strong>flow can shortcut the search</strong> for instant
+        proposals — but its proposals still go through the same solver and gates (§09).
+      </p>
+      <div class="note key">
+        <span class="label">Why the chain is built this way</span>
+        <p>
+          Each stage exists to catch a specific way the previous one can be wrong. The GP can be
+          overconfident — the conformal layer corrects it against reality. The corrected bands can
+          still hide a thin spot — the solver's worst-case margin refuses to park a recipe near a
+          cliff edge. The whole model can be wrong in a way no band admits — the qualification gate
+          checks against the actual machine. And when honesty forces a refusal, the loop turns that
+          refusal into the experiment that removes it. Nothing in the chain trusts its own opinion
+          of itself.
+        </p>
+      </div>
+    </div>
   </section>
 
   <hr class="rule">

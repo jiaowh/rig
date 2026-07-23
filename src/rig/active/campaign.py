@@ -80,12 +80,15 @@ hop from the real explanation.
 
 Determinism (implementation-plan §13.4)
 -----------------------------------------
-Given the same ``(candidates, machine, seed)``, two campaign runs produce
-identical ``CampaignResult``s, including every ``RunRecord``. This module
-introduces no randomness of its own: ``run_id`` is a ``uuid5`` hash of
-``(seed, candidate_index, run_index)`` (never ``uuid4``, which is
-os-random), and the default ``clock`` is a deterministic synthetic sequence
-(epoch + run_index seconds), not wall-clock time. Reproducibility of the
+Given the same ``(candidates, machine, seed)``, two FRESH campaigns produce
+identical ``CampaignResult``s, including every ``RunRecord`` -- and one
+instance fired repeatedly stays both collision-free AND replayable: ids are
+a ``uuid5`` hash of ``(seed, invocation, candidate_index, run_index)``
+(never ``uuid4``, which is os-random), where ``invocation`` counts this
+instance's ``run()`` calls, so the N-th call of a replayed instance
+reproduces exactly the N-th call's ids while two different calls can never
+collide. The default ``clock`` is a deterministic synthetic sequence
+(epoch + invocation-strided run_index seconds), not wall-clock time. Reproducibility of the
 MEASURED values is, as in ``rig.qualification``, the injected machine's
 contract, not this module's.
 """
@@ -127,17 +130,23 @@ _UUID_NAMESPACE = uuid.uuid5(uuid.NAMESPACE_DNS, "rig.active.campaign")
 _SYNTHETIC_EPOCH = datetime(2000, 1, 1, tzinfo=UTC)
 
 
-def _deterministic_run_id(seed: int, candidate_index: int, run_index: int) -> uuid.UUID:
-    """Reproducible ``run_id``: a uuid5 hash of ``(seed, candidate_index, run_index)``.
+def _deterministic_run_id(
+    seed: int, invocation: int, candidate_index: int, run_index: int
+) -> uuid.UUID:
+    """Reproducible ``run_id``: a uuid5 hash of ``(seed, invocation, candidate_index, run_index)``.
 
     ``RunRecord.run_id`` must be a UUID (implementation-plan §3.5), but this
     module's determinism contract forbids the usual ``uuid4()`` (os-random)
-    generator -- two ``ConfirmationCampaign.run()`` calls with the same seed
-    must emit byte-identical RunRecords, ids included. ``uuid5`` over a fixed
-    namespace is a pure function of its inputs: same inputs, same id, always,
-    on any machine.
+    generator -- replaying a campaign with the same seed must emit
+    byte-identical RunRecords, ids included. ``uuid5`` over a fixed namespace
+    is a pure function of its inputs: same inputs, same id, always, on any
+    machine. ``invocation`` is the per-instance ``run()`` call counter: it
+    keeps ids UNIQUE when one ``ConfirmationCampaign`` instance fires more
+    than once (e.g. the active loop's rejected-then-later-hit path) while
+    staying deterministic -- the N-th call of a replayed instance produces
+    exactly the N-th call's ids again. Invocation 0 hashes ``seed:0:c:r``.
     """
-    return uuid.uuid5(_UUID_NAMESPACE, f"{seed}:{candidate_index}:{run_index}")
+    return uuid.uuid5(_UUID_NAMESPACE, f"{seed}:{invocation}:{candidate_index}:{run_index}")
 
 
 def _synthetic_clock_at(run_index: int) -> datetime:
@@ -389,6 +398,10 @@ class ConfirmationCampaign:
         self._tool_id = tool_id
         self._seed = int(seed)
         self._clock = clock or _synthetic_clock_at
+        # Per-instance run() call counter: salts run_id/timestamp derivation so
+        # repeated .run() calls on ONE instance can never collide, while a
+        # replayed instance reproduces the same sequence call-for-call.
+        self._invocation = 0
 
     def run(self, result: InverseResult) -> CampaignOutcome:
         """Certify every candidate in ``result`` (or fire nothing for an Infeasible).
@@ -401,6 +414,11 @@ class ConfirmationCampaign:
         :class:`~rig.schema.RunRecord`, and partitions the candidates into
         ``certified`` / ``rejected`` by the gate's verdict alone.
         """
+        # Every run() call consumes the next invocation slot -- including the
+        # Infeasible/empty early returns -- so the id sequence of call N never
+        # depends on what earlier calls contained, only on how many there were.
+        invocation = self._invocation
+        self._invocation += 1
         if isinstance(result, Infeasible):
             return NothingToQualify(infeasible=result)
         candidates = list(result)
@@ -435,6 +453,7 @@ class ConfirmationCampaign:
                     self._build_run_record(
                         evidence=evidence,
                         observed=observed,
+                        invocation=invocation,
                         candidate_index=idx,
                         run_index=run_counter,
                     )
@@ -494,6 +513,7 @@ class ConfirmationCampaign:
         *,
         evidence: Mapping[str, Any],
         observed: Mapping[str, float],
+        invocation: int,
         candidate_index: int,
         run_index: int,
     ) -> RunRecord:
@@ -526,6 +546,7 @@ class ConfirmationCampaign:
             for name, value in observed.items()
         ]
         extra: dict[str, Any] = {
+            "campaign_invocation": invocation,
             "candidate_index": candidate_index,
             "confirmation_run_index": run_index,
             "raw_recipe": dict(evidence["recipe"]),
@@ -535,10 +556,13 @@ class ConfirmationCampaign:
         if untyped:
             extra["untyped_recipe_keys"] = untyped
         return RunRecord(
-            run_id=_deterministic_run_id(self._seed, candidate_index, run_index),
+            run_id=_deterministic_run_id(self._seed, invocation, candidate_index, run_index),
             process_id=self._process_id,
             tool_id=self._tool_id,
-            timestamp=self._clock(run_index),
+            # Invocation-strided clock index: keeps timestamps unique across
+            # repeated run() calls; invocation 0 is index-identical to a
+            # single-shot campaign.
+            timestamp=self._clock(invocation * 1_000_000 + run_index),
             recipe=RecipeRecord(values=recipe_values),
             outcomes=outcomes,
             provenance=provenance,

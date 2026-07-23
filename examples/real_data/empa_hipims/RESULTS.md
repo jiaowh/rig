@@ -176,8 +176,73 @@ calibration buffer (pure threshold dynamics; calibration scores only warm-start 
 so there is no α-adaptation/score-refresh conflation to disentangle. Non-guarantee:
 no finite-sample exactness — the binomial-CI row is *directional*, the same status as
 the static/ACI gates. The `step="decaying"` variant (Angelopoulos, Barber & Bates
-2024) is implemented and OFF by default. **This closes the §20.2 online-endpoint M1
+2024) is implemented and OFF by default — and a labeled side study
+(`run_pid_step_study.py`, [results/m1_empa_pid_step.json](results/m1_empa_pid_step.json))
+measured it on all six campaigns: late-stream threshold volatility drops to ~22% of
+fixed-step's uniformly, but `ti_200w_high_pw` flips PASS→FAIL on BOTH splits at these
+~100-row stream lengths (drift under-correction on temporal, over-correction on random —
+one short-horizon mechanism), so **decaying stays opt-in and is discouraged on drifting
+tools**; fixed-step remains the path of record. **This closes the §20.2 online-endpoint M1
 item; bare ACI remains beneath it as the validated D4 component.**
+
+## Conditional / per-region coverage — does the pooled PASS hide a regional gap?
+
+`run_conditional_coverage.py` re-analyses the RECORDED static/ACI/PID paths
+(results/m1_empa.json, never modified) for group-conditional coverage on four
+PRE-STATED groups (fixed before any number was computed; no post-hoc slicing):
+(1) knob-space density (near/mid/far — k=5-NN distance to TRAINING recipes,
+train-standardized), (2) per-output outcome-magnitude (low/mid/high), (3)
+temporal stream-position (early/mid/late — drift phase), (4) Mondrian per-output.
+Exact binomial 95% CIs; nominal-in-CI is the directional flag (the recorded
+gate's rule); groups < 20 points are flagged UNDERPOWERED (none were: smallest
+tertile n=26). A FIDELITY GATE reproduces every static/ACI/PID pooled AND
+per-output k_covered byte-equal to the recorded JSON before any conditional
+number is trusted — PASS on all 12 campaign/split cells; double-run
+byte-identical. Results:
+[results/m1_empa_conditional.json](results/m1_empa_conditional.json).
+
+**Finding: pooled PASS DOES hide a regional gap — at the high-outcome tail.**
+Across the 180 powered tertile-cells per path, static conformal under-covers 14
+(ACI 9, PID 9). The systematic hidden mode is magnitude: the HIGH tertile of the
+true outcome under-covers in 8 of 24 campaign/split/output cells (5 of 6
+campaigns, both outputs, both splits; e.g. al_250w/random/dep 0.630,
+ti_120w/random/Ipk 0.727), while the LOW tertile over-covers (1.000) in 3 — the
+marginal 0.90 sits between an over-covered low end and an under-covered high
+tail. Six of the eight high-tail failures hide behind a marginal that PASSES.
+
+**The online endpoints repair DRIFT-conditional, not magnitude-conditional,
+regional failure.** ACI/PID move all of ti_200w's temporal regional failures
+(far-density, mid-stream, low+high magnitude) back to nominal, cutting
+under-covering cells 14→9. But 7 of 8 high-tail failures are NOT repaired,
+because neither ACI nor PID conditions on outcome magnitude — closing the
+high-tail gap would need a group-conditional (Mondrian-by-magnitude) calibrator,
+now the named owed remedy. Far-from-data (1 cell) and late-drift-phase (0 cells)
+are NOT the dominant hidden modes here; the temporal drift under-coverage on
+ti_200w actually concentrates in the mid/early stream, not late. Per-tertile CIs
+are wide (n≈27–43); the finding is the consistent DIRECTION repeated across
+independent cells, not any one cell.
+
+## Mondrian group-conditional coverage — does grouping by predicted magnitude fix the high tail?
+
+`run_mondrian_coverage.py` reuses the runner's seeded GP fits and the conditional-coverage
+study's tertile/coverage machinery (by import) to evaluate a `MondrianConformalCalibrator`
+grouped by PREDICTED-mean magnitude tertile (edges frozen from the calibration slice —
+leakage-free by construction, since no true outcome exists at predict time) against the
+recorded static baseline. Static fidelity is byte-equal to
+[results/m1_empa.json](results/m1_empa.json) on all 12 cells. Of the 8 high-observed-magnitude
+cells that static conformal under-covered, **6 move to nominal** under Mondrian; the 2 that
+don't are exactly the cells where the model's predicted magnitude barely tracks the observed
+outcome (assignment agreement 0.66 and 0.48) — an honest mechanistic limit: grouping by
+predicted magnitude cannot isolate a tail the model cannot predict. The high tertile pays
+1.0–6.0× MPIW; the low tertile (which over-covered) narrows — the intended redistribution.
+Mondrian is conservative: on `ti_120w_short_pw` it over-covered enough to break the marginal
+pooled gate *from above* (the safe direction — a width cost, not a safety cost). It also
+closes the selected-point hole mechanistically: in a synthetic reconstruction of the
+false-success study's d=8 miss, the pooled gate admits the marginal candidate and the Mondrian
+gate refuses it. Artifact:
+[results/m1_empa_mondrian.json](results/m1_empa_mondrian.json). What it does and does not buy:
+coverage conditional on the *declared predicted-magnitude group* — not per-point, and not per
+true-magnitude group.
 
 ## OOD / support check — the sharpest finding
 

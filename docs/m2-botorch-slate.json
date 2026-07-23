@@ -1,0 +1,2976 @@
+{
+  "machine": "InSilicoMachine(MBE)",
+  "used_sim": true,
+  "okeys": [
+    "T_center",
+    "bow_cooldown_um"
+  ],
+  "ikeys": [
+    "T_heater",
+    "film_thickness"
+  ],
+  "tol_k": 6.0,
+  "policy": "ablation",
+  "feasibility_policy": "ablation-1.0/1.0/0.01 (kappa/z_epi/delta_frac) \u2014 the MORE PERMISSIVE ablation, NOT the binding \u00a78 2.0/2.0/0.02 policy; see docs/m2-result-binding.json for the binding-policy re-run",
+  "metrology_sigma": {
+    "T_center": 2.0843002033347267,
+    "bow_cooldown_um": 3.9543502814007767e-07
+  },
+  "pathology_config": {
+    "tool_perturbation": false,
+    "tool_perturbation_scale": 0.03,
+    "seasoning": false,
+    "seasoning_drift_rate": 0.004,
+    "first_wafer": false,
+    "first_wafer_offsets": null,
+    "metrology_noise": true,
+    "noise_a": null,
+    "noise_b": 0.002,
+    "censor_ranges": null
+  },
+  "horizon": 49001.0,
+  "reference": "rig",
+  "comparators": [
+    "botorch",
+    "scbo",
+    "turbo"
+  ],
+  "rig_summary": {
+    "rmst": 16400.0,
+    "hit_rate": 1.0
+  },
+  "slate": {
+    "botorch": {
+      "n_pairs": 100,
+      "rmst_rig": 16400.0,
+      "rmst_cmp": 27050.03,
+      "delta_rmst": -10650.029999999999,
+      "delta_se": 936.4230722760947,
+      "p_value": 5.69313639565929e-30,
+      "bootstrap_ci95": [
+        -12350.04025,
+        -9000.02975
+      ],
+      "prob_rig_better": 1.0,
+      "hit_rate_rig": 1.0,
+      "hit_rate_cmp": 0.97,
+      "win_rate_rig": 0.81,
+      "tie_rate": 0.18,
+      "per_target": [
+        {
+          "target": "joint_0.30",
+          "delta_rmst": -11100.0,
+          "p_value": 5.981414612704804e-28,
+          "hit_rate_rig": 1.0,
+          "hit_rate_cmp": 1.0,
+          "win_rate_rig": 0.9
+        },
+        {
+          "target": "joint_0.70",
+          "delta_rmst": -10200.060000000001,
+          "p_value": 1.922802467025636e-12,
+          "hit_rate_rig": 1.0,
+          "hit_rate_cmp": 0.94,
+          "win_rate_rig": 0.72
+        }
+      ]
+    },
+    "scbo": {
+      "n_pairs": 100,
+      "rmst_rig": 16400.0,
+      "rmst_cmp": 47400.87,
+      "delta_rmst": -31000.870000000003,
+      "delta_se": 686.8972566046541,
+      "p_value": 0.0,
+      "bootstrap_ci95": [
+        -32102.197749999996,
+        -29750.799750000002
+      ],
+      "prob_rig_better": 1.0,
+      "hit_rate_rig": 1.0,
+      "hit_rate_cmp": 0.13,
+      "win_rate_rig": 0.99,
+      "tie_rate": 0.01,
+      "per_target": [
+        {
+          "target": "joint_0.30",
+          "delta_rmst": -32900.88,
+          "p_value": 3.655392394073142e-208,
+          "hit_rate_rig": 1.0,
+          "hit_rate_cmp": 0.12,
+          "win_rate_rig": 0.98
+        },
+        {
+          "target": "joint_0.70",
+          "delta_rmst": -29100.86,
+          "p_value": 0.0,
+          "hit_rate_rig": 1.0,
+          "hit_rate_cmp": 0.14,
+          "win_rate_rig": 1.0
+        }
+      ]
+    },
+    "turbo": {
+      "n_pairs": 100,
+      "rmst_rig": 16400.0,
+      "rmst_cmp": 40350.32,
+      "delta_rmst": -23950.32,
+      "delta_se": 1037.6561868827266,
+      "p_value": 7.157310186411461e-118,
+      "bootstrap_ci95": [
+        -25701.666749999997,
+        -22000.3195
+      ],
+      "prob_rig_better": 1.0,
+      "hit_rate_rig": 1.0,
+      "hit_rate_cmp": 0.68,
+      "win_rate_rig": 0.97,
+      "tie_rate": 0.02,
+      "per_target": [
+        {
+          "target": "joint_0.30",
+          "delta_rmst": -25000.22,
+          "p_value": 9.128041407743503e-73,
+          "hit_rate_rig": 1.0,
+          "hit_rate_cmp": 0.78,
+          "win_rate_rig": 0.98
+        },
+        {
+          "target": "joint_0.70",
+          "delta_rmst": -22900.42,
+          "p_value": 1.1044348889891357e-56,
+          "hit_rate_rig": 1.0,
+          "hit_rate_cmp": 0.58,
+          "win_rate_rig": 0.96
+        }
+      ]
+    }
+  },
+  "raw_rows": {
+    "rig": [
+      {
+        "target": "joint_0.30",
+        "seed": 0,
+        "time": 14000.0,
+        "event": true,
+        "n_queries": 12
+      },
+      {
+        "target": "joint_0.30",
+        "seed": 1,
+        "time": 14000.0,
+        "event": true,
+        "n_queries": 12
+      },
+      {
+        "target": "joint_0.30",
+        "seed": 2,
+        "time": 14000.0,
+        "event": true,
+        "n_queries": 12
+      },
+      {
+        "target": "joint_0.30",
+        "seed": 3,
+        "time": 14000.0,
+        "event": true,
+        "n_queries": 12
+      },
+      {
+        "target": "joint_0.30",
+        "seed": 4,
+        "time": 14000.0,
+        "event": true,
+        "n_queries": 12
+      },
+      {
+        "target": "joint_0.30",
+        "seed": 5,
+        "time": 14000.0,
+        "event": true,
+        "n_queries": 12
+      },
+      {
+        "target": "joint_0.30",
+        "seed": 6,
+        "time": 14000.0,
+        "event": true,
+        "n_queries": 12
+      },
+      {
+        "target": "joint_0.30",
+        "seed": 7,
+        "time": 14000.0,
+        "event": true,
+        "n_queries": 12
+      },
+      {
+        "target": "joint_0.30",
+        "seed": 8,
+        "time": 14000.0,
+        "event": true,
+        "n_queries": 12
+      },
+      {
+        "target": "joint_0.30",
+        "seed": 9,
+        "time": 14000.0,
+        "event": true,
+        "n_queries": 12
+      },
+      {
+        "target": "joint_0.30",
+        "seed": 10,
+        "time": 14000.0,
+        "event": true,
+        "n_queries": 12
+      },
+      {
+        "target": "joint_0.30",
+        "seed": 11,
+        "time": 14000.0,
+        "event": true,
+        "n_queries": 12
+      },
+      {
+        "target": "joint_0.30",
+        "seed": 12,
+        "time": 14000.0,
+        "event": true,
+        "n_queries": 12
+      },
+      {
+        "target": "joint_0.30",
+        "seed": 13,
+        "time": 14000.0,
+        "event": true,
+        "n_queries": 12
+      },
+      {
+        "target": "joint_0.30",
+        "seed": 14,
+        "time": 14000.0,
+        "event": true,
+        "n_queries": 12
+      },
+      {
+        "target": "joint_0.30",
+        "seed": 15,
+        "time": 14000.0,
+        "event": true,
+        "n_queries": 12
+      },
+      {
+        "target": "joint_0.30",
+        "seed": 16,
+        "time": 14000.0,
+        "event": true,
+        "n_queries": 12
+      },
+      {
+        "target": "joint_0.30",
+        "seed": 17,
+        "time": 14000.0,
+        "event": true,
+        "n_queries": 12
+      },
+      {
+        "target": "joint_0.30",
+        "seed": 18,
+        "time": 14000.0,
+        "event": true,
+        "n_queries": 12
+      },
+      {
+        "target": "joint_0.30",
+        "seed": 19,
+        "time": 14000.0,
+        "event": true,
+        "n_queries": 12
+      },
+      {
+        "target": "joint_0.30",
+        "seed": 20,
+        "time": 14000.0,
+        "event": true,
+        "n_queries": 12
+      },
+      {
+        "target": "joint_0.30",
+        "seed": 21,
+        "time": 14000.0,
+        "event": true,
+        "n_queries": 12
+      },
+      {
+        "target": "joint_0.30",
+        "seed": 22,
+        "time": 14000.0,
+        "event": true,
+        "n_queries": 12
+      },
+      {
+        "target": "joint_0.30",
+        "seed": 23,
+        "time": 14000.0,
+        "event": true,
+        "n_queries": 12
+      },
+      {
+        "target": "joint_0.30",
+        "seed": 24,
+        "time": 14000.0,
+        "event": true,
+        "n_queries": 12
+      },
+      {
+        "target": "joint_0.30",
+        "seed": 25,
+        "time": 14000.0,
+        "event": true,
+        "n_queries": 12
+      },
+      {
+        "target": "joint_0.30",
+        "seed": 26,
+        "time": 14000.0,
+        "event": true,
+        "n_queries": 12
+      },
+      {
+        "target": "joint_0.30",
+        "seed": 27,
+        "time": 14000.0,
+        "event": true,
+        "n_queries": 12
+      },
+      {
+        "target": "joint_0.30",
+        "seed": 28,
+        "time": 14000.0,
+        "event": true,
+        "n_queries": 12
+      },
+      {
+        "target": "joint_0.30",
+        "seed": 29,
+        "time": 14000.0,
+        "event": true,
+        "n_queries": 12
+      },
+      {
+        "target": "joint_0.30",
+        "seed": 30,
+        "time": 14000.0,
+        "event": true,
+        "n_queries": 12
+      },
+      {
+        "target": "joint_0.30",
+        "seed": 31,
+        "time": 14000.0,
+        "event": true,
+        "n_queries": 12
+      },
+      {
+        "target": "joint_0.30",
+        "seed": 32,
+        "time": 14000.0,
+        "event": true,
+        "n_queries": 12
+      },
+      {
+        "target": "joint_0.30",
+        "seed": 33,
+        "time": 14000.0,
+        "event": true,
+        "n_queries": 12
+      },
+      {
+        "target": "joint_0.30",
+        "seed": 34,
+        "time": 14000.0,
+        "event": true,
+        "n_queries": 12
+      },
+      {
+        "target": "joint_0.30",
+        "seed": 35,
+        "time": 19000.0,
+        "event": true,
+        "n_queries": 16
+      },
+      {
+        "target": "joint_0.30",
+        "seed": 36,
+        "time": 14000.0,
+        "event": true,
+        "n_queries": 12
+      },
+      {
+        "target": "joint_0.30",
+        "seed": 37,
+        "time": 14000.0,
+        "event": true,
+        "n_queries": 12
+      },
+      {
+        "target": "joint_0.30",
+        "seed": 38,
+        "time": 14000.0,
+        "event": true,
+        "n_queries": 12
+      },
+      {
+        "target": "joint_0.30",
+        "seed": 39,
+        "time": 9000.0,
+        "event": true,
+        "n_queries": 8
+      },
+      {
+        "target": "joint_0.30",
+        "seed": 40,
+        "time": 14000.0,
+        "event": true,
+        "n_queries": 12
+      },
+      {
+        "target": "joint_0.30",
+        "seed": 41,
+        "time": 14000.0,
+        "event": true,
+        "n_queries": 12
+      },
+      {
+        "target": "joint_0.30",
+        "seed": 42,
+        "time": 14000.0,
+        "event": true,
+        "n_queries": 12
+      },
+      {
+        "target": "joint_0.30",
+        "seed": 43,
+        "time": 14000.0,
+        "event": true,
+        "n_queries": 12
+      },
+      {
+        "target": "joint_0.30",
+        "seed": 44,
+        "time": 14000.0,
+        "event": true,
+        "n_queries": 12
+      },
+      {
+        "target": "joint_0.30",
+        "seed": 45,
+        "time": 14000.0,
+        "event": true,
+        "n_queries": 12
+      },
+      {
+        "target": "joint_0.30",
+        "seed": 46,
+        "time": 14000.0,
+        "event": true,
+        "n_queries": 12
+      },
+      {
+        "target": "joint_0.30",
+        "seed": 47,
+        "time": 14000.0,
+        "event": true,
+        "n_queries": 12
+      },
+      {
+        "target": "joint_0.30",
+        "seed": 48,
+        "time": 14000.0,
+        "event": true,
+        "n_queries": 12
+      },
+      {
+        "target": "joint_0.30",
+        "seed": 49,
+        "time": 14000.0,
+        "event": true,
+        "n_queries": 12
+      },
+      {
+        "target": "joint_0.70",
+        "seed": 0,
+        "time": 14000.0,
+        "event": true,
+        "n_queries": 12
+      },
+      {
+        "target": "joint_0.70",
+        "seed": 1,
+        "time": 19000.0,
+        "event": true,
+        "n_queries": 16
+      },
+      {
+        "target": "joint_0.70",
+        "seed": 2,
+        "time": 19000.0,
+        "event": true,
+        "n_queries": 16
+      },
+      {
+        "target": "joint_0.70",
+        "seed": 3,
+        "time": 24000.0,
+        "event": true,
+        "n_queries": 20
+      },
+      {
+        "target": "joint_0.70",
+        "seed": 4,
+        "time": 14000.0,
+        "event": true,
+        "n_queries": 12
+      },
+      {
+        "target": "joint_0.70",
+        "seed": 5,
+        "time": 19000.0,
+        "event": true,
+        "n_queries": 16
+      },
+      {
+        "target": "joint_0.70",
+        "seed": 6,
+        "time": 19000.0,
+        "event": true,
+        "n_queries": 16
+      },
+      {
+        "target": "joint_0.70",
+        "seed": 7,
+        "time": 19000.0,
+        "event": true,
+        "n_queries": 16
+      },
+      {
+        "target": "joint_0.70",
+        "seed": 8,
+        "time": 19000.0,
+        "event": true,
+        "n_queries": 16
+      },
+      {
+        "target": "joint_0.70",
+        "seed": 9,
+        "time": 19000.0,
+        "event": true,
+        "n_queries": 16
+      },
+      {
+        "target": "joint_0.70",
+        "seed": 10,
+        "time": 19000.0,
+        "event": true,
+        "n_queries": 16
+      },
+      {
+        "target": "joint_0.70",
+        "seed": 11,
+        "time": 19000.0,
+        "event": true,
+        "n_queries": 16
+      },
+      {
+        "target": "joint_0.70",
+        "seed": 12,
+        "time": 24000.0,
+        "event": true,
+        "n_queries": 20
+      },
+      {
+        "target": "joint_0.70",
+        "seed": 13,
+        "time": 19000.0,
+        "event": true,
+        "n_queries": 16
+      },
+      {
+        "target": "joint_0.70",
+        "seed": 14,
+        "time": 19000.0,
+        "event": true,
+        "n_queries": 16
+      },
+      {
+        "target": "joint_0.70",
+        "seed": 15,
+        "time": 19000.0,
+        "event": true,
+        "n_queries": 16
+      },
+      {
+        "target": "joint_0.70",
+        "seed": 16,
+        "time": 19000.0,
+        "event": true,
+        "n_queries": 16
+      },
+      {
+        "target": "joint_0.70",
+        "seed": 17,
+        "time": 14000.0,
+        "event": true,
+        "n_queries": 12
+      },
+      {
+        "target": "joint_0.70",
+        "seed": 18,
+        "time": 29000.0,
+        "event": true,
+        "n_queries": 24
+      },
+      {
+        "target": "joint_0.70",
+        "seed": 19,
+        "time": 19000.0,
+        "event": true,
+        "n_queries": 16
+      },
+      {
+        "target": "joint_0.70",
+        "seed": 20,
+        "time": 19000.0,
+        "event": true,
+        "n_queries": 16
+      },
+      {
+        "target": "joint_0.70",
+        "seed": 21,
+        "time": 19000.0,
+        "event": true,
+        "n_queries": 16
+      },
+      {
+        "target": "joint_0.70",
+        "seed": 22,
+        "time": 19000.0,
+        "event": true,
+        "n_queries": 16
+      },
+      {
+        "target": "joint_0.70",
+        "seed": 23,
+        "time": 19000.0,
+        "event": true,
+        "n_queries": 16
+      },
+      {
+        "target": "joint_0.70",
+        "seed": 24,
+        "time": 19000.0,
+        "event": true,
+        "n_queries": 16
+      },
+      {
+        "target": "joint_0.70",
+        "seed": 25,
+        "time": 14000.0,
+        "event": true,
+        "n_queries": 12
+      },
+      {
+        "target": "joint_0.70",
+        "seed": 26,
+        "time": 14000.0,
+        "event": true,
+        "n_queries": 12
+      },
+      {
+        "target": "joint_0.70",
+        "seed": 27,
+        "time": 19000.0,
+        "event": true,
+        "n_queries": 16
+      },
+      {
+        "target": "joint_0.70",
+        "seed": 28,
+        "time": 19000.0,
+        "event": true,
+        "n_queries": 16
+      },
+      {
+        "target": "joint_0.70",
+        "seed": 29,
+        "time": 24000.0,
+        "event": true,
+        "n_queries": 20
+      },
+      {
+        "target": "joint_0.70",
+        "seed": 30,
+        "time": 14000.0,
+        "event": true,
+        "n_queries": 12
+      },
+      {
+        "target": "joint_0.70",
+        "seed": 31,
+        "time": 14000.0,
+        "event": true,
+        "n_queries": 12
+      },
+      {
+        "target": "joint_0.70",
+        "seed": 32,
+        "time": 19000.0,
+        "event": true,
+        "n_queries": 16
+      },
+      {
+        "target": "joint_0.70",
+        "seed": 33,
+        "time": 19000.0,
+        "event": true,
+        "n_queries": 16
+      },
+      {
+        "target": "joint_0.70",
+        "seed": 34,
+        "time": 29000.0,
+        "event": true,
+        "n_queries": 24
+      },
+      {
+        "target": "joint_0.70",
+        "seed": 35,
+        "time": 14000.0,
+        "event": true,
+        "n_queries": 12
+      },
+      {
+        "target": "joint_0.70",
+        "seed": 36,
+        "time": 19000.0,
+        "event": true,
+        "n_queries": 16
+      },
+      {
+        "target": "joint_0.70",
+        "seed": 37,
+        "time": 19000.0,
+        "event": true,
+        "n_queries": 16
+      },
+      {
+        "target": "joint_0.70",
+        "seed": 38,
+        "time": 19000.0,
+        "event": true,
+        "n_queries": 16
+      },
+      {
+        "target": "joint_0.70",
+        "seed": 39,
+        "time": 14000.0,
+        "event": true,
+        "n_queries": 12
+      },
+      {
+        "target": "joint_0.70",
+        "seed": 40,
+        "time": 19000.0,
+        "event": true,
+        "n_queries": 16
+      },
+      {
+        "target": "joint_0.70",
+        "seed": 41,
+        "time": 19000.0,
+        "event": true,
+        "n_queries": 16
+      },
+      {
+        "target": "joint_0.70",
+        "seed": 42,
+        "time": 24000.0,
+        "event": true,
+        "n_queries": 20
+      },
+      {
+        "target": "joint_0.70",
+        "seed": 43,
+        "time": 14000.0,
+        "event": true,
+        "n_queries": 12
+      },
+      {
+        "target": "joint_0.70",
+        "seed": 44,
+        "time": 19000.0,
+        "event": true,
+        "n_queries": 16
+      },
+      {
+        "target": "joint_0.70",
+        "seed": 45,
+        "time": 14000.0,
+        "event": true,
+        "n_queries": 12
+      },
+      {
+        "target": "joint_0.70",
+        "seed": 46,
+        "time": 19000.0,
+        "event": true,
+        "n_queries": 16
+      },
+      {
+        "target": "joint_0.70",
+        "seed": 47,
+        "time": 19000.0,
+        "event": true,
+        "n_queries": 16
+      },
+      {
+        "target": "joint_0.70",
+        "seed": 48,
+        "time": 24000.0,
+        "event": true,
+        "n_queries": 20
+      },
+      {
+        "target": "joint_0.70",
+        "seed": 49,
+        "time": 19000.0,
+        "event": true,
+        "n_queries": 16
+      }
+    ],
+    "botorch": [
+      {
+        "target": "joint_0.30",
+        "seed": 0,
+        "time": 19000.0,
+        "event": true,
+        "n_queries": 16
+      },
+      {
+        "target": "joint_0.30",
+        "seed": 1,
+        "time": 24000.0,
+        "event": true,
+        "n_queries": 20
+      },
+      {
+        "target": "joint_0.30",
+        "seed": 2,
+        "time": 19000.0,
+        "event": true,
+        "n_queries": 16
+      },
+      {
+        "target": "joint_0.30",
+        "seed": 3,
+        "time": 29000.0,
+        "event": true,
+        "n_queries": 24
+      },
+      {
+        "target": "joint_0.30",
+        "seed": 4,
+        "time": 24000.0,
+        "event": true,
+        "n_queries": 20
+      },
+      {
+        "target": "joint_0.30",
+        "seed": 5,
+        "time": 39000.0,
+        "event": true,
+        "n_queries": 32
+      },
+      {
+        "target": "joint_0.30",
+        "seed": 6,
+        "time": 39000.0,
+        "event": true,
+        "n_queries": 32
+      },
+      {
+        "target": "joint_0.30",
+        "seed": 7,
+        "time": 29000.0,
+        "event": true,
+        "n_queries": 24
+      },
+      {
+        "target": "joint_0.30",
+        "seed": 8,
+        "time": 29000.0,
+        "event": true,
+        "n_queries": 24
+      },
+      {
+        "target": "joint_0.30",
+        "seed": 9,
+        "time": 19000.0,
+        "event": true,
+        "n_queries": 16
+      },
+      {
+        "target": "joint_0.30",
+        "seed": 10,
+        "time": 19000.0,
+        "event": true,
+        "n_queries": 16
+      },
+      {
+        "target": "joint_0.30",
+        "seed": 11,
+        "time": 29000.0,
+        "event": true,
+        "n_queries": 24
+      },
+      {
+        "target": "joint_0.30",
+        "seed": 12,
+        "time": 24000.0,
+        "event": true,
+        "n_queries": 20
+      },
+      {
+        "target": "joint_0.30",
+        "seed": 13,
+        "time": 34000.0,
+        "event": true,
+        "n_queries": 28
+      },
+      {
+        "target": "joint_0.30",
+        "seed": 14,
+        "time": 19000.0,
+        "event": true,
+        "n_queries": 16
+      },
+      {
+        "target": "joint_0.30",
+        "seed": 15,
+        "time": 14000.0,
+        "event": true,
+        "n_queries": 12
+      },
+      {
+        "target": "joint_0.30",
+        "seed": 16,
+        "time": 34000.0,
+        "event": true,
+        "n_queries": 28
+      },
+      {
+        "target": "joint_0.30",
+        "seed": 17,
+        "time": 24000.0,
+        "event": true,
+        "n_queries": 20
+      },
+      {
+        "target": "joint_0.30",
+        "seed": 18,
+        "time": 24000.0,
+        "event": true,
+        "n_queries": 20
+      },
+      {
+        "target": "joint_0.30",
+        "seed": 19,
+        "time": 19000.0,
+        "event": true,
+        "n_queries": 16
+      },
+      {
+        "target": "joint_0.30",
+        "seed": 20,
+        "time": 14000.0,
+        "event": true,
+        "n_queries": 12
+      },
+      {
+        "target": "joint_0.30",
+        "seed": 21,
+        "time": 19000.0,
+        "event": true,
+        "n_queries": 16
+      },
+      {
+        "target": "joint_0.30",
+        "seed": 22,
+        "time": 24000.0,
+        "event": true,
+        "n_queries": 20
+      },
+      {
+        "target": "joint_0.30",
+        "seed": 23,
+        "time": 29000.0,
+        "event": true,
+        "n_queries": 24
+      },
+      {
+        "target": "joint_0.30",
+        "seed": 24,
+        "time": 34000.0,
+        "event": true,
+        "n_queries": 28
+      },
+      {
+        "target": "joint_0.30",
+        "seed": 25,
+        "time": 29000.0,
+        "event": true,
+        "n_queries": 24
+      },
+      {
+        "target": "joint_0.30",
+        "seed": 26,
+        "time": 19000.0,
+        "event": true,
+        "n_queries": 16
+      },
+      {
+        "target": "joint_0.30",
+        "seed": 27,
+        "time": 29000.0,
+        "event": true,
+        "n_queries": 24
+      },
+      {
+        "target": "joint_0.30",
+        "seed": 28,
+        "time": 19000.0,
+        "event": true,
+        "n_queries": 16
+      },
+      {
+        "target": "joint_0.30",
+        "seed": 29,
+        "time": 14000.0,
+        "event": true,
+        "n_queries": 12
+      },
+      {
+        "target": "joint_0.30",
+        "seed": 30,
+        "time": 29000.0,
+        "event": true,
+        "n_queries": 24
+      },
+      {
+        "target": "joint_0.30",
+        "seed": 31,
+        "time": 24000.0,
+        "event": true,
+        "n_queries": 20
+      },
+      {
+        "target": "joint_0.30",
+        "seed": 32,
+        "time": 14000.0,
+        "event": true,
+        "n_queries": 12
+      },
+      {
+        "target": "joint_0.30",
+        "seed": 33,
+        "time": 24000.0,
+        "event": true,
+        "n_queries": 20
+      },
+      {
+        "target": "joint_0.30",
+        "seed": 34,
+        "time": 34000.0,
+        "event": true,
+        "n_queries": 28
+      },
+      {
+        "target": "joint_0.30",
+        "seed": 35,
+        "time": 34000.0,
+        "event": true,
+        "n_queries": 28
+      },
+      {
+        "target": "joint_0.30",
+        "seed": 36,
+        "time": 34000.0,
+        "event": true,
+        "n_queries": 28
+      },
+      {
+        "target": "joint_0.30",
+        "seed": 37,
+        "time": 19000.0,
+        "event": true,
+        "n_queries": 16
+      },
+      {
+        "target": "joint_0.30",
+        "seed": 38,
+        "time": 19000.0,
+        "event": true,
+        "n_queries": 16
+      },
+      {
+        "target": "joint_0.30",
+        "seed": 39,
+        "time": 9000.0,
+        "event": true,
+        "n_queries": 8
+      },
+      {
+        "target": "joint_0.30",
+        "seed": 40,
+        "time": 34000.0,
+        "event": true,
+        "n_queries": 28
+      },
+      {
+        "target": "joint_0.30",
+        "seed": 41,
+        "time": 24000.0,
+        "event": true,
+        "n_queries": 20
+      },
+      {
+        "target": "joint_0.30",
+        "seed": 42,
+        "time": 29000.0,
+        "event": true,
+        "n_queries": 24
+      },
+      {
+        "target": "joint_0.30",
+        "seed": 43,
+        "time": 19000.0,
+        "event": true,
+        "n_queries": 16
+      },
+      {
+        "target": "joint_0.30",
+        "seed": 44,
+        "time": 24000.0,
+        "event": true,
+        "n_queries": 20
+      },
+      {
+        "target": "joint_0.30",
+        "seed": 45,
+        "time": 29000.0,
+        "event": true,
+        "n_queries": 24
+      },
+      {
+        "target": "joint_0.30",
+        "seed": 46,
+        "time": 34000.0,
+        "event": true,
+        "n_queries": 28
+      },
+      {
+        "target": "joint_0.30",
+        "seed": 47,
+        "time": 29000.0,
+        "event": true,
+        "n_queries": 24
+      },
+      {
+        "target": "joint_0.30",
+        "seed": 48,
+        "time": 34000.0,
+        "event": true,
+        "n_queries": 28
+      },
+      {
+        "target": "joint_0.30",
+        "seed": 49,
+        "time": 19000.0,
+        "event": true,
+        "n_queries": 16
+      },
+      {
+        "target": "joint_0.70",
+        "seed": 0,
+        "time": 34000.0,
+        "event": true,
+        "n_queries": 28
+      },
+      {
+        "target": "joint_0.70",
+        "seed": 1,
+        "time": 49000.0,
+        "event": false,
+        "n_queries": 40
+      },
+      {
+        "target": "joint_0.70",
+        "seed": 2,
+        "time": 24000.0,
+        "event": true,
+        "n_queries": 20
+      },
+      {
+        "target": "joint_0.70",
+        "seed": 3,
+        "time": 19000.0,
+        "event": true,
+        "n_queries": 16
+      },
+      {
+        "target": "joint_0.70",
+        "seed": 4,
+        "time": 14000.0,
+        "event": true,
+        "n_queries": 12
+      },
+      {
+        "target": "joint_0.70",
+        "seed": 5,
+        "time": 19000.0,
+        "event": true,
+        "n_queries": 16
+      },
+      {
+        "target": "joint_0.70",
+        "seed": 6,
+        "time": 19000.0,
+        "event": true,
+        "n_queries": 16
+      },
+      {
+        "target": "joint_0.70",
+        "seed": 7,
+        "time": 29000.0,
+        "event": true,
+        "n_queries": 24
+      },
+      {
+        "target": "joint_0.70",
+        "seed": 8,
+        "time": 19000.0,
+        "event": true,
+        "n_queries": 16
+      },
+      {
+        "target": "joint_0.70",
+        "seed": 9,
+        "time": 19000.0,
+        "event": true,
+        "n_queries": 16
+      },
+      {
+        "target": "joint_0.70",
+        "seed": 10,
+        "time": 24000.0,
+        "event": true,
+        "n_queries": 20
+      },
+      {
+        "target": "joint_0.70",
+        "seed": 11,
+        "time": 24000.0,
+        "event": true,
+        "n_queries": 20
+      },
+      {
+        "target": "joint_0.70",
+        "seed": 12,
+        "time": 34000.0,
+        "event": true,
+        "n_queries": 28
+      },
+      {
+        "target": "joint_0.70",
+        "seed": 13,
+        "time": 19000.0,
+        "event": true,
+        "n_queries": 16
+      },
+      {
+        "target": "joint_0.70",
+        "seed": 14,
+        "time": 24000.0,
+        "event": true,
+        "n_queries": 20
+      },
+      {
+        "target": "joint_0.70",
+        "seed": 15,
+        "time": 19000.0,
+        "event": true,
+        "n_queries": 16
+      },
+      {
+        "target": "joint_0.70",
+        "seed": 16,
+        "time": 34000.0,
+        "event": true,
+        "n_queries": 28
+      },
+      {
+        "target": "joint_0.70",
+        "seed": 17,
+        "time": 29000.0,
+        "event": true,
+        "n_queries": 24
+      },
+      {
+        "target": "joint_0.70",
+        "seed": 18,
+        "time": 29000.0,
+        "event": true,
+        "n_queries": 24
+      },
+      {
+        "target": "joint_0.70",
+        "seed": 19,
+        "time": 19000.0,
+        "event": true,
+        "n_queries": 16
+      },
+      {
+        "target": "joint_0.70",
+        "seed": 20,
+        "time": 24000.0,
+        "event": true,
+        "n_queries": 20
+      },
+      {
+        "target": "joint_0.70",
+        "seed": 21,
+        "time": 29000.0,
+        "event": true,
+        "n_queries": 24
+      },
+      {
+        "target": "joint_0.70",
+        "seed": 22,
+        "time": 29000.0,
+        "event": true,
+        "n_queries": 24
+      },
+      {
+        "target": "joint_0.70",
+        "seed": 23,
+        "time": 19000.0,
+        "event": true,
+        "n_queries": 16
+      },
+      {
+        "target": "joint_0.70",
+        "seed": 24,
+        "time": 44000.0,
+        "event": true,
+        "n_queries": 36
+      },
+      {
+        "target": "joint_0.70",
+        "seed": 25,
+        "time": 24000.0,
+        "event": true,
+        "n_queries": 20
+      },
+      {
+        "target": "joint_0.70",
+        "seed": 26,
+        "time": 29000.0,
+        "event": true,
+        "n_queries": 24
+      },
+      {
+        "target": "joint_0.70",
+        "seed": 27,
+        "time": 24000.0,
+        "event": true,
+        "n_queries": 20
+      },
+      {
+        "target": "joint_0.70",
+        "seed": 28,
+        "time": 19000.0,
+        "event": true,
+        "n_queries": 16
+      },
+      {
+        "target": "joint_0.70",
+        "seed": 29,
+        "time": 49000.0,
+        "event": true,
+        "n_queries": 40
+      },
+      {
+        "target": "joint_0.70",
+        "seed": 30,
+        "time": 24000.0,
+        "event": true,
+        "n_queries": 20
+      },
+      {
+        "target": "joint_0.70",
+        "seed": 31,
+        "time": 24000.0,
+        "event": true,
+        "n_queries": 20
+      },
+      {
+        "target": "joint_0.70",
+        "seed": 32,
+        "time": 24000.0,
+        "event": true,
+        "n_queries": 20
+      },
+      {
+        "target": "joint_0.70",
+        "seed": 33,
+        "time": 34000.0,
+        "event": true,
+        "n_queries": 28
+      },
+      {
+        "target": "joint_0.70",
+        "seed": 34,
+        "time": 29000.0,
+        "event": true,
+        "n_queries": 24
+      },
+      {
+        "target": "joint_0.70",
+        "seed": 35,
+        "time": 44000.0,
+        "event": true,
+        "n_queries": 36
+      },
+      {
+        "target": "joint_0.70",
+        "seed": 36,
+        "time": 39000.0,
+        "event": true,
+        "n_queries": 32
+      },
+      {
+        "target": "joint_0.70",
+        "seed": 37,
+        "time": 19000.0,
+        "event": true,
+        "n_queries": 16
+      },
+      {
+        "target": "joint_0.70",
+        "seed": 38,
+        "time": 49000.0,
+        "event": false,
+        "n_queries": 40
+      },
+      {
+        "target": "joint_0.70",
+        "seed": 39,
+        "time": 19000.0,
+        "event": true,
+        "n_queries": 16
+      },
+      {
+        "target": "joint_0.70",
+        "seed": 40,
+        "time": 49000.0,
+        "event": true,
+        "n_queries": 40
+      },
+      {
+        "target": "joint_0.70",
+        "seed": 41,
+        "time": 34000.0,
+        "event": true,
+        "n_queries": 28
+      },
+      {
+        "target": "joint_0.70",
+        "seed": 42,
+        "time": 39000.0,
+        "event": true,
+        "n_queries": 32
+      },
+      {
+        "target": "joint_0.70",
+        "seed": 43,
+        "time": 29000.0,
+        "event": true,
+        "n_queries": 24
+      },
+      {
+        "target": "joint_0.70",
+        "seed": 44,
+        "time": 39000.0,
+        "event": true,
+        "n_queries": 32
+      },
+      {
+        "target": "joint_0.70",
+        "seed": 45,
+        "time": 24000.0,
+        "event": true,
+        "n_queries": 20
+      },
+      {
+        "target": "joint_0.70",
+        "seed": 46,
+        "time": 24000.0,
+        "event": true,
+        "n_queries": 20
+      },
+      {
+        "target": "joint_0.70",
+        "seed": 47,
+        "time": 34000.0,
+        "event": true,
+        "n_queries": 28
+      },
+      {
+        "target": "joint_0.70",
+        "seed": 48,
+        "time": 49000.0,
+        "event": false,
+        "n_queries": 40
+      },
+      {
+        "target": "joint_0.70",
+        "seed": 49,
+        "time": 34000.0,
+        "event": true,
+        "n_queries": 28
+      }
+    ],
+    "scbo": [
+      {
+        "target": "joint_0.30",
+        "seed": 0,
+        "time": 49000.0,
+        "event": false,
+        "n_queries": 40
+      },
+      {
+        "target": "joint_0.30",
+        "seed": 1,
+        "time": 49000.0,
+        "event": false,
+        "n_queries": 40
+      },
+      {
+        "target": "joint_0.30",
+        "seed": 2,
+        "time": 49000.0,
+        "event": false,
+        "n_queries": 40
+      },
+      {
+        "target": "joint_0.30",
+        "seed": 3,
+        "time": 49000.0,
+        "event": false,
+        "n_queries": 40
+      },
+      {
+        "target": "joint_0.30",
+        "seed": 4,
+        "time": 49000.0,
+        "event": false,
+        "n_queries": 40
+      },
+      {
+        "target": "joint_0.30",
+        "seed": 5,
+        "time": 49000.0,
+        "event": false,
+        "n_queries": 40
+      },
+      {
+        "target": "joint_0.30",
+        "seed": 6,
+        "time": 49000.0,
+        "event": false,
+        "n_queries": 40
+      },
+      {
+        "target": "joint_0.30",
+        "seed": 7,
+        "time": 49000.0,
+        "event": false,
+        "n_queries": 40
+      },
+      {
+        "target": "joint_0.30",
+        "seed": 8,
+        "time": 49000.0,
+        "event": false,
+        "n_queries": 40
+      },
+      {
+        "target": "joint_0.30",
+        "seed": 9,
+        "time": 49000.0,
+        "event": false,
+        "n_queries": 40
+      },
+      {
+        "target": "joint_0.30",
+        "seed": 10,
+        "time": 49000.0,
+        "event": false,
+        "n_queries": 40
+      },
+      {
+        "target": "joint_0.30",
+        "seed": 11,
+        "time": 49000.0,
+        "event": false,
+        "n_queries": 40
+      },
+      {
+        "target": "joint_0.30",
+        "seed": 12,
+        "time": 49000.0,
+        "event": false,
+        "n_queries": 40
+      },
+      {
+        "target": "joint_0.30",
+        "seed": 13,
+        "time": 49000.0,
+        "event": false,
+        "n_queries": 40
+      },
+      {
+        "target": "joint_0.30",
+        "seed": 14,
+        "time": 44000.0,
+        "event": true,
+        "n_queries": 36
+      },
+      {
+        "target": "joint_0.30",
+        "seed": 15,
+        "time": 19000.0,
+        "event": true,
+        "n_queries": 16
+      },
+      {
+        "target": "joint_0.30",
+        "seed": 16,
+        "time": 49000.0,
+        "event": false,
+        "n_queries": 40
+      },
+      {
+        "target": "joint_0.30",
+        "seed": 17,
+        "time": 49000.0,
+        "event": false,
+        "n_queries": 40
+      },
+      {
+        "target": "joint_0.30",
+        "seed": 18,
+        "time": 49000.0,
+        "event": false,
+        "n_queries": 40
+      },
+      {
+        "target": "joint_0.30",
+        "seed": 19,
+        "time": 49000.0,
+        "event": false,
+        "n_queries": 40
+      },
+      {
+        "target": "joint_0.30",
+        "seed": 20,
+        "time": 49000.0,
+        "event": false,
+        "n_queries": 40
+      },
+      {
+        "target": "joint_0.30",
+        "seed": 21,
+        "time": 49000.0,
+        "event": false,
+        "n_queries": 40
+      },
+      {
+        "target": "joint_0.30",
+        "seed": 22,
+        "time": 49000.0,
+        "event": false,
+        "n_queries": 40
+      },
+      {
+        "target": "joint_0.30",
+        "seed": 23,
+        "time": 49000.0,
+        "event": false,
+        "n_queries": 40
+      },
+      {
+        "target": "joint_0.30",
+        "seed": 24,
+        "time": 49000.0,
+        "event": false,
+        "n_queries": 40
+      },
+      {
+        "target": "joint_0.30",
+        "seed": 25,
+        "time": 49000.0,
+        "event": false,
+        "n_queries": 40
+      },
+      {
+        "target": "joint_0.30",
+        "seed": 26,
+        "time": 49000.0,
+        "event": false,
+        "n_queries": 40
+      },
+      {
+        "target": "joint_0.30",
+        "seed": 27,
+        "time": 39000.0,
+        "event": true,
+        "n_queries": 32
+      },
+      {
+        "target": "joint_0.30",
+        "seed": 28,
+        "time": 49000.0,
+        "event": false,
+        "n_queries": 40
+      },
+      {
+        "target": "joint_0.30",
+        "seed": 29,
+        "time": 49000.0,
+        "event": false,
+        "n_queries": 40
+      },
+      {
+        "target": "joint_0.30",
+        "seed": 30,
+        "time": 49000.0,
+        "event": false,
+        "n_queries": 40
+      },
+      {
+        "target": "joint_0.30",
+        "seed": 31,
+        "time": 49000.0,
+        "event": false,
+        "n_queries": 40
+      },
+      {
+        "target": "joint_0.30",
+        "seed": 32,
+        "time": 49000.0,
+        "event": false,
+        "n_queries": 40
+      },
+      {
+        "target": "joint_0.30",
+        "seed": 33,
+        "time": 29000.0,
+        "event": true,
+        "n_queries": 24
+      },
+      {
+        "target": "joint_0.30",
+        "seed": 34,
+        "time": 49000.0,
+        "event": true,
+        "n_queries": 40
+      },
+      {
+        "target": "joint_0.30",
+        "seed": 35,
+        "time": 49000.0,
+        "event": false,
+        "n_queries": 40
+      },
+      {
+        "target": "joint_0.30",
+        "seed": 36,
+        "time": 49000.0,
+        "event": false,
+        "n_queries": 40
+      },
+      {
+        "target": "joint_0.30",
+        "seed": 37,
+        "time": 49000.0,
+        "event": false,
+        "n_queries": 40
+      },
+      {
+        "target": "joint_0.30",
+        "seed": 38,
+        "time": 49000.0,
+        "event": false,
+        "n_queries": 40
+      },
+      {
+        "target": "joint_0.30",
+        "seed": 39,
+        "time": 9000.0,
+        "event": true,
+        "n_queries": 8
+      },
+      {
+        "target": "joint_0.30",
+        "seed": 40,
+        "time": 49000.0,
+        "event": false,
+        "n_queries": 40
+      },
+      {
+        "target": "joint_0.30",
+        "seed": 41,
+        "time": 49000.0,
+        "event": false,
+        "n_queries": 40
+      },
+      {
+        "target": "joint_0.30",
+        "seed": 42,
+        "time": 49000.0,
+        "event": false,
+        "n_queries": 40
+      },
+      {
+        "target": "joint_0.30",
+        "seed": 43,
+        "time": 49000.0,
+        "event": false,
+        "n_queries": 40
+      },
+      {
+        "target": "joint_0.30",
+        "seed": 44,
+        "time": 49000.0,
+        "event": false,
+        "n_queries": 40
+      },
+      {
+        "target": "joint_0.30",
+        "seed": 45,
+        "time": 49000.0,
+        "event": false,
+        "n_queries": 40
+      },
+      {
+        "target": "joint_0.30",
+        "seed": 46,
+        "time": 49000.0,
+        "event": false,
+        "n_queries": 40
+      },
+      {
+        "target": "joint_0.30",
+        "seed": 47,
+        "time": 49000.0,
+        "event": false,
+        "n_queries": 40
+      },
+      {
+        "target": "joint_0.30",
+        "seed": 48,
+        "time": 49000.0,
+        "event": false,
+        "n_queries": 40
+      },
+      {
+        "target": "joint_0.30",
+        "seed": 49,
+        "time": 49000.0,
+        "event": false,
+        "n_queries": 40
+      },
+      {
+        "target": "joint_0.70",
+        "seed": 0,
+        "time": 49000.0,
+        "event": false,
+        "n_queries": 40
+      },
+      {
+        "target": "joint_0.70",
+        "seed": 1,
+        "time": 49000.0,
+        "event": false,
+        "n_queries": 40
+      },
+      {
+        "target": "joint_0.70",
+        "seed": 2,
+        "time": 49000.0,
+        "event": false,
+        "n_queries": 40
+      },
+      {
+        "target": "joint_0.70",
+        "seed": 3,
+        "time": 49000.0,
+        "event": false,
+        "n_queries": 40
+      },
+      {
+        "target": "joint_0.70",
+        "seed": 4,
+        "time": 49000.0,
+        "event": true,
+        "n_queries": 40
+      },
+      {
+        "target": "joint_0.70",
+        "seed": 5,
+        "time": 39000.0,
+        "event": true,
+        "n_queries": 32
+      },
+      {
+        "target": "joint_0.70",
+        "seed": 6,
+        "time": 49000.0,
+        "event": false,
+        "n_queries": 40
+      },
+      {
+        "target": "joint_0.70",
+        "seed": 7,
+        "time": 49000.0,
+        "event": false,
+        "n_queries": 40
+      },
+      {
+        "target": "joint_0.70",
+        "seed": 8,
+        "time": 49000.0,
+        "event": false,
+        "n_queries": 40
+      },
+      {
+        "target": "joint_0.70",
+        "seed": 9,
+        "time": 49000.0,
+        "event": false,
+        "n_queries": 40
+      },
+      {
+        "target": "joint_0.70",
+        "seed": 10,
+        "time": 49000.0,
+        "event": false,
+        "n_queries": 40
+      },
+      {
+        "target": "joint_0.70",
+        "seed": 11,
+        "time": 39000.0,
+        "event": true,
+        "n_queries": 32
+      },
+      {
+        "target": "joint_0.70",
+        "seed": 12,
+        "time": 49000.0,
+        "event": false,
+        "n_queries": 40
+      },
+      {
+        "target": "joint_0.70",
+        "seed": 13,
+        "time": 49000.0,
+        "event": false,
+        "n_queries": 40
+      },
+      {
+        "target": "joint_0.70",
+        "seed": 14,
+        "time": 49000.0,
+        "event": false,
+        "n_queries": 40
+      },
+      {
+        "target": "joint_0.70",
+        "seed": 15,
+        "time": 49000.0,
+        "event": false,
+        "n_queries": 40
+      },
+      {
+        "target": "joint_0.70",
+        "seed": 16,
+        "time": 49000.0,
+        "event": false,
+        "n_queries": 40
+      },
+      {
+        "target": "joint_0.70",
+        "seed": 17,
+        "time": 49000.0,
+        "event": false,
+        "n_queries": 40
+      },
+      {
+        "target": "joint_0.70",
+        "seed": 18,
+        "time": 49000.0,
+        "event": false,
+        "n_queries": 40
+      },
+      {
+        "target": "joint_0.70",
+        "seed": 19,
+        "time": 49000.0,
+        "event": false,
+        "n_queries": 40
+      },
+      {
+        "target": "joint_0.70",
+        "seed": 20,
+        "time": 49000.0,
+        "event": false,
+        "n_queries": 40
+      },
+      {
+        "target": "joint_0.70",
+        "seed": 21,
+        "time": 49000.0,
+        "event": false,
+        "n_queries": 40
+      },
+      {
+        "target": "joint_0.70",
+        "seed": 22,
+        "time": 49000.0,
+        "event": false,
+        "n_queries": 40
+      },
+      {
+        "target": "joint_0.70",
+        "seed": 23,
+        "time": 49000.0,
+        "event": false,
+        "n_queries": 40
+      },
+      {
+        "target": "joint_0.70",
+        "seed": 24,
+        "time": 49000.0,
+        "event": false,
+        "n_queries": 40
+      },
+      {
+        "target": "joint_0.70",
+        "seed": 25,
+        "time": 39000.0,
+        "event": true,
+        "n_queries": 32
+      },
+      {
+        "target": "joint_0.70",
+        "seed": 26,
+        "time": 49000.0,
+        "event": false,
+        "n_queries": 40
+      },
+      {
+        "target": "joint_0.70",
+        "seed": 27,
+        "time": 44000.0,
+        "event": true,
+        "n_queries": 36
+      },
+      {
+        "target": "joint_0.70",
+        "seed": 28,
+        "time": 49000.0,
+        "event": false,
+        "n_queries": 40
+      },
+      {
+        "target": "joint_0.70",
+        "seed": 29,
+        "time": 49000.0,
+        "event": false,
+        "n_queries": 40
+      },
+      {
+        "target": "joint_0.70",
+        "seed": 30,
+        "time": 49000.0,
+        "event": false,
+        "n_queries": 40
+      },
+      {
+        "target": "joint_0.70",
+        "seed": 31,
+        "time": 49000.0,
+        "event": false,
+        "n_queries": 40
+      },
+      {
+        "target": "joint_0.70",
+        "seed": 32,
+        "time": 49000.0,
+        "event": false,
+        "n_queries": 40
+      },
+      {
+        "target": "joint_0.70",
+        "seed": 33,
+        "time": 49000.0,
+        "event": false,
+        "n_queries": 40
+      },
+      {
+        "target": "joint_0.70",
+        "seed": 34,
+        "time": 49000.0,
+        "event": false,
+        "n_queries": 40
+      },
+      {
+        "target": "joint_0.70",
+        "seed": 35,
+        "time": 49000.0,
+        "event": false,
+        "n_queries": 40
+      },
+      {
+        "target": "joint_0.70",
+        "seed": 36,
+        "time": 49000.0,
+        "event": false,
+        "n_queries": 40
+      },
+      {
+        "target": "joint_0.70",
+        "seed": 37,
+        "time": 49000.0,
+        "event": false,
+        "n_queries": 40
+      },
+      {
+        "target": "joint_0.70",
+        "seed": 38,
+        "time": 49000.0,
+        "event": false,
+        "n_queries": 40
+      },
+      {
+        "target": "joint_0.70",
+        "seed": 39,
+        "time": 29000.0,
+        "event": true,
+        "n_queries": 24
+      },
+      {
+        "target": "joint_0.70",
+        "seed": 40,
+        "time": 49000.0,
+        "event": false,
+        "n_queries": 40
+      },
+      {
+        "target": "joint_0.70",
+        "seed": 41,
+        "time": 49000.0,
+        "event": false,
+        "n_queries": 40
+      },
+      {
+        "target": "joint_0.70",
+        "seed": 42,
+        "time": 49000.0,
+        "event": true,
+        "n_queries": 40
+      },
+      {
+        "target": "joint_0.70",
+        "seed": 43,
+        "time": 49000.0,
+        "event": false,
+        "n_queries": 40
+      },
+      {
+        "target": "joint_0.70",
+        "seed": 44,
+        "time": 49000.0,
+        "event": false,
+        "n_queries": 40
+      },
+      {
+        "target": "joint_0.70",
+        "seed": 45,
+        "time": 49000.0,
+        "event": false,
+        "n_queries": 40
+      },
+      {
+        "target": "joint_0.70",
+        "seed": 46,
+        "time": 49000.0,
+        "event": false,
+        "n_queries": 40
+      },
+      {
+        "target": "joint_0.70",
+        "seed": 47,
+        "time": 49000.0,
+        "event": false,
+        "n_queries": 40
+      },
+      {
+        "target": "joint_0.70",
+        "seed": 48,
+        "time": 49000.0,
+        "event": false,
+        "n_queries": 40
+      },
+      {
+        "target": "joint_0.70",
+        "seed": 49,
+        "time": 49000.0,
+        "event": false,
+        "n_queries": 40
+      }
+    ],
+    "turbo": [
+      {
+        "target": "joint_0.30",
+        "seed": 0,
+        "time": 29000.0,
+        "event": true,
+        "n_queries": 24
+      },
+      {
+        "target": "joint_0.30",
+        "seed": 1,
+        "time": 39000.0,
+        "event": true,
+        "n_queries": 32
+      },
+      {
+        "target": "joint_0.30",
+        "seed": 2,
+        "time": 39000.0,
+        "event": true,
+        "n_queries": 32
+      },
+      {
+        "target": "joint_0.30",
+        "seed": 3,
+        "time": 49000.0,
+        "event": true,
+        "n_queries": 40
+      },
+      {
+        "target": "joint_0.30",
+        "seed": 4,
+        "time": 49000.0,
+        "event": false,
+        "n_queries": 40
+      },
+      {
+        "target": "joint_0.30",
+        "seed": 5,
+        "time": 49000.0,
+        "event": false,
+        "n_queries": 40
+      },
+      {
+        "target": "joint_0.30",
+        "seed": 6,
+        "time": 29000.0,
+        "event": true,
+        "n_queries": 24
+      },
+      {
+        "target": "joint_0.30",
+        "seed": 7,
+        "time": 24000.0,
+        "event": true,
+        "n_queries": 20
+      },
+      {
+        "target": "joint_0.30",
+        "seed": 8,
+        "time": 44000.0,
+        "event": true,
+        "n_queries": 36
+      },
+      {
+        "target": "joint_0.30",
+        "seed": 9,
+        "time": 24000.0,
+        "event": true,
+        "n_queries": 20
+      },
+      {
+        "target": "joint_0.30",
+        "seed": 10,
+        "time": 49000.0,
+        "event": true,
+        "n_queries": 40
+      },
+      {
+        "target": "joint_0.30",
+        "seed": 11,
+        "time": 34000.0,
+        "event": true,
+        "n_queries": 28
+      },
+      {
+        "target": "joint_0.30",
+        "seed": 12,
+        "time": 19000.0,
+        "event": true,
+        "n_queries": 16
+      },
+      {
+        "target": "joint_0.30",
+        "seed": 13,
+        "time": 34000.0,
+        "event": true,
+        "n_queries": 28
+      },
+      {
+        "target": "joint_0.30",
+        "seed": 14,
+        "time": 44000.0,
+        "event": true,
+        "n_queries": 36
+      },
+      {
+        "target": "joint_0.30",
+        "seed": 15,
+        "time": 49000.0,
+        "event": false,
+        "n_queries": 40
+      },
+      {
+        "target": "joint_0.30",
+        "seed": 16,
+        "time": 49000.0,
+        "event": false,
+        "n_queries": 40
+      },
+      {
+        "target": "joint_0.30",
+        "seed": 17,
+        "time": 24000.0,
+        "event": true,
+        "n_queries": 20
+      },
+      {
+        "target": "joint_0.30",
+        "seed": 18,
+        "time": 44000.0,
+        "event": true,
+        "n_queries": 36
+      },
+      {
+        "target": "joint_0.30",
+        "seed": 19,
+        "time": 49000.0,
+        "event": false,
+        "n_queries": 40
+      },
+      {
+        "target": "joint_0.30",
+        "seed": 20,
+        "time": 34000.0,
+        "event": true,
+        "n_queries": 28
+      },
+      {
+        "target": "joint_0.30",
+        "seed": 21,
+        "time": 49000.0,
+        "event": true,
+        "n_queries": 40
+      },
+      {
+        "target": "joint_0.30",
+        "seed": 22,
+        "time": 29000.0,
+        "event": true,
+        "n_queries": 24
+      },
+      {
+        "target": "joint_0.30",
+        "seed": 23,
+        "time": 49000.0,
+        "event": false,
+        "n_queries": 40
+      },
+      {
+        "target": "joint_0.30",
+        "seed": 24,
+        "time": 49000.0,
+        "event": false,
+        "n_queries": 40
+      },
+      {
+        "target": "joint_0.30",
+        "seed": 25,
+        "time": 29000.0,
+        "event": true,
+        "n_queries": 24
+      },
+      {
+        "target": "joint_0.30",
+        "seed": 26,
+        "time": 49000.0,
+        "event": true,
+        "n_queries": 40
+      },
+      {
+        "target": "joint_0.30",
+        "seed": 27,
+        "time": 49000.0,
+        "event": false,
+        "n_queries": 40
+      },
+      {
+        "target": "joint_0.30",
+        "seed": 28,
+        "time": 49000.0,
+        "event": true,
+        "n_queries": 40
+      },
+      {
+        "target": "joint_0.30",
+        "seed": 29,
+        "time": 39000.0,
+        "event": true,
+        "n_queries": 32
+      },
+      {
+        "target": "joint_0.30",
+        "seed": 30,
+        "time": 39000.0,
+        "event": true,
+        "n_queries": 32
+      },
+      {
+        "target": "joint_0.30",
+        "seed": 31,
+        "time": 34000.0,
+        "event": true,
+        "n_queries": 28
+      },
+      {
+        "target": "joint_0.30",
+        "seed": 32,
+        "time": 44000.0,
+        "event": true,
+        "n_queries": 36
+      },
+      {
+        "target": "joint_0.30",
+        "seed": 33,
+        "time": 39000.0,
+        "event": true,
+        "n_queries": 32
+      },
+      {
+        "target": "joint_0.30",
+        "seed": 34,
+        "time": 49000.0,
+        "event": false,
+        "n_queries": 40
+      },
+      {
+        "target": "joint_0.30",
+        "seed": 35,
+        "time": 34000.0,
+        "event": true,
+        "n_queries": 28
+      },
+      {
+        "target": "joint_0.30",
+        "seed": 36,
+        "time": 44000.0,
+        "event": true,
+        "n_queries": 36
+      },
+      {
+        "target": "joint_0.30",
+        "seed": 37,
+        "time": 34000.0,
+        "event": true,
+        "n_queries": 28
+      },
+      {
+        "target": "joint_0.30",
+        "seed": 38,
+        "time": 44000.0,
+        "event": true,
+        "n_queries": 36
+      },
+      {
+        "target": "joint_0.30",
+        "seed": 39,
+        "time": 9000.0,
+        "event": true,
+        "n_queries": 8
+      },
+      {
+        "target": "joint_0.30",
+        "seed": 40,
+        "time": 39000.0,
+        "event": true,
+        "n_queries": 32
+      },
+      {
+        "target": "joint_0.30",
+        "seed": 41,
+        "time": 44000.0,
+        "event": true,
+        "n_queries": 36
+      },
+      {
+        "target": "joint_0.30",
+        "seed": 42,
+        "time": 29000.0,
+        "event": true,
+        "n_queries": 24
+      },
+      {
+        "target": "joint_0.30",
+        "seed": 43,
+        "time": 24000.0,
+        "event": true,
+        "n_queries": 20
+      },
+      {
+        "target": "joint_0.30",
+        "seed": 44,
+        "time": 29000.0,
+        "event": true,
+        "n_queries": 24
+      },
+      {
+        "target": "joint_0.30",
+        "seed": 45,
+        "time": 39000.0,
+        "event": true,
+        "n_queries": 32
+      },
+      {
+        "target": "joint_0.30",
+        "seed": 46,
+        "time": 49000.0,
+        "event": false,
+        "n_queries": 40
+      },
+      {
+        "target": "joint_0.30",
+        "seed": 47,
+        "time": 39000.0,
+        "event": true,
+        "n_queries": 32
+      },
+      {
+        "target": "joint_0.30",
+        "seed": 48,
+        "time": 49000.0,
+        "event": false,
+        "n_queries": 40
+      },
+      {
+        "target": "joint_0.30",
+        "seed": 49,
+        "time": 44000.0,
+        "event": true,
+        "n_queries": 36
+      },
+      {
+        "target": "joint_0.70",
+        "seed": 0,
+        "time": 44000.0,
+        "event": true,
+        "n_queries": 36
+      },
+      {
+        "target": "joint_0.70",
+        "seed": 1,
+        "time": 49000.0,
+        "event": true,
+        "n_queries": 40
+      },
+      {
+        "target": "joint_0.70",
+        "seed": 2,
+        "time": 49000.0,
+        "event": false,
+        "n_queries": 40
+      },
+      {
+        "target": "joint_0.70",
+        "seed": 3,
+        "time": 49000.0,
+        "event": false,
+        "n_queries": 40
+      },
+      {
+        "target": "joint_0.70",
+        "seed": 4,
+        "time": 49000.0,
+        "event": false,
+        "n_queries": 40
+      },
+      {
+        "target": "joint_0.70",
+        "seed": 5,
+        "time": 24000.0,
+        "event": true,
+        "n_queries": 20
+      },
+      {
+        "target": "joint_0.70",
+        "seed": 6,
+        "time": 49000.0,
+        "event": false,
+        "n_queries": 40
+      },
+      {
+        "target": "joint_0.70",
+        "seed": 7,
+        "time": 49000.0,
+        "event": false,
+        "n_queries": 40
+      },
+      {
+        "target": "joint_0.70",
+        "seed": 8,
+        "time": 24000.0,
+        "event": true,
+        "n_queries": 20
+      },
+      {
+        "target": "joint_0.70",
+        "seed": 9,
+        "time": 49000.0,
+        "event": false,
+        "n_queries": 40
+      },
+      {
+        "target": "joint_0.70",
+        "seed": 10,
+        "time": 39000.0,
+        "event": true,
+        "n_queries": 32
+      },
+      {
+        "target": "joint_0.70",
+        "seed": 11,
+        "time": 49000.0,
+        "event": false,
+        "n_queries": 40
+      },
+      {
+        "target": "joint_0.70",
+        "seed": 12,
+        "time": 49000.0,
+        "event": false,
+        "n_queries": 40
+      },
+      {
+        "target": "joint_0.70",
+        "seed": 13,
+        "time": 44000.0,
+        "event": true,
+        "n_queries": 36
+      },
+      {
+        "target": "joint_0.70",
+        "seed": 14,
+        "time": 44000.0,
+        "event": true,
+        "n_queries": 36
+      },
+      {
+        "target": "joint_0.70",
+        "seed": 15,
+        "time": 49000.0,
+        "event": false,
+        "n_queries": 40
+      },
+      {
+        "target": "joint_0.70",
+        "seed": 16,
+        "time": 34000.0,
+        "event": true,
+        "n_queries": 28
+      },
+      {
+        "target": "joint_0.70",
+        "seed": 17,
+        "time": 24000.0,
+        "event": true,
+        "n_queries": 20
+      },
+      {
+        "target": "joint_0.70",
+        "seed": 18,
+        "time": 49000.0,
+        "event": false,
+        "n_queries": 40
+      },
+      {
+        "target": "joint_0.70",
+        "seed": 19,
+        "time": 49000.0,
+        "event": false,
+        "n_queries": 40
+      },
+      {
+        "target": "joint_0.70",
+        "seed": 20,
+        "time": 44000.0,
+        "event": true,
+        "n_queries": 36
+      },
+      {
+        "target": "joint_0.70",
+        "seed": 21,
+        "time": 29000.0,
+        "event": true,
+        "n_queries": 24
+      },
+      {
+        "target": "joint_0.70",
+        "seed": 22,
+        "time": 49000.0,
+        "event": false,
+        "n_queries": 40
+      },
+      {
+        "target": "joint_0.70",
+        "seed": 23,
+        "time": 49000.0,
+        "event": false,
+        "n_queries": 40
+      },
+      {
+        "target": "joint_0.70",
+        "seed": 24,
+        "time": 49000.0,
+        "event": false,
+        "n_queries": 40
+      },
+      {
+        "target": "joint_0.70",
+        "seed": 25,
+        "time": 24000.0,
+        "event": true,
+        "n_queries": 20
+      },
+      {
+        "target": "joint_0.70",
+        "seed": 26,
+        "time": 49000.0,
+        "event": true,
+        "n_queries": 40
+      },
+      {
+        "target": "joint_0.70",
+        "seed": 27,
+        "time": 39000.0,
+        "event": true,
+        "n_queries": 32
+      },
+      {
+        "target": "joint_0.70",
+        "seed": 28,
+        "time": 49000.0,
+        "event": false,
+        "n_queries": 40
+      },
+      {
+        "target": "joint_0.70",
+        "seed": 29,
+        "time": 49000.0,
+        "event": true,
+        "n_queries": 40
+      },
+      {
+        "target": "joint_0.70",
+        "seed": 30,
+        "time": 39000.0,
+        "event": true,
+        "n_queries": 32
+      },
+      {
+        "target": "joint_0.70",
+        "seed": 31,
+        "time": 39000.0,
+        "event": true,
+        "n_queries": 32
+      },
+      {
+        "target": "joint_0.70",
+        "seed": 32,
+        "time": 49000.0,
+        "event": false,
+        "n_queries": 40
+      },
+      {
+        "target": "joint_0.70",
+        "seed": 33,
+        "time": 49000.0,
+        "event": false,
+        "n_queries": 40
+      },
+      {
+        "target": "joint_0.70",
+        "seed": 34,
+        "time": 49000.0,
+        "event": false,
+        "n_queries": 40
+      },
+      {
+        "target": "joint_0.70",
+        "seed": 35,
+        "time": 39000.0,
+        "event": true,
+        "n_queries": 32
+      },
+      {
+        "target": "joint_0.70",
+        "seed": 36,
+        "time": 39000.0,
+        "event": true,
+        "n_queries": 32
+      },
+      {
+        "target": "joint_0.70",
+        "seed": 37,
+        "time": 29000.0,
+        "event": true,
+        "n_queries": 24
+      },
+      {
+        "target": "joint_0.70",
+        "seed": 38,
+        "time": 44000.0,
+        "event": true,
+        "n_queries": 36
+      },
+      {
+        "target": "joint_0.70",
+        "seed": 39,
+        "time": 29000.0,
+        "event": true,
+        "n_queries": 24
+      },
+      {
+        "target": "joint_0.70",
+        "seed": 40,
+        "time": 44000.0,
+        "event": true,
+        "n_queries": 36
+      },
+      {
+        "target": "joint_0.70",
+        "seed": 41,
+        "time": 44000.0,
+        "event": true,
+        "n_queries": 36
+      },
+      {
+        "target": "joint_0.70",
+        "seed": 42,
+        "time": 49000.0,
+        "event": false,
+        "n_queries": 40
+      },
+      {
+        "target": "joint_0.70",
+        "seed": 43,
+        "time": 49000.0,
+        "event": false,
+        "n_queries": 40
+      },
+      {
+        "target": "joint_0.70",
+        "seed": 44,
+        "time": 39000.0,
+        "event": true,
+        "n_queries": 32
+      },
+      {
+        "target": "joint_0.70",
+        "seed": 45,
+        "time": 49000.0,
+        "event": true,
+        "n_queries": 40
+      },
+      {
+        "target": "joint_0.70",
+        "seed": 46,
+        "time": 49000.0,
+        "event": false,
+        "n_queries": 40
+      },
+      {
+        "target": "joint_0.70",
+        "seed": 47,
+        "time": 24000.0,
+        "event": true,
+        "n_queries": 20
+      },
+      {
+        "target": "joint_0.70",
+        "seed": 48,
+        "time": 24000.0,
+        "event": true,
+        "n_queries": 20
+      },
+      {
+        "target": "joint_0.70",
+        "seed": 49,
+        "time": 14000.0,
+        "event": true,
+        "n_queries": 12
+      }
+    ]
+  },
+  "config": {
+    "seeds": 50,
+    "targets": 2,
+    "budget": 40,
+    "q": 4,
+    "n_seed": 8,
+    "n_pool": 128,
+    "tol_k": 6.0,
+    "bootstrap": 5000,
+    "policy": "ablation",
+    "out": "docs/m2-botorch-slate.json",
+    "force_synthetic": false
+  },
+  "claim_holds_vs_slate": true,
+  "beaten_by": [],
+  "verdict": "IN-SILICO: the M2 'RIG reaches spec ~2x cheaper than BO' claim HOLDS against the full BoTorch slate (BoTorchBO, SCBO, TuRBO): RIG is cheaper (\u0394RMST<0) or tied on every comparator, none significantly beats it. (Machinery proof, not real-tool evidence; the real-data headline stays gated on M0.)",
+  "false_accept_note": "In this cost-to-target harness a HIT is a single in-spec observation on the noisy machine for ALL arms (RIG run without the F2 confirmation hook, plus the three BO arms), so false-accept exposure is identical across arms and not a differentiator; a confirmation-gated variant is the F2 ConfirmationCampaign, out of slate scope."
+}

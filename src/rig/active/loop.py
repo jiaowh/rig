@@ -145,16 +145,13 @@ class ActiveLearningLoop:
         validating it -- the validation cost is visible instead via
         ``n_queries`` and ``qualification_outcome.n_machine_calls``.
 
-    Caveat (pre-existing, not introduced or repaired by this hook):
-    ``ConfirmationCampaign`` derives ``RunRecord.run_id`` from ``(seed,
-    candidate_index, run_index)``, both of which restart at 0 on every
-    ``.run()`` call (see that module's docstring). If the SAME
-    ``qualification`` instance is fired more than once over one loop's
-    lifetime (e.g. a rejected seed-DoE hit followed by a later in-loop
-    hit), the second ``CampaignResult``'s ``run_id``\\ s can collide with
-    the first's whenever the same recipe recurs at the same candidate
-    index. This is a property of ``ConfirmationCampaign``'s single-call-
-    oriented determinism contract, not something this hook changes.
+    Multi-fire safety: ``ConfirmationCampaign`` salts every ``run_id`` and
+    timestamp with a per-instance invocation counter (fixed 2026-07-22), so
+    firing the SAME ``qualification`` instance more than once over one
+    loop's lifetime (e.g. a rejected seed-DoE hit followed by a later
+    in-loop hit) can never produce colliding ``RunRecord`` ids, while
+    replaying the whole loop still reproduces the same id sequence
+    call-for-call.
     """
 
     def __init__(
