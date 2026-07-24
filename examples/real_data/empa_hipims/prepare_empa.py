@@ -62,6 +62,18 @@ from pathlib import Path
 if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8")
 
+# E1 frame validation (implementation-plan §15.6): print-only, does not touch the
+# converter's own output. Imported lazily-tolerant -- if the editable install is
+# somehow missing (e.g. a bare-checkout doc build), the converter still runs and
+# writes CSVs; only the validation summary is skipped, loudly.
+try:
+    from rig_adapters.tabular.spec import load_spec
+    from rig_adapters.tabular.validation import frame_from_csv, validate_frame
+
+    _VALIDATION_AVAILABLE = True
+except ImportError:  # pragma: no cover - only if rig is not installed
+    _VALIDATION_AVAILABLE = False
+
 HERE = Path(__file__).resolve().parent
 REPO = HERE.parents[2]
 DATA_DIR = REPO / "data" / "m0-candidates" / "empa-hipims" / "extracted_sample"
@@ -112,6 +124,7 @@ CAMPAIGNS: tuple[Campaign, ...] = (
 def df_path(campaign: Campaign) -> Path:
     """Full path of a campaign's df_campaign JSON (raw outcome table)."""
     return DATA_DIR / f"{campaign.stem}__df_campaign_{campaign.df_key}.json"
+
 
 # The 5 continuous knobs per parameterization, in tidy (renamed) CSV spelling.
 PRR_INPUTS = ("PRR (Hz)", "PW (us)", "pos Delay (us)", "pos PW (us)", "pos Setpoint (V)")
@@ -243,6 +256,22 @@ def main(out_dir: Path | None = None) -> int:
         "Ipk is measured, never set; ti_120w_short_pw has BatchNr==1 everywhere "
         "(file order kept) and 5 rows 3e-11 to 4e-11 outside its Campaign.json bounds."
     )
+
+    # E1 frame validation (implementation-plan §15.6): read back each just-written CSV
+    # (byte-identical -- validation is read-only, never touches convert_campaign's
+    # output) against its own spec and print the report. Non-fatal: a validation
+    # violation here is EXPECTED for the known Ti-120W quirk, not a converter bug --
+    # this is a report, not a gate (that is ingest_csv's job, via strict=True).
+    if _VALIDATION_AVAILABLE:
+        print("\nframe validation (E1, non-fatal -- reports what ingest_csv would reject):")
+        for s in summaries:
+            slug = str(s["slug"])
+            spec = load_spec(HERE / "specs" / f"{slug}.toml")
+            frame = frame_from_csv(Path(str(s["path"])))
+            report = validate_frame(frame, spec, order_key="BatchNr")
+            print(f"- {slug}: {report.summary()}")
+    else:
+        print("\nframe validation (E1) skipped: rig_adapters.tabular.validation not importable")
     return 0
 
 

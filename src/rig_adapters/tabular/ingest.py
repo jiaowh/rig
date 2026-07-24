@@ -59,6 +59,7 @@ from rig.schema import (
     RunRecord,
 )
 from rig_adapters.tabular.spec import ProcessSpec
+from rig_adapters.tabular.validation import Frame, ValidationReport, validate_frame
 
 SUM_TO_ONE_ATOL = 1e-6
 _RUN_ID_NAMESPACE = uuid.UUID("6f9c2a1e-6f0e-4bda-9f3b-6c5df0a5b9d1")
@@ -94,6 +95,11 @@ class IngestResult:
     rejects: list[RejectedRow] = field(default_factory=list)
     unmatched_columns: tuple[str, ...] = ()
     synthetic_timestamps: bool = False
+    # E1 frame-validation pre-pass report (implementation-plan §15.6). ``None`` only for
+    # ``ingest_jsonl`` (which has no CSV frame to validate); ``ingest_csv`` always
+    # attaches one. Additive field -- existing callers that construct/compare
+    # IngestResult by keyword are unaffected.
+    frame_report: ValidationReport | None = None
 
     def __iter__(self) -> Iterator[RunRecord]:
         return iter(self.records)
@@ -226,9 +232,11 @@ def ingest_csv(
     *,
     tool_column: str | None = None,
     timestamp_column: str | None = None,
+    order_key: str | None = None,
     source: Source = "real_tool",
     default_tool_id: str = "unknown",
     on_error: OnError = "raise",
+    strict: bool = False,
 ) -> IngestResult:
     """Ingest a flat CSV of recipe->outcome rows into validated RunRecords.
 
@@ -236,6 +244,17 @@ def ingest_csv(
     ``on_error="skip"`` drops bad rows and reports them in
     :attr:`IngestResult.rejects`. Missing REQUIRED columns are always a hard
     :class:`IngestError` regardless of policy.
+
+    Before any row is touched, a frame-level validation pre-pass (E1,
+    implementation-plan §15.6) runs over the whole CSV via
+    :func:`rig_adapters.tabular.validation.validate_frame` and is attached as
+    :attr:`IngestResult.frame_report` -- this is purely additive and does not change
+    accept/reject behavior for any existing caller. ``order_key`` names an optional
+    column (e.g. a run-order/batch column, possibly UNDECLARED in ``spec`` -- it need
+    only be present in the CSV) whose monotonicity the pre-pass checks; pass
+    ``strict=True`` to raise :class:`~rig_adapters.tabular.validation.FrameValidationError`
+    up front when the pre-pass finds a BLOCKING violation (missing columns, non-numeric
+    cells, or NaN/inf) -- default ``False`` keeps today's behavior unchanged.
     """
     if on_error not in ("raise", "skip"):
         raise ValueError(f"on_error must be 'raise' or 'skip', got {on_error!r}")
@@ -264,11 +283,25 @@ def ingest_csv(
                 stacklevel=2,
             )
 
+        # Materialize once: the frame-level pre-pass and the existing per-row loop both
+        # need every row, and this iterates the exact same DictReader either way -- not
+        # a behavior change, just no longer lazy.
+        rows = list(reader)
+        frame_report = validate_frame(
+            Frame(header=tuple(header), rows=tuple(rows)),
+            spec,
+            order_key=order_key,
+            tool_column=tool_column,
+            timestamp_column=timestamp_column,
+            strict=strict,
+        )
+
         result = IngestResult(
             unmatched_columns=unmatched,
             synthetic_timestamps=timestamp_column is None,
+            frame_report=frame_report,
         )
-        for row_index, row in enumerate(reader):
+        for row_index, row in enumerate(rows):
             try:
                 record = _row_to_record(
                     row,

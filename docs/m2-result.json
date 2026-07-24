@@ -6,121 +6,121 @@
     "bo"
   ],
   "n_targets": 4,
-  "n_seeds": 40,
+  "n_seeds": 50,
   "horizon": 49001.0,
   "per_target": [
     {
       "target": "joint_0.30",
-      "n_seeds": 40,
+      "n_seeds": 50,
       "rmst": {
         "rig": 14000.0,
-        "bo": 40375.625
+        "bo": 40800.6
       },
       "hit_rate": {
         "rig": 1.0,
-        "bo": 0.375
+        "bo": 0.4
       },
       "median_cost": {
         "rig": 14000.0,
         "bo": 49000.0
       },
-      "delta_rmst": -26375.625,
-      "delta_se": 2046.308606273593,
-      "p_value": 5.166535745914351e-38,
-      "win_rate": 0.95,
-      "tie_rate": 0.05,
+      "delta_rmst": -26800.6,
+      "delta_se": 1776.3436617952057,
+      "p_value": 1.9569358099866167e-51,
+      "win_rate": 0.96,
+      "tie_rate": 0.04,
       "reference": "rig",
       "other": "bo"
     },
     {
       "target": "joint_0.43",
-      "n_seeds": 40,
+      "n_seeds": 50,
       "rmst": {
-        "rig": 14250.0,
-        "bo": 36250.3
+        "rig": 14100.0,
+        "bo": 36500.34
       },
       "hit_rate": {
         "rig": 1.0,
-        "bo": 0.7
+        "bo": 0.66
       },
       "median_cost": {
         "rig": 14000.0,
         "bo": 39000.0
       },
-      "delta_rmst": -22000.300000000003,
-      "delta_se": 2014.8365331336433,
-      "p_value": 9.336665632939717e-28,
-      "win_rate": 0.875,
-      "tie_rate": 0.125,
+      "delta_rmst": -22400.339999999997,
+      "delta_se": 1781.8445511570305,
+      "p_value": 3.031769510598937e-36,
+      "win_rate": 0.92,
+      "tie_rate": 0.08,
       "reference": "rig",
       "other": "bo"
     },
     {
       "target": "joint_0.57",
-      "n_seeds": 40,
+      "n_seeds": 50,
       "rmst": {
-        "rig": 14250.0,
-        "bo": 46000.825
+        "rig": 14200.0,
+        "bo": 45000.78
       },
       "hit_rate": {
         "rig": 1.0,
-        "bo": 0.175
+        "bo": 0.22
       },
       "median_cost": {
         "rig": 14000.0,
         "bo": 49000.0
       },
-      "delta_rmst": -31750.824999999997,
-      "delta_se": 1142.2833508413642,
-      "p_value": 4.858389388058207e-170,
-      "win_rate": 1.0,
-      "tie_rate": 0.0,
+      "delta_rmst": -30800.78,
+      "delta_se": 1248.729275476474,
+      "p_value": 2.497313923600154e-134,
+      "win_rate": 0.98,
+      "tie_rate": 0.02,
       "reference": "rig",
       "other": "bo"
     },
     {
       "target": "joint_0.70",
-      "n_seeds": 40,
+      "n_seeds": 50,
       "rmst": {
-        "rig": 18500.0,
-        "bo": 40500.575
+        "rig": 18800.0,
+        "bo": 41900.6
       },
       "hit_rate": {
         "rig": 1.0,
-        "bo": 0.425
+        "bo": 0.4
       },
       "median_cost": {
         "rig": 19000.0,
         "bo": 49000.0
       },
-      "delta_rmst": -22000.574999999997,
-      "delta_se": 1887.5233458448602,
-      "p_value": 2.143838533875364e-31,
-      "win_rate": 0.9,
-      "tie_rate": 0.075,
+      "delta_rmst": -23100.6,
+      "delta_se": 1600.365709705129,
+      "p_value": 3.1356937813907933e-47,
+      "win_rate": 0.92,
+      "tie_rate": 0.06,
       "reference": "rig",
       "other": "bo"
     }
   ],
   "pooled_rmst": {
-    "rig": 15250.0,
-    "bo": 40781.83125
+    "rig": 15275.0,
+    "bo": 41050.58
   },
   "pooled_hit_rate": {
     "rig": 1.0,
-    "bo": 0.41875
+    "bo": 0.42
   },
-  "pooled_delta_rmst": -25531.831250000003,
-  "pooled_delta_se": 957.4721046124968,
-  "pooled_p_value": 1.1714685174501907e-156,
-  "pooled_win_rate": 0.93125,
-  "pooled_tie_rate": 0.0625,
+  "pooled_delta_rmst": -25775.58,
+  "pooled_delta_se": 848.6933994193664,
+  "pooled_p_value": 1.3312689727190448e-202,
+  "pooled_win_rate": 0.945,
+  "pooled_tie_rate": 0.05,
   "bootstrap_ci95": [
-    -27406.8815625,
-    -23625.52484375
+    -27375.605125000002,
+    -24125.559875
   ],
   "prob_reference_better": 1.0,
-  "verdict": "rig is cheaper than bo by dRMST=-2.55e+04 (95% CI [-2.74e+04, -2.36e+04], p=1.17e-156, win-rate 93%); SIGNIFICANT at 0.05.",
+  "verdict": "rig is cheaper than bo by dRMST=-2.58e+04 (95% CI [-2.74e+04, -2.41e+04], p=1.33e-202, win-rate 94%); SIGNIFICANT at 0.05.",
   "campaigns": [
     {
       "method": "rig",
@@ -764,6 +764,166 @@
     },
     {
       "method": "rig",
+      "target": "joint_0.30",
+      "seed": 40,
+      "time": 14000.0,
+      "event": true,
+      "n_queries": 12
+    },
+    {
+      "method": "bo",
+      "target": "joint_0.30",
+      "seed": 40,
+      "time": 49000.0,
+      "event": false,
+      "n_queries": 40
+    },
+    {
+      "method": "rig",
+      "target": "joint_0.30",
+      "seed": 41,
+      "time": 14000.0,
+      "event": true,
+      "n_queries": 12
+    },
+    {
+      "method": "bo",
+      "target": "joint_0.30",
+      "seed": 41,
+      "time": 24000.0,
+      "event": true,
+      "n_queries": 20
+    },
+    {
+      "method": "rig",
+      "target": "joint_0.30",
+      "seed": 42,
+      "time": 14000.0,
+      "event": true,
+      "n_queries": 12
+    },
+    {
+      "method": "bo",
+      "target": "joint_0.30",
+      "seed": 42,
+      "time": 44000.0,
+      "event": true,
+      "n_queries": 36
+    },
+    {
+      "method": "rig",
+      "target": "joint_0.30",
+      "seed": 43,
+      "time": 14000.0,
+      "event": true,
+      "n_queries": 12
+    },
+    {
+      "method": "bo",
+      "target": "joint_0.30",
+      "seed": 43,
+      "time": 49000.0,
+      "event": false,
+      "n_queries": 40
+    },
+    {
+      "method": "rig",
+      "target": "joint_0.30",
+      "seed": 44,
+      "time": 14000.0,
+      "event": true,
+      "n_queries": 12
+    },
+    {
+      "method": "bo",
+      "target": "joint_0.30",
+      "seed": 44,
+      "time": 49000.0,
+      "event": true,
+      "n_queries": 40
+    },
+    {
+      "method": "rig",
+      "target": "joint_0.30",
+      "seed": 45,
+      "time": 14000.0,
+      "event": true,
+      "n_queries": 12
+    },
+    {
+      "method": "bo",
+      "target": "joint_0.30",
+      "seed": 45,
+      "time": 19000.0,
+      "event": true,
+      "n_queries": 16
+    },
+    {
+      "method": "rig",
+      "target": "joint_0.30",
+      "seed": 46,
+      "time": 14000.0,
+      "event": true,
+      "n_queries": 12
+    },
+    {
+      "method": "bo",
+      "target": "joint_0.30",
+      "seed": 46,
+      "time": 49000.0,
+      "event": false,
+      "n_queries": 40
+    },
+    {
+      "method": "rig",
+      "target": "joint_0.30",
+      "seed": 47,
+      "time": 14000.0,
+      "event": true,
+      "n_queries": 12
+    },
+    {
+      "method": "bo",
+      "target": "joint_0.30",
+      "seed": 47,
+      "time": 49000.0,
+      "event": false,
+      "n_queries": 40
+    },
+    {
+      "method": "rig",
+      "target": "joint_0.30",
+      "seed": 48,
+      "time": 14000.0,
+      "event": true,
+      "n_queries": 12
+    },
+    {
+      "method": "bo",
+      "target": "joint_0.30",
+      "seed": 48,
+      "time": 44000.0,
+      "event": true,
+      "n_queries": 36
+    },
+    {
+      "method": "rig",
+      "target": "joint_0.30",
+      "seed": 49,
+      "time": 14000.0,
+      "event": true,
+      "n_queries": 12
+    },
+    {
+      "method": "bo",
+      "target": "joint_0.30",
+      "seed": 49,
+      "time": 49000.0,
+      "event": false,
+      "n_queries": 40
+    },
+    {
+      "method": "rig",
       "target": "joint_0.43",
       "seed": 0,
       "time": 14000.0,
@@ -926,9 +1086,9 @@
       "method": "rig",
       "target": "joint_0.43",
       "seed": 10,
-      "time": 19000.0,
+      "time": 14000.0,
       "event": true,
-      "n_queries": 16
+      "n_queries": 12
     },
     {
       "method": "bo",
@@ -1404,6 +1564,166 @@
     },
     {
       "method": "rig",
+      "target": "joint_0.43",
+      "seed": 40,
+      "time": 14000.0,
+      "event": true,
+      "n_queries": 12
+    },
+    {
+      "method": "bo",
+      "target": "joint_0.43",
+      "seed": 40,
+      "time": 49000.0,
+      "event": false,
+      "n_queries": 40
+    },
+    {
+      "method": "rig",
+      "target": "joint_0.43",
+      "seed": 41,
+      "time": 14000.0,
+      "event": true,
+      "n_queries": 12
+    },
+    {
+      "method": "bo",
+      "target": "joint_0.43",
+      "seed": 41,
+      "time": 49000.0,
+      "event": false,
+      "n_queries": 40
+    },
+    {
+      "method": "rig",
+      "target": "joint_0.43",
+      "seed": 42,
+      "time": 14000.0,
+      "event": true,
+      "n_queries": 12
+    },
+    {
+      "method": "bo",
+      "target": "joint_0.43",
+      "seed": 42,
+      "time": 24000.0,
+      "event": true,
+      "n_queries": 20
+    },
+    {
+      "method": "rig",
+      "target": "joint_0.43",
+      "seed": 43,
+      "time": 14000.0,
+      "event": true,
+      "n_queries": 12
+    },
+    {
+      "method": "bo",
+      "target": "joint_0.43",
+      "seed": 43,
+      "time": 34000.0,
+      "event": true,
+      "n_queries": 28
+    },
+    {
+      "method": "rig",
+      "target": "joint_0.43",
+      "seed": 44,
+      "time": 14000.0,
+      "event": true,
+      "n_queries": 12
+    },
+    {
+      "method": "bo",
+      "target": "joint_0.43",
+      "seed": 44,
+      "time": 49000.0,
+      "event": false,
+      "n_queries": 40
+    },
+    {
+      "method": "rig",
+      "target": "joint_0.43",
+      "seed": 45,
+      "time": 14000.0,
+      "event": true,
+      "n_queries": 12
+    },
+    {
+      "method": "bo",
+      "target": "joint_0.43",
+      "seed": 45,
+      "time": 49000.0,
+      "event": false,
+      "n_queries": 40
+    },
+    {
+      "method": "rig",
+      "target": "joint_0.43",
+      "seed": 46,
+      "time": 14000.0,
+      "event": true,
+      "n_queries": 12
+    },
+    {
+      "method": "bo",
+      "target": "joint_0.43",
+      "seed": 46,
+      "time": 19000.0,
+      "event": true,
+      "n_queries": 16
+    },
+    {
+      "method": "rig",
+      "target": "joint_0.43",
+      "seed": 47,
+      "time": 14000.0,
+      "event": true,
+      "n_queries": 12
+    },
+    {
+      "method": "bo",
+      "target": "joint_0.43",
+      "seed": 47,
+      "time": 29000.0,
+      "event": true,
+      "n_queries": 24
+    },
+    {
+      "method": "rig",
+      "target": "joint_0.43",
+      "seed": 48,
+      "time": 14000.0,
+      "event": true,
+      "n_queries": 12
+    },
+    {
+      "method": "bo",
+      "target": "joint_0.43",
+      "seed": 48,
+      "time": 49000.0,
+      "event": false,
+      "n_queries": 40
+    },
+    {
+      "method": "rig",
+      "target": "joint_0.43",
+      "seed": 49,
+      "time": 14000.0,
+      "event": true,
+      "n_queries": 12
+    },
+    {
+      "method": "bo",
+      "target": "joint_0.43",
+      "seed": 49,
+      "time": 24000.0,
+      "event": true,
+      "n_queries": 20
+    },
+    {
+      "method": "rig",
       "target": "joint_0.57",
       "seed": 0,
       "time": 14000.0,
@@ -2044,6 +2364,166 @@
     },
     {
       "method": "rig",
+      "target": "joint_0.57",
+      "seed": 40,
+      "time": 14000.0,
+      "event": true,
+      "n_queries": 12
+    },
+    {
+      "method": "bo",
+      "target": "joint_0.57",
+      "seed": 40,
+      "time": 49000.0,
+      "event": false,
+      "n_queries": 40
+    },
+    {
+      "method": "rig",
+      "target": "joint_0.57",
+      "seed": 41,
+      "time": 14000.0,
+      "event": true,
+      "n_queries": 12
+    },
+    {
+      "method": "bo",
+      "target": "joint_0.57",
+      "seed": 41,
+      "time": 19000.0,
+      "event": true,
+      "n_queries": 16
+    },
+    {
+      "method": "rig",
+      "target": "joint_0.57",
+      "seed": 42,
+      "time": 14000.0,
+      "event": true,
+      "n_queries": 12
+    },
+    {
+      "method": "bo",
+      "target": "joint_0.57",
+      "seed": 42,
+      "time": 44000.0,
+      "event": true,
+      "n_queries": 36
+    },
+    {
+      "method": "rig",
+      "target": "joint_0.57",
+      "seed": 43,
+      "time": 14000.0,
+      "event": true,
+      "n_queries": 12
+    },
+    {
+      "method": "bo",
+      "target": "joint_0.57",
+      "seed": 43,
+      "time": 49000.0,
+      "event": false,
+      "n_queries": 40
+    },
+    {
+      "method": "rig",
+      "target": "joint_0.57",
+      "seed": 44,
+      "time": 14000.0,
+      "event": true,
+      "n_queries": 12
+    },
+    {
+      "method": "bo",
+      "target": "joint_0.57",
+      "seed": 44,
+      "time": 49000.0,
+      "event": false,
+      "n_queries": 40
+    },
+    {
+      "method": "rig",
+      "target": "joint_0.57",
+      "seed": 45,
+      "time": 14000.0,
+      "event": true,
+      "n_queries": 12
+    },
+    {
+      "method": "bo",
+      "target": "joint_0.57",
+      "seed": 45,
+      "time": 14000.0,
+      "event": true,
+      "n_queries": 12
+    },
+    {
+      "method": "rig",
+      "target": "joint_0.57",
+      "seed": 46,
+      "time": 14000.0,
+      "event": true,
+      "n_queries": 12
+    },
+    {
+      "method": "bo",
+      "target": "joint_0.57",
+      "seed": 46,
+      "time": 39000.0,
+      "event": true,
+      "n_queries": 32
+    },
+    {
+      "method": "rig",
+      "target": "joint_0.57",
+      "seed": 47,
+      "time": 14000.0,
+      "event": true,
+      "n_queries": 12
+    },
+    {
+      "method": "bo",
+      "target": "joint_0.57",
+      "seed": 47,
+      "time": 49000.0,
+      "event": false,
+      "n_queries": 40
+    },
+    {
+      "method": "rig",
+      "target": "joint_0.57",
+      "seed": 48,
+      "time": 14000.0,
+      "event": true,
+      "n_queries": 12
+    },
+    {
+      "method": "bo",
+      "target": "joint_0.57",
+      "seed": 48,
+      "time": 49000.0,
+      "event": false,
+      "n_queries": 40
+    },
+    {
+      "method": "rig",
+      "target": "joint_0.57",
+      "seed": 49,
+      "time": 14000.0,
+      "event": true,
+      "n_queries": 12
+    },
+    {
+      "method": "bo",
+      "target": "joint_0.57",
+      "seed": 49,
+      "time": 49000.0,
+      "event": false,
+      "n_queries": 40
+    },
+    {
+      "method": "rig",
       "target": "joint_0.70",
       "seed": 0,
       "time": 14000.0,
@@ -2510,9 +2990,9 @@
       "method": "rig",
       "target": "joint_0.70",
       "seed": 29,
-      "time": 14000.0,
+      "time": 24000.0,
       "event": true,
-      "n_queries": 12
+      "n_queries": 20
     },
     {
       "method": "bo",
@@ -2542,9 +3022,9 @@
       "method": "rig",
       "target": "joint_0.70",
       "seed": 31,
-      "time": 19000.0,
+      "time": 14000.0,
       "event": true,
-      "n_queries": 16
+      "n_queries": 12
     },
     {
       "method": "bo",
@@ -2590,9 +3070,9 @@
       "method": "rig",
       "target": "joint_0.70",
       "seed": 34,
-      "time": 24000.0,
+      "time": 29000.0,
       "event": true,
-      "n_queries": 20
+      "n_queries": 24
     },
     {
       "method": "bo",
@@ -2680,6 +3160,166 @@
       "seed": 39,
       "time": 49000.0,
       "event": true,
+      "n_queries": 40
+    },
+    {
+      "method": "rig",
+      "target": "joint_0.70",
+      "seed": 40,
+      "time": 19000.0,
+      "event": true,
+      "n_queries": 16
+    },
+    {
+      "method": "bo",
+      "target": "joint_0.70",
+      "seed": 40,
+      "time": 49000.0,
+      "event": false,
+      "n_queries": 40
+    },
+    {
+      "method": "rig",
+      "target": "joint_0.70",
+      "seed": 41,
+      "time": 19000.0,
+      "event": true,
+      "n_queries": 16
+    },
+    {
+      "method": "bo",
+      "target": "joint_0.70",
+      "seed": 41,
+      "time": 49000.0,
+      "event": false,
+      "n_queries": 40
+    },
+    {
+      "method": "rig",
+      "target": "joint_0.70",
+      "seed": 42,
+      "time": 24000.0,
+      "event": true,
+      "n_queries": 20
+    },
+    {
+      "method": "bo",
+      "target": "joint_0.70",
+      "seed": 42,
+      "time": 49000.0,
+      "event": false,
+      "n_queries": 40
+    },
+    {
+      "method": "rig",
+      "target": "joint_0.70",
+      "seed": 43,
+      "time": 14000.0,
+      "event": true,
+      "n_queries": 12
+    },
+    {
+      "method": "bo",
+      "target": "joint_0.70",
+      "seed": 43,
+      "time": 44000.0,
+      "event": true,
+      "n_queries": 36
+    },
+    {
+      "method": "rig",
+      "target": "joint_0.70",
+      "seed": 44,
+      "time": 19000.0,
+      "event": true,
+      "n_queries": 16
+    },
+    {
+      "method": "bo",
+      "target": "joint_0.70",
+      "seed": 44,
+      "time": 49000.0,
+      "event": false,
+      "n_queries": 40
+    },
+    {
+      "method": "rig",
+      "target": "joint_0.70",
+      "seed": 45,
+      "time": 14000.0,
+      "event": true,
+      "n_queries": 12
+    },
+    {
+      "method": "bo",
+      "target": "joint_0.70",
+      "seed": 45,
+      "time": 49000.0,
+      "event": false,
+      "n_queries": 40
+    },
+    {
+      "method": "rig",
+      "target": "joint_0.70",
+      "seed": 46,
+      "time": 19000.0,
+      "event": true,
+      "n_queries": 16
+    },
+    {
+      "method": "bo",
+      "target": "joint_0.70",
+      "seed": 46,
+      "time": 49000.0,
+      "event": true,
+      "n_queries": 40
+    },
+    {
+      "method": "rig",
+      "target": "joint_0.70",
+      "seed": 47,
+      "time": 19000.0,
+      "event": true,
+      "n_queries": 16
+    },
+    {
+      "method": "bo",
+      "target": "joint_0.70",
+      "seed": 47,
+      "time": 39000.0,
+      "event": true,
+      "n_queries": 32
+    },
+    {
+      "method": "rig",
+      "target": "joint_0.70",
+      "seed": 48,
+      "time": 24000.0,
+      "event": true,
+      "n_queries": 20
+    },
+    {
+      "method": "bo",
+      "target": "joint_0.70",
+      "seed": 48,
+      "time": 49000.0,
+      "event": false,
+      "n_queries": 40
+    },
+    {
+      "method": "rig",
+      "target": "joint_0.70",
+      "seed": 49,
+      "time": 19000.0,
+      "event": true,
+      "n_queries": 16
+    },
+    {
+      "method": "bo",
+      "target": "joint_0.70",
+      "seed": 49,
+      "time": 49000.0,
+      "event": false,
       "n_queries": 40
     }
   ],
@@ -2721,63 +3361,63 @@
     "censor_ranges": null
   },
   "both_hit_delta_rmst": {
-    "n_both_hit": 67,
-    "delta_rmst": -14029.850746268658,
-    "p_value": 5.301613815982071e-26,
+    "n_both_hit": 84,
+    "delta_rmst": -15000.000000000002,
+    "p_value": 4.806436008966099e-35,
     "median_saving": 15000.0
   },
   "tol_sensitivity_curve": [
     {
       "tol_k": 2.0,
-      "delta_rmst": -16667.54166666667,
-      "p_value": 1.706717742770987e-17,
+      "delta_rmst": -18282.1875,
+      "p_value": 7.626138376743614e-34,
       "hit_rate": {
-        "rig": 0.9583333333333334,
-        "bo": 0.08333333333333333
+        "rig": 1.0,
+        "bo": 0.0625
       },
-      "win_rate": 0.875,
-      "tie_rate": 0.125
+      "win_rate": 0.9375,
+      "tie_rate": 0.0625
     },
     {
       "tol_k": 3.0,
-      "delta_rmst": -23542.541666666664,
-      "p_value": 5.753225990747945e-38,
+      "delta_rmst": -23907.125,
+      "p_value": 2.6066395313640013e-53,
       "hit_rate": {
         "rig": 1.0,
         "bo": 0.125
       },
-      "win_rate": 0.9166666666666666,
-      "tie_rate": 0.041666666666666664
+      "win_rate": 0.9375,
+      "tie_rate": 0.0625
     },
     {
       "tol_k": 4.0,
-      "delta_rmst": -23750.791666666668,
-      "p_value": 1.4328960510209198e-29,
+      "delta_rmst": -23750.78125,
+      "p_value": 7.855051048097974e-39,
       "hit_rate": {
         "rig": 1.0,
-        "bo": 0.20833333333333334
+        "bo": 0.21875
       },
-      "win_rate": 0.9166666666666666,
-      "tie_rate": 0.041666666666666664
+      "win_rate": 0.9375,
+      "tie_rate": 0.03125
     },
     {
       "tol_k": 6.0,
-      "delta_rmst": -21250.54166666668,
-      "p_value": 6.095144536419507e-15,
+      "delta_rmst": -21406.78125,
+      "p_value": 6.09677281146138e-19,
       "hit_rate": {
         "rig": 1.0,
-        "bo": 0.4583333333333333
+        "bo": 0.46875
       },
-      "win_rate": 0.9166666666666666,
-      "tie_rate": 0.041666666666666664
+      "win_rate": 0.875,
+      "tie_rate": 0.09375
     },
     {
       "tol_k": 8.0,
-      "delta_rmst": -15000.20833333333,
-      "p_value": 8.7434087234995e-10,
+      "delta_rmst": -16406.5,
+      "p_value": 1.4624498001436691e-13,
       "hit_rate": {
         "rig": 1.0,
-        "bo": 0.7916666666666666
+        "bo": 0.75
       },
       "win_rate": 0.875,
       "tie_rate": 0.125
@@ -2785,12 +3425,15 @@
   ],
   "inverse_readout": {
     "target": "joint_0.30",
+    "verdict": "INFEASIBLE_FALLBACK",
     "rig_candidates": 0,
-    "feasible": false
+    "feasible": false,
+    "distance_to_feasible": 0.6780245854726518,
+    "reason": "pessimistic-infeasible, but the binding term is EPISTEMIC (model uncertainty), not a hard spec conflict: the predicted mean reaches the spec, only the uncertainty is too large \u2014 collect more runs in this region near the reported recipe and re-solve (WP-I handoff); robust-margin deficit 0.678\u03c3. Required per-output relaxation: bow_cooldown_um by 2.71e-07."
   },
-  "scoped_verdict": "IN-SILICO MACHINERY PROOF (not real-tool evidence; headline gated on M0). On the InSilicoMachine (metrology_noise=True) with a coupled T_center\u00d7bow_cooldown_um target and a metrology-anchored spec (tol=6\u03c3): rig is cheaper than bo by dRMST=-2.55e+04 (95% CI [-2.74e+04, -2.36e+04], p=1.17e-156, win-rate 93%); SIGNIFICANT at 0.05.",
+  "scoped_verdict": "IN-SILICO MACHINERY PROOF (not real-tool evidence; headline gated on M0). On the InSilicoMachine (metrology_noise=True) with a coupled T_center\u00d7bow_cooldown_um target and a metrology-anchored spec (tol=6\u03c3): rig is cheaper than bo by dRMST=-2.58e+04 (95% CI [-2.74e+04, -2.41e+04], p=1.33e-202, win-rate 94%); SIGNIFICANT at 0.05.",
   "config": {
-    "seeds": 40,
+    "seeds": 50,
     "targets": 4,
     "budget": 40,
     "q": 4,
@@ -2799,10 +3442,13 @@
     "bootstrap": 5000,
     "tol_k": 6.0,
     "tol_curve": "2,3,4,6,8",
-    "curve_seeds": 12,
+    "curve_seeds": 16,
     "curve_targets": 2,
     "no_curve": false,
+    "policy": "ablation",
     "out": "docs/m2-result.json",
     "force_synthetic": false
-  }
+  },
+  "policy": "ablation",
+  "feasibility_policy": "ablation-1.0/1.0/0.01 (kappa/z_epi/delta_frac) \u2014 the MORE PERMISSIVE ablation, NOT the binding \u00a78 2.0/2.0/0.02 policy; see docs/m2-result-binding.json for the binding-policy re-run"
 }

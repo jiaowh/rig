@@ -2279,3 +2279,610 @@ conflates α-adaptation with score-refresh (a non-default arm would separate the
 cardinal no-tuning rule); §20.2 conformal-PID is the eventual online endpoint, this validates the
 bare-ACI D4 component. `RESULTS.md` updated (static→+ACI table, adversarial-checks paragraph,
 revised verdict). Nothing committed.
+
+---
+
+## 2026-07-21 — inverse-capability audit
+
+Created root `audit.md` at the user's request; no product code was changed. Read the required
+BUILD_STATE/BUILD_LOG and relevant plan sections, then inspected core inverse/forward/active/
+qualification code, the real Empa runner and recorded results.
+
+Verdict: RIG can fit forward models and propose constrained inverse candidates, but is not
+deployment-ready for predicting inputs from desired outputs. Release blockers documented: solver
+feasibility uses raw sigmas rather than mandatory `conformal_set`, and `ConfirmationBatchGate` is
+not wired into inverse, active-loop or Empa execution. Also documented: 1.0/1.0 active-loop/M2
+settings versus binding 2.0/2.0; incomplete robust-objective features; limited real-data evidence;
+stale revalidation docs; and local ruff failures (14 diagnostics; four files need formatting).
+The focused pytest-plus-quality bundle exceeded the 60-second command limit before a completed
+fresh test result, so no current suite pass is claimed. BUILD_STATE updated. Nothing committed.
+
+---
+
+## 2026-07-22 — Audit remediation + the two remaining M1 items (orchestrated, 4 parallel subagents)
+
+Orchestrator (Fable-5) validated every audit.md finding FIRST-HAND against source before
+delegating (F1/F2/F3/F5/F6/F7 all CONFIRMED; F3 sharpened: the SOLVER already defaults to the
+binding 2.0/2.0 — only the loop/M2 sat at 1.0/1.0; F7 sharpened: loop.py DOES auto-revalidate
+on the ensemble fast/full split, but no default path conformal-wraps, so the conformal component
+was inert everywhere). Four subagents ran in parallel with disjoint file ownership (opus x3 +
+sonnet x1); orchestrator did unowned-file ruff cleanup, the full 6-campaign Empa run, promotion,
+and these docs. Individual entries follow.
+
+## 2026-07-22 — F1/F3/F5/F7 audit fixes (inverse feasibility calibration) [subagent A, opus]
+
+Made the §13.2 `C(x)⊆Z*` conformal containment part of the DEFAULT `solve()` path
+(`_conformal_screen`/`_conformal_infeasible` in `pessimistic.py`) whenever `self.model` is
+conformal-wrapped, with the reval path's anti-false-abstention pool sweep and an
+aleatoric/coverage-worded Infeasible; unwrapped models are byte-identical (F1). Added
+`RecipeCandidate.calibration_status ∈ {model-feasible, conformal-checked, revalidated}`,
+default `model-feasible` = raw-σ only, explicitly NOT a calibrated guarantee (F1/F5).
+Aligned `ActiveLearningLoop` defaults to the binding §8 2.0/2.0/0.02 (were 1.0/1.0/0.01);
+solver already correct; added a defaults-match pin test; `run_m2_sweep.py` keeps 1.0/1.0/0.01
+but now labels it `FEASIBILITY_POLICY` (ablation) in JSON/stdout — binding-policy re-run owed
+(F3). Added the §8 fidelity ledger to `pessimistic.py` docstrings: joint→per-output product,
+worst-member→z_epi·σ_epi, PGD→first-order δ, flow-typicality→Mahalanobis, conformal→default-on
+when wrapped (F5). Annotated the stale "active/loop.py never sets revalidation_model" claim in
+`docs/dimensionality-2026-07-17.md` in place (F7). New `tests/test_conformal_feasibility.py` —
+mechanism twin of the d=20 false success (overconfident raw σ + honest conformal band →
+wrapped default path REJECTS what raw pessimism certifies); red-proof: disabling the gate
+turned 2 tests red, restored green. `_conformal_in_box`/`_conformal_set`/`_conformal_spill`
+generalized with `model` arg defaulting to `revalidation_model` (preserves test_ensemble's
+3-arg calls). `tests/test_interfaces.py` canonical-fields test updated for the new field
+(ownership extended mid-task after another agent's suite run caught it). Files: interfaces.py,
+inverse/pessimistic.py, active/loop.py, examples/run_m2_sweep.py, docs/dimensionality doc,
+tests/{test_active_loop,test_interfaces,test_conformal_feasibility}.py. Bar: 85+32+9+51 tests
+green across inverse/loop/d2/interfaces/ensemble+distill; ruff clean on touched files. Empa
+inverse demo confirmed UNAFFECTED (runs the raw GP → gate inert → FEASIBLE×3 stands, now
+labeled model-feasible).
+
+## 2026-07-22 — F2: confirmation-campaign orchestrator wired to the gate [subagent B, sonnet]
+
+Built `src/rig/active/campaign.py` (`ConfirmationCampaign`, `CampaignResult`,
+`CandidateCertification`, `NothingToQualify`) — audit F2: `ConfirmationBatchGate` existed but
+no production path called it. `Infeasible` input → ZERO machine calls + typed
+`NothingToQualify`; otherwise each `RecipeCandidate` goes through one shared gate
+(`gate.certify` per candidate), every confirmation measurement reconstructed as a logged
+`RunRecord` from the gate's own `evidence["observed_values"]` (no duplicated statistics),
+certified/rejected partitioned solely by `qualification.passed`. Multiplicity surfaced:
+`n_candidates` + `confidence_per_candidate` always reported; opt-in `bonferroni=True` applies
+alpha/q (incompatible with a pre-built static gate — raises). Serial-correlation/Cpk/staged-
+ladder caveats referenced by number from qualification.py's honest-limits docs via
+`CampaignResult.caveats`; provenance caveat auto-added when source != real_tool (in-silico
+rehearsal, not tool qualification). Deterministic: uuid5 run ids, synthetic clock, no own RNG
+— two fresh campaigns byte-identical. 19 new tests incl. one sim-gated InSilicoMachine
+integration test; red-proof: inverting the certified/rejected partition turned 5 tests red
+(incl. the sim-gated one), restored. Bar: test_campaign+test_qualification 63 passed; ruff
+clean; import-linter 1 kept / 0 broken. NOT yet auto-invoked from ActiveLearningLoop or the
+Empa runner — the orchestration path now exists; the hookup into a real campaign remains a
+deployment step (M4/M5 territory).
+
+## 2026-07-22 — Conformal-PID (§20.2 online ENDPOINT) BUILT + wired + tested [subagent C, opus]
+
+New `src/rig/calibration/pid.py::ConformalPIDController` — the §20.2 endpoint that supersedes
+bare ACI (Angelopoulos–Candès–Tibshirani 2023 P+I; decaying-step variant Angelopoulos–Barber–
+Bates 2024, `step="fixed"|"decaying"` default fixed; scorecaster hook OFF by default). Forms
+verified against the paper's released `core/methods.py` (P = quantile tracker
+q_{t+1}=q_t+η(err_t−α); I = saturation_fn_log = KI·tan(S·ln(t+1)/(Csat·(t+1))); combo
+q = qts + integrator). Tracks the threshold q_t on the STANDARDIZED-residual scale, bands
+`mean ± q_t·σ_total(x)` (reuses `SplitConformalCalibrator` UNCHANGED — conformal.py untouched).
+FINITE BY CONSTRUCTION — the paper's mytan→±∞ replaced by a clamped-argument tan; q_0
+warm-start has a finite fallback at tiny n; observe() appends NO scores (pure threshold
+dynamics — no ACI update_scores conflation, no stale-buffer infinite quantile). Library
+defaults η=0.1 / KI=2.0 / Csat=7.0 / window=50, justified from the paper rescaled to the
+standardized score — NOT tuned on Empa; recorded as hyperparameters.provenance in the JSON.
+`tests/test_pid.py` 10 tests (exchangeable coverage; static-undercovers-vs-PID-recovers REPAIR;
+pre-update-scoring guard; all-miss finiteness with n_infinite_width==0; KI=0 integrator
+mutation-proof; decaying-volatility; determinism; per-output independence; warm-start-finite;
+scorecaster hook) — red-proof: flipping the P-update sign turned 7/10 red, restored. Wired as
+the THIRD runner path in run_m1_empa.py (`splits.*.pid` + `meta.pid` + GATE SUMMARY +PID rows)
+mirroring the ACI protocol exactly; runner made ruff-clean (E402 restructure + noqa, F541;
+prepare_empa.py reformatted, AST-identical). Smoke: static+ACI blocks byte-identical to
+pre-edit baseline; deterministic.
+
+## 2026-07-22 — FULL 6-campaign run + verification + promotion [orchestrator]
+
+Ran the PID-extended runner across all 6 campaigns twice (full restarts, 220.9 s each,
+scratchpad first — results/ never written by an unverified run). Verification script
+(scratchpad m1_full/verify_full.py): (A) DETERMINISM v1==v2 modulo wall_seconds — PASS;
+(B) BASELINE the static+ACI+OOD+inverse content byte-identical to the recorded
+results/m1_empa.json (the only inverse-demo delta being the new additive calibration_status
+labels) — PASS; (C) PID: **all 12 campaign/split gates PASS with n_infinite_width = 0 on
+every campaign/split/output** (ti_200w_high_pw temporal 0.875 [0.826,0.914], random 0.929
+[0.889,0.958]; static FAILs unchanged; §5.6 rolling detector still fires on the temporal
+drift episode, window-min 0.820/0.840); (D) demo-verdict spot-check was vacuous (schema
+mismatch) — superseded by (B), which covers the full demo block; noted rather than counted.
+Promoted v1→results/m1_empa.json, v2→results/m1_empa.rerun.json (superset discipline, same
+as the ACI session). RESULTS.md: +§20.2 PID section (static→ACI→PID table, finiteness
+argument, threshold traces), header/status/verdict updated, caveat 2 updated for the
+default-on conformal gate. NET: of the two remaining M1 items, **conformal-PID is DONE**;
+material-conditioned pooling is the subagent-D entry below. Also this session (orchestrator):
+ruff cleanup of unowned files (mfl bakeoff I001+format, test_mfl_baseline E402-noqa+F841,
+test_empa_ingest format; 15 tests green) and import-linter re-verified with the corrected
+exit-code form (1 kept / 0 broken, exit 0) — the audit's "lint-imports unavailable" was the
+Windows Store Python PATH quirk, not a broken contract.
+
+## 2026-07-22 — Material-conditioned pooling BUILT + full run (M1 remainder; audit F4 control) [subagent D, opus]
+
+Built `examples/real_data/empa_hipims/run_m1_empa_pooled.py` + `tests/test_empa_pooled.py`
+(7 tests) reusing `MultiToolGPForwardModel` (ICM §10.4) with **material as the task**; pooling
+within each parameterization subspace (PRR 4 campaigns / DUTY 2 — knob names differ; never
+across). **No src edits needed.** Recorded `--full` (n_restarts=2, seed 0, ~9 min) →
+`results/m1_empa_pooled.json`; deterministic by construction (seeded; verified zero wall-clock
+keys in the payload) + determinism unit tests. Baseline comparisons read `results/m1_empa.json`
+(valid — its static/ACI/OOD/inverse blocks stayed byte-identical through the PID promotion).
+Split reconstruction asserted equal to the baseline's split_sizes for all 6 campaigns.
+
+- **Block A (awareness — the F4 control):** fitted al↔ti task corr 0.9985. Directional pass
+  6/12 (the 4 previously-blind pairs: 3/4; all cross-material: 6/8); unknown-material fallback
+  epistemic dominates both materials 12/12 (§5.8); predicted MEAN shifts 0.78–1.67 Å/s on all 4
+  blind pairs (tens of σ_epi — structurally impossible for a per-campaign model; baseline
+  flagged 0/4). Honest catches: the epistemic flag is ASYMMETRIC (Al-conditioning carries
+  intrinsically higher epistemic than Ti after pooled standardization — fires cleanly only when
+  the cross material is Al); support stays ~flat (±0.06) — input-space screening remains blind
+  to a same-box material shift. Campaign-as-task corroborates (1/4). Awareness = material as an
+  explicit axis (mean + unknown-fallback), NOT auto-detection of a wrong-material query.
+- **Block B (LOMO honest transfer):** zero-shot §5.8 domination holds both directions but the
+  fallback mean is the trained material's surface (dep-RMSE 9–24× the full-data ceiling — no
+  zero-shot mean transfer). Few-shot K=10/20: dep-RMSE 2–14× ceiling, raw predictive PICP
+  0.79–0.94 (3/4 arms mis-calibrated), conformal coverage held only via near-vacuous MPIW
+  0.8–1.8 Å/s. `transfer_claimable=False` → **cross-material transfer FORBIDDEN (F4)**.
+- **Block C (pooling cost):** 0 PASS→FAIL flips across all 12 cells; pooling FIXES
+  ti_200w_high_pw/random (0.950 FAIL over-cover → 0.896 PASS), nudges its temporal 0.817→0.833
+  (still FAIL — the drift case belongs to ACI/PID); others within ±0.04, all PASS.
+- Gotchas recorded: (1) pool per parameterization subspace (PRR/DUTY knob names differ);
+  (2) don't over-read the 3/4 epistemic flag — the robust awareness is mean-shift +
+  unknown-fallback (support and same-tier epistemic are confounded by the shared knob box);
+  (3) the LOMO few-shot cal/test split MUST be exchangeable (random) — a first draft's
+  front-to-back temporal split put ti_120w (120 W) in cal and ti_200w (200 W) in test and faked
+  a 0.55 conformal PICP (tier shift masquerading as transfer failure); fixed before recording;
+  (4) smoke (max_iter=60) vs full (max_iter=100) differ at float precision — determinism claims
+  are same-config only.
+
+Tests: 7 new + 9 empa-ingest = 16 green; ruff check + format clean on both files. RESULTS.md
+pooling section + verdict update integrated by the orchestrator. NET: **both remaining M1 items
+(conformal-PID §20.2; material-conditioned pooling) are now DONE** — awareness gained, transfer
+honestly measured and NOT claimed, pooling coverage-safe.
+
+## 2026-07-22 — F2 remainder: opt-in qualification hook wired into ActiveLearningLoop [subagent I, sonnet]
+
+`src/rig/active/loop.py`: added an OPT-IN `qualification: ConfirmationCampaign | None = None`
+constructor argument. Default `None` is byte-identical to every prior release (proven by
+`test_loop_qualification_none_is_byte_identical_to_no_param`: two seeded Trajectories — param
+omitted vs explicit None — compared via dataclass ==; structurally guaranteed besides, all ctor
+params keyword-only). When set, BOTH stop points (seed-DoE early return, in-loop per-batch hit)
+first wrap every in-spec recipe as a RecipeCandidate (`_hitting_candidates`; only `.recipe` read
+downstream, D7-safe) and run them through `qualification.run(...)` (`_qualify_hit`) before the
+hit stands: certified → hit stands, `Trajectory.qualification_outcome` (new additive field)
+carries the CampaignResult, stop_reason gains a "(qualified)" suffix; rejected → hit NOT
+declared, loop does not stop, CampaignResult appended to `Trajectory.qualification_rejections`
+(new additive field), falls through to the ordinary non-hit path (the data still counts, only
+the STOP is gated); budget-would-overspend → nothing fires, distinct stop_reason "unqualified
+hit, budget exhausted". Confirmation runs are budget-honest: charged against the same
+`n_queries`/`budget`, computed exactly via `_expected_qualification_calls` (n_hitting × n_runs,
+reading the campaign's private gate config since no public cost accessor exists — documented
+coupling). Caveat surfaced NOT fixed (outside ownership): repeated `.run()` calls on one
+ConfirmationCampaign instance can produce colliding RunRecord ids across CampaignResults
+(candidate/run indices restart at 0 per call) — noted in the class docstring; small follow-up
+owed in campaign.py (e.g. a per-call salt).
+
+Tests (tests/test_active_loop.py, 11→17): defaults-to-None; byte-identity; pass-path with exact
+n_queries arithmetic (8 seed + 8×5 confirmation = 48); pass determinism; rejection
+does-not-stop (RED-PROOFED: hand-inverted `n_certified > 0` to `>= 0`, exactly that test went
+red, restored green); budget-exhaustion refuses to fire. Bar: test_active_loop + test_campaign
+36 passed; extra diligence test_active_mbe + test_ensemble 23 passed (other loop consumers,
+neither passes qualification=). ruff check + format clean. Nothing committed.
+
+## 2026-07-22 — D7 different-physics ROM verifier BUILT (Phase-0 owed item closed for MBE) [subagent F, opus]
+
+New `src/rig_adapters/mbe/verifier.py::GeometricDepositionVerifier` — purely-geometric Knudsen
+line-of-sight deposition ROM (cosine emission (cos_e)^m·cos_i/D², m=1 Lambertian, rotation-
+averaged ring flux → area-weighted wafer mean; ZERO Arrhenius/thermal/regime/kMC content;
+imports only numpy+stdlib; shares no code or constants with the fast path — enforced by an AST
+import/code-name-scan test and a predicts-with-sim-monkeypatched-to-raise test). Bounds the
+flux-scale channel `thickness_grown` via `thickness = film_thickness × g`,
+`g = Φ̄(config)/Φ̄(nominal)` (=1 at the nominal build; obeys ~1/H²; independently reproduces the
+sim's internal flux_nonuniformity_pct=1.558 exactly without touching its code). Wired into
+`MBEAdapter.independent_verifier` as a distinct object → `validate_adapter`'s D7 identity check
+passes with a REAL verifier for the first time; NO core (`src/rig/`) edits needed — the
+existing Callable slot sufficed.
+
+Scope established EMPIRICALLY and stated honestly: the machine's combined nonuniformity is
+~98% Arrhenius-thermal (thermal_nu≈78 vs geometric flux_nu≈1.56) → out of scope, exposed as a
+diagnostic only; slip/T_center/bow are thermal/thermo-mechanical → cannot verify; scoped to
+the nominal chamber build (this in-silico machine models thickness as geometry-independent, so
+the catchable corruption is a hidden FLUX-SCALE pathology — seasoning/depletion/drift — not a
+geometry rebuild). Agreement band 5%, derived from noise-vs-pathology separation (metrology
+≤~0.7% rel; meaningful pathology ≥10%), NOT tuned to an observed gap (nominal gap is 0).
+Detects flux_eff 0.85/0.7/0.5 (rel_error −0.15/−0.30/−0.50) and accumulated seasoning loss;
+within-band 2% correctly not flagged.
+
+Tests: new `tests/test_mbe_verifier.py`, 5 groups — (a) D7 identity (red-proofed: wiring the
+physics_plugin as verifier makes validate_adapter raise), (b) nominal agreement, (c)
+independent disagreement (red-proofed: band 0.05→0.9 turns all 5 red), (d) determinism,
+(e) mechanical different-physics; a/d/e run un-gated in CI. One unavoidable single-assertion
+update in `tests/test_mbe_adapter.py` (`independent_verifier` no longer None — now asserts
+present + distinct from physics_plugin). Bar: 45 passed (verifier+registry+adapter), 162
+broader sweep; ruff clean; import-linter 1 kept / 0 broken. Nothing committed.
+
+## 2026-07-22 — WP-E §8 hardening: PGD δ-box + flow typicality [subagent G, opus]
+
+Built the two owed §8 robust-objective features (WP-E remainder item 2 / audit F5's "implement
+and benchmark"), both OPT-IN and default-off byte-identical. Files: src/rig/inverse/
+pessimistic.py, NEW src/rig/inverse/typicality.py, inverse/__init__.py (lazy export), NEW
+tests/test_inverse_hardening.py. Nothing committed.
+
+- **PGD δ-box** (`delta_mode="pgd"`, default "taylor"; pgd_steps=10): `_pgd_delta` replaces the
+  first-order Σ|J|·Δ term with the §8.5 max_{δ∈Δ} inner problem via projected ℓ∞ sign-gradient
+  ascent (δ=0 start, step Δ/4, both directions, deterministic), driven by the model's own
+  `jacobian` — GP tier, no torch. Reproduces Taylor exactly on a linear μ (pinned); catches the
+  curvature Taylor misses: convex μ=1.5x² → Taylor 2.100 vs brute-force box max 2.284 = PGD
+  2.284 (<1e-6); end-to-end, a spec that is +5σ FEASIBLE under Taylor is −3.1σ INFEASIBLE under
+  PGD. Honest limits: a LOWER bound (few box corners, interior extrema/J=0 stalls missed), not
+  a certificate; ≈2·pgd_steps·m extra jacobian calls; RAISES with analytic_grad=True (mixing
+  objectives forbidden). Red-proofed: stubbing _pgd_delta to Taylor turns the benchmark red.
+- **Flow typicality** (`typicality=`, default None): NEW `FlowTypicalityScore` — small
+  unconditional zuko NSF over the standardized input marginal (~7 s CPU, seeded), score =
+  −|log p − E_train[log p]| (the TYPICALITY-SET statistic, NOT raw log-likelihood — Nalisnick
+  2019), floor = 5th pct of train scores. Wired as an ADDITIONAL hard §8.2 screen alongside the
+  Mahalanobis floor (both must pass; the fail-closed cheap fallback is never replaced);
+  screen-only, deliberately NOT in the soft λ_m reward (not autograd-composable; too costly in
+  the hot loop). Closes the multimodal hole: bimodal 2-D gap point (nn-dist 2.06) — Mahalanobis
+  wrongly ACCEPTS (−0.01 ≥ floor −2.14), typicality REJECTS (−3.80 < −2.23); solver end-to-end
+  certifies the gap recipe FEASIBLE without the screen, INFEASIBLE with it (that flip is the
+  red-proof). Nalisnick property shown via a sharp-spike case (raw log-lik would ADMIT +1.97;
+  typicality rejects −4.23 < −3.36). Honest limit: the high-d Gaussian SHELL case is NOT
+  robustly demonstrable with a small CPU flow (it under-fits the peak; measured at d=12–24) —
+  documented rather than faked; the screen must be fitted on the same X_train as the floor.
+- Torch-free `import rig` preserved (TYPE_CHECKING + duck-typing + lazy export;
+  subprocess-verified). Ledger docstrings updated — PGD + flow typicality now
+  "IMPLEMENTED, opt-in"; remaining GP-tier approximations: joint-MC spec-hit, worst-of-K
+  epistemic. Bar: 89 passed (test_inverse 72 unchanged + hardening 15 + conformal_feasibility
+  2); ruff check+format clean.
+
+## 2026-07-22 — M3 acceptance v2: honest re-run DONE [subagent H, opus]
+
+New: `examples/run_m3_acceptance_v2.py`, `docs/m3-acceptance-v2.json`,
+`docs/M3-acceptance-v2-2026-07-22.md`, `tests/test_m3_acceptance_v2.py` (v1 left byte-for-byte
+intact). Fixes all four v1 audit critiques: InSilicoMachine (not toy tanh; metrology noise ON;
+outputs = the coupled T_center + bow_cooldown_um pair), NON-SATURATING ground-truth pass rule
+(top-1 hit COUNTS on the noise-free physics; confidences are not even arguments — unit-tested
+that a saturated-confidence flip changes nothing and a ground-truth flip changes the verdict),
+PRE-REGISTERED targets via a cold_light-only pre-probe (3 genuinely cold_light-INFEASIBLE + 3
+HIT controls; selection cannot manufacture a d2 win), scoring never touches the surrogate. §8
+arms run the BINDING policy (κ=z_epi=2.0, δ=0.02). §14.6 SBC/TARP gate is BLOCKING and PASSED
+before any arm ran (sbc_p=[0.90,0.39], tarp_err=0.025, N=1024 training runs).
+
+VERDICT PASS, non-tautologically: ground-truth hits cold_heavy 6/6, cold_light 3/6 (honest
+INFEASIBLEs at −225σ/−120σ/support-floor), d2_light 6/6 — at 0.1875× starts (9/48) and 0.229×
+wall-time. **Load-bearing caveat from the agent's own adversarial control: 9 RANDOM restarts
+also rescue 3/3** (cold restarts 1/2/3→0, 5→1, 9→3, 48→3) — so d2's edge over cold_light is
+the restart BUDGET, not amortized-vs-random starts; the stronger claim "amortization beats
+equal-budget random search" is NOT demonstrated on this smooth, low-dim, near-invertible map
+and is not claimed. Scope narrowed to 2→2: `thickness_grown` excluded because a
+near-deterministic identity output breaks SBC calibration (overconfident posterior) — a real
+gotcha recorded for future gate configs. Determinism: smoke double-run byte-identical
+(timing-stripped digest 6f75c98f…). Tests: 5 passed; ruff check+format clean. v1's PASS stays
+recorded as the toy-tanh result it was. Nothing committed.
+
+## 2026-07-22 — M2 binding-policy re-run (audit F3 owed item CLOSED) [subagent E, opus]
+
+Added `--policy {ablation,binding}` to `examples/run_m2_sweep.py` (default ablation =
+1.0/1.0/0.01, behaviorally identical to the published run, still writes docs/m2-result.json;
+binding = 2.0/2.0/0.02 → docs/m2-result-binding.json). Threaded through BOTH RIG pin sites
+(`_make_factories`→ActiveLearningLoop and `_inverse_readout`→PessimisticInverseSolver) + the
+tol-curve; policy label written into JSON meta and printed at start. The BO comparator is
+PROVABLY untouched: WarmStartedBO takes no such knobs and the bo factory closure does not even
+capture policy_knobs (checked via co_freevars). ruff clean.
+
+Ran `--policy binding` (50 seeds × 4 targets + tol-curve, InSilicoMachine + metrology noise,
+~138 min): **the M2 cost-to-target win SURVIVES the binding §8 policy, attenuated ~35%.**
+Pooled ΔRMST −25,530 (ablation@40, published) → **−16,480** (binding@50), CI [−18.2k, −14.7k],
+p = 8.7e-70, P(rig better) = 1.00; win-rate 93%→82%; rig hit-rate 1.00→0.99; rig RMST
+15.25k→24.58k (+61% — conservatism priced as cost, not reliability collapse); both-hit median
+saving 15k→5k; the win holds at every tol_k ∈ {2,3,4,6,8}. Control: BO RMST 40.78k→41.05k and
+hit 0.42 flat across runs despite 40→50 seeds → the RIG-side movement is the POLICY, not the
+seed count. Feasibility: both policies abstain 100% at 6σ (§8 never binds there, per IF-1);
+binding abstains ~9× harder (mean distance_to_feasible 1.60σ→14.84σ). Determinism: a
+3-seed×4-target binding subset reproduces the full run's seeds 0–2 byte-identically (24/24).
+
+Files: examples/run_m2_sweep.py (flag), docs/M2-result-2026-07-16.md (dated binding section
+APPENDED; historical numbers labeled ablation-policy), docs/m2-result-binding.json (new).
+docs/m2-result.json deliberately NOT refreshed (optional ablation@50 refresh remains an
+optional owed item; BO-invariance already isolates the policy effect). The audit's question is
+answered: **the M2 cost win is not an artifact of the permissive ablation policy.** Nothing
+committed.
+
+## 2026-07-22 — campaign.py multi-fire run_id collision FIXED [orchestrator]
+
+The caveat agent I surfaced (repeated `.run()` on one `ConfirmationCampaign` restarts
+candidate/run indices at 0 → colliding RunRecord ids across CampaignResults) is fixed: a
+per-instance `_invocation` counter now salts `_deterministic_run_id` (uuid5 over
+`seed:invocation:candidate_index:run_index`) and strides the synthetic clock index
+(invocation×1e6 + run_index); every `run()` call — including Infeasible/empty early returns —
+consumes the next slot, so call N's ids depend only on call COUNT, never earlier calls'
+content. Invocation 0 is byte-identical to the old derivation (existing determinism tests
+pass unchanged); a replayed instance reproduces the same sequence call-for-call. New
+regression test `test_repeated_run_on_one_instance_never_collides_but_replays_exactly`
+(disjoint ids+timestamps across calls, exact two-call replay, Infeasible-consumes-a-slot);
+RED-PROOFED by hard-pinning invocation to 0 in the hash (test fails), restored. loop.py's
+documented caveat replaced with the multi-fire-safety note. Bar: test_campaign +
+test_active_loop + test_qualification 81 passed; ruff clean. Nothing committed.
+
+## 2026-07-23 — E1 frame validation built against the real Empa contract [subagent J, sonnet]
+
+Built the E1 DataFrame-validation item deferred 2026-07-17 (pandera dropped), now against the
+ACTUAL M0/Empa ingest contract. New `src/rig_adapters/tabular/validation.py` — `Frame`/
+`frame_from_csv`, typed `Violation`/`ValidationReport` (machine-readable), `validate_frame(
+frame, spec, *, order_key=, strict=)`. Six checks: `missing_columns`/`dtype`/`nan_inf`
+BLOCKING (frame-wide versions of what ingest already enforces per-row), `bounds`/`order_key`/
+`duplicate_rows` ADVISORY (reports what skip-mode already tolerates or was never checked). NO
+pandas/pandera dependency added — "frame" = header + row dicts from csv.DictReader; a
+heavyweight dataframe lib would repeat the exact mistake pandera was dropped for.
+
+SI trap respected: the bounds check reads the RAW un-ingested cell (declared unit) against
+`spec.continuous`/`.categorical`/`.compositional` — `continuous_si` never referenced —
+reproducing ingest's SI-round-trip comparison bit-for-bit on the real Ti-120W 3e-11 rounding
+edge. Empa agreement PINNED row-for-row (not count-for-count): the report's flagged ti_120w
+rows (441/225/260/215/357 across 4 columns) == `ingest_csv(on_error="skip")`'s actual 5
+rejects; degenerate `BatchNr` flagged `UNVERIFIED-ORDER` (all 495 rows), with a non-degenerate
+al_120w control proving the check doesn't fire unconditionally.
+
+Wiring, non-breaking: `ingest_csv` runs validation as a pre-pass and attaches
+`IngestResult.frame_report` (additive field; opt-in `order_key`/`strict` kwargs; strict raises
+ONLY on blocking violations — a bounds-only real-data quirk does not trip it, proven by test).
+`prepare_empa.py` prints the per-campaign report summary; all 6 output CSVs verified
+byte-identical before/after. Tests: 34 new (`tests/test_frame_validation.py`) + 9 empa-ingest
+green; 72 pre-existing tabular tests green (refactor changed nothing observable). RED-PROOFED
+twice (bounds block and dtype block disabled in turn — dependent tests incl. the real-data
+agreement test went red; restored, 43/43 green). ruff clean. Nothing committed.
+
+## 2026-07-23 — Conditional / per-region conformal coverage on the recorded Empa M1 results [subagent M, opus]
+
+The owed §20 group-conditional study, disjoint ownership: NEW run_conditional_coverage.py +
+results/m1_empa_conditional.json + tests/test_conditional_coverage.py; recorded
+results/m1_empa.json NOT touched (read-only re-analysis). Four PRE-STATED groups fixed in the
+docstring before computing any coverage (anti-p-hacking): density near/mid/far (k=5-NN
+distance to TRAINING recipes, train-standardized, no test-point leakage), outcome-magnitude
+low/mid/high per output, temporal stream early/mid/late, Mondrian per-output. Indicators
+reproduced by IMPORTING the runner's own ingest/split/fit_and_eval + the calibration
+controllers (no forked logic; online indicator = controller.observe() return). FIDELITY GATE:
+reproduced pooled AND per-output k_covered byte-equal to m1_empa.json on ALL 12 campaign/split
+cells (ACI n_infinite_width verified); double-run byte-identical.
+
+FINDING: **pooled PASS hides regional under-coverage at the HIGH-outcome tail** — the
+high-magnitude tertile under-covers 8/24 campaign/split/output cells (5 of 6 campaigns, both
+outputs, both splits; 6 of the 8 hidden behind a PASSING marginal), the low tertile
+over-covers (1.000) in 3 — the marginal 0.90 is bought by over-covering the low end and
+under-covering the high tail. Aggregate under-covering tertile-cells of 180: static 14 →
+ACI 9 / PID 9. The online endpoints repair ti_200w's DRIFT-conditional regional failures
+(far-density, mid-stream, magnitude tails all back to nominal) but 7 of 8 high-tail failures
+are NOT repaired — ACI/PID adapt over stream/time and do not condition on magnitude. Named
+owed remedy: a group-conditional (Mondrian-by-magnitude) calibrator. Honest negatives
+recorded: far-from-data (1 cell) and late-drift-phase (0 cells) are NOT the dominant hidden
+modes; ti_200w's temporal under-coverage concentrates mid/early stream, not late; per-tertile
+CIs are wide (n≈27-43) — the finding is the repeated direction, not one cell. Tests: 13 pass
+(determinism, no-leakage density reference, binom_ci reuse `is` runner's, underpowered
+flagging, one-campaign fidelity pin, red-proofed fidelity gate across all three paths). ruff
+clean. RESULTS.md section added by the orchestrator. Nothing committed.
+
+## 2026-07-23 — In-silico multi-tool M4 DRESS REHEARSAL built + full run [subagent K, opus]
+
+New examples/run_multitool_rehearsal.py + tests/test_multitool_rehearsal.py +
+docs/multitool-rehearsal-2026-07-23.md + docs/multitool-rehearsal.json (provenance=physics_sim,
+labeled REHEARSAL throughout — machinery proof, never headline evidence). 3-tool fleet on
+InSilicoMachine: ±3% hidden emissivity/cosine/flux via the sim's tool_perturbation (standing
+for §10.2 run-invisible chamber differences) + ±5-8% build geometry via machine_config, offsets
+fixed before outcomes were measured; outputs {thickness_grown, T_center}, tool signal
+19.5×/6.3× noise. Four phases, all green, full run 14.7 s:
+- (P2) pooled ICM + §5.8 LOTO zero-shot epistemic domination 3/3 folds; few-shot pooled vs
+  from-scratch at equal n → **pooling HELPS on this fleet** (K=10: 3.78e-9 vs 4.55e-9; K=20:
+  2.39e-9 vs 3.28e-9 thickness-RMSE; smoke config agrees, not a config artifact).
+- (P3) EPIG-driven new-chamber onboarding: **EPIG = 2.97 nats > 0 on the unknown-tool path** —
+  the 2026-07-17 EPIG-collapse fix holds live on its historically fragile seam
+  (posterior_cov unknown-tool branch feeding epig()). Runs-to-loose-threshold TIE at 8 (honest:
+  an easy smooth 2-D problem — a good Sobol seed clears it), but the warm start converges ~4.5×
+  sharper (7.7e-10 vs 3.5e-9 m, below the single-tool ceiling) by borrowing fleet data.
+- (P4) **runner-level qualification auto-invocation crumb CLOSED (in-silico form)**: direct
+  `ConfirmationCampaign.run(solver.solve(spec))` — reachable spec → 2/2 certified (58 runs,
+  CP bound 0.9019 ≥ 0.90, headline_eligible=False); unreachable spec → Infeasible →
+  NothingToQualify with 0 machine calls (asserted); AND the ActiveLearningLoop
+  `qualification=` hook fires on a solve-driven in-loop hit charging 10 confirmation runs to
+  budget (n_queries=22).
+No src bug found. Honest observation recorded: onboarded-tool candidates carry
+calibration_status="model-feasible" — the multi-tool view is not conformal-wrapped, so the
+§13.2 default gate is correctly inert there; natural M4 enhancement (owed, optional): wrap the
+onboarded tool view in ConformalForwardModel (per-tool calibration split) to upgrade to
+"conformal-checked". Tests: 6 (4 sim-gated end-to-end/determinism/CLI/budget-charge + 2
+ungated numpy guards: EPIG>0 unknown-tool, EPIG(x;{x})==BALD(x)). Smoke AND full double-run
+byte-identical minus timings; ruff clean; full-suite collection 702 tests, no errors. Nothing
+committed.
+
+## 2026-07-23 — PID decaying-step side study (labeled; NOT the path of record) [subagent N, sonnet]
+
+New examples/real_data/empa_hipims/run_pid_step_study.py + results/m1_empa_pid_step.json +
+tests/test_pid_step_study.py. Reuses run_m1_empa.py's ingest/split/fit/pid_eval BY IMPORT
+(never edited); fixed-step reproduction verified against results/m1_empa.json EXACTLY on all
+12 campaign/split cells (two independent cross-checks), n_infinite_width=0 on all 24
+output-rows × 2 modes, double full-run byte-identical. Hypotheses PRE-REGISTERED in the
+docstring before any run.
+
+Finding: decaying-step (eta_t = eta·t^-0.6, Angelopoulos-Barber-Bates 2024) cuts late-stream
+threshold volatility to 12-36% (median ~22%) of fixed-step's on all 24 output-rows, uniformly
+— the predicted win, confirmed. BUT ti_200w_high_pw flips PASS→FAIL on BOTH splits: temporal
+0.875→0.842 (drift UNDER-correction, exactly as pre-registered) and, unexpectedly, random
+0.929→0.942 (over-coverage — the CI shifts entirely above 0.90). Both flips are one mechanism:
+at these ~100-row Empa streams eta_t has already decayed to ~17% (t=20) / ~6% (t=120) of the
+fixed rate, so the controller spends its whole budget early and freezes with too little runway
+to converge in EITHER direction. Rolling-detector fire status unchanged everywhere (0/24
+flips; it already fires under the recorded fixed path on 21/24 output-rows — a pre-existing
+window-statistic sensitivity, not a decaying effect).
+
+RECOMMENDATION: step="decaying" stays OPT-IN, not default; actively discouraged on drifting
+tools / short online streams (n≈100) where the asymptotic Robbins-Monro guarantee has no room
+to bite. Fixed-step remains the path of record (recorded artifacts untouched). Tests: 8 new —
+real-data fidelity gate, volatility-metric unit tests incl. edge cases, synthetic
+decaying-vs-fixed direction, determinism, red-proofed fidelity gate (single k_covered
+perturbation flagged, restored). ruff clean. Nothing committed.
+
+## 2026-07-23 — Optional ablation@50 M2 refresh DONE (stale pre-IF-1 JSON replaced) [orchestrator]
+
+Ran the default-policy sweep (`python examples/run_m2_sweep.py`, 50 seeds, detached, ~78 min
+main block + curve) → docs/m2-result.json REFRESHED with the post-IF-1 schema (verdict keys
+present; policy="ablation" label; 50 seeds). Verified: pooled ΔRMST CI95 [−27,376, −24,126]
+(point ≈ −25,750) vs the published ablation@40 −25,530 — the published numbers REPRODUCE
+post-crash-fix to <1%; both-hit n=84, ΔRMST −15,000, median saving 15,000 (published: −14,030 /
+15k); tol-curve wins at every tol_k 2–8 (hit rig=1.00 throughout; win 0.88–0.94). This also
+completes the airtight apples-to-apples at EQUAL seed count: ablation@50 ≈ −25.75k vs
+binding@50 −16.48k → the binding-policy attenuation is ~36% at matched n_seeds, confirming the
+BO-invariance-based conclusion of the 2026-07-22 binding entry. The "stale pre-IF-1
+docs/m2-result.json" caveat is CLOSED. Nothing committed.
+
+## 2026-07-23 — False-success-rate vs dimension study (dimensionality owed item #1) [subagent L, opus]
+
+Built examples/run_false_success_study.py + tests/test_false_success_study.py +
+docs/false-success-study.json + docs/false-success-study-2026-07-23.md. Grid: d∈{2,8,15,20} at
+12·d runs + the d=20/n800 CRIME SCENE × 2 arms (raw unwrapped GP = gate inert vs
+conformal-wrapped = §13.2 default-on, n_cal=n/3 carved from the SAME budget — the honest cost)
+× 20 seeds, binding 2.0/2.0/0.02, 48 restarts; grid uses analytic_grad (timed: FD 222 s vs
+analytic 16 s per d=20 solve, same verdict), crime scene runs the exact original FD path.
+92.9 min total, deterministic (smoke byte-identical + pinned by test).
+
+**Crime-scene verdict: the original miss reproduces byte-exactly on the raw arm (1 false
+success, excursion 0.2461 = 1.046 vs the ±0.8 box) and the default-on §13.2 gate KILLS it**
+(rejects both band-spilling candidates, returns 1 conformal-checked survivor that genuinely
+hits, 0 FS). New fragility: the same cell under the analytic optimizer path gives 3/3 hits —
+the d=20 raw-σ margin is fragile to GP fit AND search path, which is exactly why the
+calibrated gate must be the acceptance test at high d.
+
+**Powered-grid honesty:** false successes are too rare at 12·d density to separate the arms —
+raw 0/122 certified candidates (FSR ≤ 3.0% at 95% CP), wrapped 1/84 (1.2% [0.03, 6.4]). The
+solver's own epistemic abstention (5-85%) dominates; beyond d=2 the gate adds only ~0-20 pp
+abstention and costs no genuine hits at d≥15. d=2 wrapped is the degenerate small-budget case
+(n_cal=8 → infinite conformal band → 100% abstention; flagged, excluded). **And the gate is
+NOT a certificate: the wrapped arm produced its OWN d=8 selected-point miss** — split
+conformal is marginal, not conditional, coverage, and the solver hands it SELECTED points; at
+fixed budget wrapping is not strictly safer (cal carve-out weakens the surrogate).
+Conditional/Mondrian conformal (or a selection-inflation term) is the real fix — now motivated
+independently by this study AND the Empa high-outcome-tail conditional-coverage study.
+
+Tests: 11 (scorer incl. certified-but-missing, inclusive boundary, reason bucketing,
+Clopper-Pearson 0-count guard, smoke determinism); red-proof: inverting the scorer polarity
+turned 4 red incl. the certified-miss test, restored, and a pinning test keeps the polarity
+honest. ruff clean. Nothing committed.
+
+## 2026-07-23 — Multi-tool rehearsal Phase 4b: onboarded-tool conformal wrap [subagent R, sonnet]
+
+Extended examples/run_multitool_rehearsal.py with Phase 4b: conformal-wraps the onboarded tool
+(ConformalForwardModel + SplitConformalCalibrator, α=0.1) on a held-out calibration split
+carved from tool C's own onboarding runs (chronological trailing 1/3: fit 16 / cal 8 at full
+config), re-solves the same reachable spec, and demonstrates the calibration_status upgrade
+model-feasible → conformal-checked. BOTH branches ran naturally, no config-shrinking: the
+natural split (n_cal=8) is honestly ONE run short of the minimum (9) for a finite α=0.1
+quantile → infinite band → **the §13.2 gate rejects the raw-margin-admitted candidate
+(Infeasible → NothingToQualify, 0 machine calls) — fail-closed working as designed and
+reported plainly**; a labeled extra-collection variant charges exactly 1 more run (plain
+Sobol-seeded, NOT EPIG-selected, preserving calibration exchangeability) to reach n_cal=9 →
+finite band kappa=[1.462, 2.000], a conformal-checked FEASIBLE candidate (0/1 gate rejections
+— agrees with raw margins there; calibrated band 1.98e-8 m / 7.92 K, tighter than the raw
+worst-case 2.24e-7 m / 20.83 K), and a certified 29-run confirmation campaign. Zero src edits
+— ConformalForwardModel composed around ToolBoundForwardModel as-is and the solver's default
+gate consumed it unchanged. Phases 1-4 verified byte-identical to the recorded artifact
+(programmatic sorted-JSON diff, before AND after ruff format, across two full runs); full run
+37.8 s. Tests 6→10 green (min-n_cal boundary pin, synthetic infinite-band unit, sim-gated
+upgrade + wiring); upgrade assertion red-proofed (skipping the wrap fails hard); ruff clean.
+Nothing committed.
+
+## 2026-07-23 — Mondrian / group-conditional conformal calibrator (top code priority) [subagent O, opus]
+
+Added src/rig/calibration/mondrian.py: `MondrianConformalCalibrator` (per-group split conformal
+on the standardized-residual score, exact ceil((1-α)(n_g+1)) rule per group incl. the honest
++inf branch; `min_group_n` POOLED fallback — never silent-shrink, never useless-infinite —
+default = the finite-quantile floor, 9 at α=0.1), `predicted_magnitude_group_fn`, and
+`MondrianConformalForwardModel` satisfying the SAME interface as ConformalForwardModel →
+**the solver's default §13.2 gate consumes it with ZERO solver edits (proven by test)**.
+Design constraint honored: grouping keys on the PREDICTED mean at fit AND predict (no true y
+exists at predict time; consequence documented and MEASURED — assignment inherits model
+error).
+
+Empa study (run_mondrian_coverage.py + results/m1_empa_mondrian.json; static fidelity
+byte-equal to m1_empa.json on all 12 cells; double-run byte-identical): **6 of the 8
+high-observed-tertile cells that static conformal under-covered move to nominal**; the 2 that
+stay under are exactly the two lowest predicted/observed assignment-agreement cells (0.66,
+0.48) — when the GP mean can't predict which points are high-magnitude, predicted-grouping
+cannot isolate the observed tail. Honest mechanistic limit, not a bug. Cost: high-tertile MPIW
+1.0-6.0× (low tertile NARROWS — it was over-covering; the intended redistribution). Honest
+negative: Mondrian broke ti_120w's marginal pooled PASS on both splits by OVER-covering
+(0.939→0.959, 0.913→0.944 — the safe direction, a width cost not a safety cost).
+
+Selected-point mechanism test (the false-success-study motivation): a solver-selected point in
+a high-predicted-magnitude region with 16× wider residuals — the POOLED gate admits the tight
+box (the d=8-style marginal miss slipping through), the MONDRIAN gate returns Infeasible with
+a conformal-cause reason and nonzero spill. Red-proofs: forcing internal pooled-fallback flips
+both the selected-point and +inf tests red; restored. Bar: test_mondrian + test_conformal +
+test_conformal_feasibility = 25 passed; ruff clean. Limits recorded: coverage conditional on
+the DECLARED predicted-magnitude group only — not per-point, not per-true-magnitude;
+underpowered groups borrow pooled (safe, un-conditioned). Next candidates: investigate the two
+low-agreement tail cells (predicted magnitude is a weak proxy where the GP mean is
+tail-biased); magnitude-group support in the amortized path. Nothing committed.
+
+## 2026-07-23 — WP-E BoTorch comparator slate: SCBO + TuRBO [subagent P, opus]
+
+Added `SCBOBaseline` + `TuRBOBaseline` in NEW src/rig/baselines/trust_region_bo.py
+(lazy-loaded via baselines/__init__; import-linter 1 kept / 0 broken) — faithful to the
+canonical BoTorch TuRBO-1 (arXiv:1910.01739: TurboState machine verbatim, lengthscale-shaped
+Sobol candidates + Thompson selection, restart-on-collapse) and SCBO (arXiv:2002.08526:
+spec box as 2m outcome constraints via ModelListGP + ConstrainedMaxPosteriorSampling,
+feasible-first). Declared simplifications: TuRBO-1 not -m; restart keeps history (helps the
+comparator); SCBO objective = shared box-distance scalarization. Both inherit BoTorchBO's
+fairness contract exactly (bit-identical warm start, budget/cost/hit-rule/domain/GP tier).
+NEW examples/run_m2_botorch_slate.py reuses run_m2_sweep machinery by import, CRN pairing,
+imported rmst_difference_test + paired bootstrap.
+
+RESULT (50 seeds × 2 joint targets, tol=6σ, ablation policy, in-silico MBE): **the M2
+"~2× cheaper than BO" claim HOLDS against the full slate** — RIG RMST 16,400 / hit 1.00 vs
+BoTorchBO 27,050 / 0.97 (ΔRMST −10,650, p=5.7e-30, **1.65×**), TuRBO 40,350 / 0.68 (−23,950,
+p=7e-118, 2.46×), SCBO 47,401 / 0.13 (−31,001, 2.89×); no comparator wins pooled or
+per-target. Honest reads: "~2×" is arm-dependent — 1.65× against the strongest arm; SCBO is
+the weakest arm because the ~4e-7-scale bow constraint defeats constrained-Thompson within 40
+queries — a genuine SCBO-vs-problem finding, NOT a broken comparator (proven by the
+discriminating bowl sanity: TuRBO 8/8, SCBO 8/8, pure random 0/8, hits from the optimization
+loop not the seed DoE); hit = single noisy in-spec observation for ALL arms equally.
+
+Tests: tests/test_botorch_slate.py 18 passed (warm-start bit-identity, determinism
+byte-identical, budget exactness, known-answer sanity, compositional rejection, sweep
+drop-in); red-proof: a hidden extra machine call inside _query turned the budget tests red for
+both arms, removed. ruff clean. Artifacts: docs/m2-botorch-slate.json + doc. Still in-silico
+(real headline gated on M0); optional follow-on: binding-policy re-run of the slate. Nothing
+committed.
+
+## 2026-07-23 — Analytic-gradient vs FD parity study BUILT + RUN [subagent Q, sonnet]
+
+New examples/run_gradient_parity_study.py + tests/test_gradient_parity.py +
+docs/gradient-parity.json + docs/gradient-parity-2026-07-23.md. Grid: d∈{2,4,8,15,20} × 15
+seeds × 2 target classes (reachable = the false-success study's ±0.8 box, imported; hard =
+±0.3 boundary box) × FD-vs-analytic, 150 pairs, SAME shared reduced budget both arms
+(n_restarts=16, max_iter=40), binding policy; truth family reused by import. 42.7 min.
+
+RESULTS: overall verdict agreement **146/150 = 97.3%** (CI [93.3%, 99.3%]; 100% at d=2/4/15,
+86.7% at d=8/20). **All 4 disagreements are the same shape: FD → INFEASIBLE, analytic →
+FEASIBLE, and analytic's certified recipe genuinely hits ground truth every time** — FD false
+abstentions, zero false successes from either arm, zero cases favoring keep-FD. Among
+agreeing-FEASIBLE pairs ground-truth agreement is 100% in every cell (recipes/margins differ,
+top picks always hit together). Speedup monotone: 1.90× (d=2) → 5.91× (d=8) → 11.43× (d=20).
+
+RECOMMENDATION (evidence gathered, DECISION NOT MADE): flip `analytic_grad=True` as the
+default for d≳8; keep FD below (win <3.2× there, and every currently-published number rides
+the FD default). Not unconditional: n=150 cannot rule out a rare false success (0 observed =
+upper bound, not zero), and the hard/boundary class showed little live disagreement surface —
+the marginal-boundary scenario nearest the original d=20/800 false success is not directly
+probed. Migration checklist enumerated: dimensionality doc, M2 (doc + binding JSON + sweep via
+loop.py), M3 v1/v2, test_active_loop.py, test_inverse.py's FD-pin test (needs restructuring),
+mfl_bakeoff, Empa/sputtering real-data demos, multitool rehearsal — all ride today's FD
+default and would need re-verification on a flip. (The false-success study's main grid is
+already analytic by its own CLI default; its crime-scene arm hardcodes FD regardless.)
+
+Tests: 13/13 green (margin-formula units, all 4 disagreement shapes, gt_split case, aggregate
+tallying, the analytic+pgd construction-time raise, smoke determinism byte-identical);
+red-proof live: ground-truth-blind scorer → 3 tests red → restored. ruff clean. No src edits.
+Nothing committed.

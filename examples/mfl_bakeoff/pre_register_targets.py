@@ -27,6 +27,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 
 import numpy as np
+from run_bakeoff import CONTROLLED_OUTPUTS, RECIPE_KEYS, canonical_hash, in_spec
 from scipy.optimize import minimize
 from scipy.stats import qmc
 
@@ -36,8 +37,6 @@ from rig_adapters.mbe.adapter import (
     evaluate_physics,
 )
 from rig_adapters.mbe.outcomes import metrics_to_outcomes
-
-from run_bakeoff import CONTROLLED_OUTPUTS, RECIPE_KEYS, canonical_hash, in_spec
 
 _OUT_PATH = Path(__file__).resolve().parent / "targets.json"
 _N_DENSE = 4096

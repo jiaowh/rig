@@ -1,0 +1,3217 @@
+{
+  "meta": {
+    "study": "LABELED SIDE STUDY: PID decaying-step vs the recorded fixed-step path of record (results/m1_empa.json, untouched). Not itself a program gate.",
+    "pre_stated_hypothesis": "(1) decaying-step reduces late-stream threshold volatility on the exchangeable RANDOM-split streams without flipping any PASS to FAIL; (2) on the known-drifting ti_200w_high_pw TEMPORAL stream, decaying-step risks slower adaptation and possibly worse coverage / a harder-firing section 5.6 rolling-coverage detector, because eta_t -> 0 over the stream",
+    "seed": 0,
+    "alpha": 0.1,
+    "nominal_coverage": 0.9,
+    "gp_restarts": 5,
+    "late_stream_window_frac": 0.5,
+    "detector_rule": "trailing rolling-coverage window minimum < nominal_coverage (the convention already used in RESULTS.md for the fixed-step PID path)",
+    "fidelity_gate": {
+      "status": "PASS",
+      "cells_checked": 12,
+      "reference_file": "results/m1_empa.json",
+      "checked": "pooled + per-output PICP/k_covered/n_test, both an imported pid_eval call and this study's own tracer, for every campaign x split"
+    },
+    "hyperparameters_common": {
+      "alpha_target": 0.1,
+      "eta": 0.1,
+      "KI": 2.0,
+      "Csat": 7.0,
+      "window": 50,
+      "decay_eps": 0.1,
+      "provenance": "ConformalPIDController library defaults, identical across both step modes and all campaigns/splits, fixed before any outcome was seen"
+    },
+    "caveats": [
+      "REAL measured data (real_tool), same six Empa campaigns as run_m1_empa.py; BO-driven (BayBE) sampling means split-conformal exchangeability is an approximation and the temporal split doubles as a drift stress test",
+      "pooled coverage CI treats 2*n_test trials as independent though outputs share test rows (optimistic, same caveat as the recorded runs)",
+      "online realized-coverage binomial CI is DIRECTIONAL (asymptotic guarantee only), same status as the recorded static/ACI/PID gates",
+      "ti_120w_short_pw: temporal order key is unverified file order"
+    ]
+  },
+  "summary": {
+    "n_cells": 12,
+    "n_output_rows_quieter_late_stream": 24,
+    "n_gate_flips": 1,
+    "n_pooled_gate_flips": 2,
+    "n_detector_status_flips": 0,
+    "flip_details": [
+      "ti_200w_high_pw/temporal/dep_rate_A_per_s: per-output gate flipped",
+      "ti_200w_high_pw/temporal: POOLED gate flipped",
+      "ti_200w_high_pw/random: POOLED gate flipped"
+    ]
+  },
+  "ti_200w_high_pw_drift_case": {
+    "fixed_detector_fires": {
+      "dep_rate_A_per_s": true,
+      "Ipk (A)": true
+    },
+    "decaying_detector_fires": {
+      "dep_rate_A_per_s": true,
+      "Ipk (A)": true
+    },
+    "fixed_pooled_picp": 0.875,
+    "decaying_pooled_picp": 0.8416666666666667,
+    "fixed_pooled_gate": true,
+    "decaying_pooled_gate": false
+  },
+  "campaigns": {
+    "al_120w_short_pw": {
+      "temporal": {
+        "degenerate_order": false,
+        "n_test": 120,
+        "output_keys": [
+          "dep_rate_A_per_s",
+          "Ipk (A)"
+        ],
+        "units": [
+          "angstrom/second",
+          "A"
+        ],
+        "recorded_form_fixed": {
+          "protocol": "online section 20.2 conformal-PID (endpoint): fresh split calibrator on the SAME calibration slice; test rows streamed in split order; interval at the current threshold q_t scored BEFORE observe(x, y); q_t tracked directly (finite by construction, so n_infinite_width is 0)",
+          "hyperparameters": {
+            "alpha_target": 0.1,
+            "eta": 0.1,
+            "KI": 2.0,
+            "Csat": 7.0,
+            "window": 50,
+            "step": "fixed",
+            "integrate": true,
+            "scorecaster": false,
+            "provenance": "ConformalPIDController library defaults (P+I quantile-tracker + log-time tan integrator; decaying-step OFF, scorecaster OFF), uniform across all campaigns and splits, fixed before any per-campaign outcome was seen"
+          },
+          "per_output": {
+            "dep_rate_A_per_s": {
+              "unit": "angstrom/second",
+              "picp": 0.8833333333333333,
+              "k_covered": 106,
+              "n_test": 120,
+              "ci95": [
+                0.8120049096131917,
+                0.9347278494900572
+              ],
+              "nominal_in_ci": true,
+              "mean_width": 0.3997536081694048,
+              "n_infinite_width": 0,
+              "q_threshold": {
+                "used_min": 1.3973028988182024,
+                "used_max": 1.8294210950916099,
+                "used_mean": 1.6277327062558686,
+                "final": 1.7691788632411607
+              },
+              "effective_alpha": {
+                "used_min": 0.03333333333333333,
+                "used_max": 0.15833333333333333,
+                "used_mean": 0.07784722222222222,
+                "final": 0.05
+              },
+              "rolling_coverage": {
+                "window": 50,
+                "min_full_window": 0.88,
+                "final": 0.88
+              }
+            },
+            "Ipk (A)": {
+              "unit": "A",
+              "picp": 0.8916666666666667,
+              "k_covered": 107,
+              "n_test": 120,
+              "ci95": [
+                0.8218725616110573,
+                0.941041693770915
+              ],
+              "nominal_in_ci": true,
+              "mean_width": 0.05195651686154923,
+              "n_infinite_width": 0,
+              "q_threshold": {
+                "used_min": 0.4160298178473494,
+                "used_max": 0.904384291985529,
+                "used_mean": 0.6583757301254801,
+                "final": 0.7079922601817027
+              },
+              "effective_alpha": {
+                "used_min": 0.075,
+                "used_max": 0.13333333333333333,
+                "used_mean": 0.09048611111111109,
+                "final": 0.08333333333333333
+              },
+              "rolling_coverage": {
+                "window": 50,
+                "min_full_window": 0.84,
+                "final": 0.92
+              }
+            }
+          },
+          "pooled": {
+            "picp": 0.8875,
+            "k_covered": 213,
+            "n_trials": 240,
+            "ci95": [
+              0.840550857927553,
+              0.9245394007031613
+            ],
+            "nominal_in_ci": true
+          }
+        },
+        "fixed": {
+          "step": "fixed",
+          "hyperparameters": {
+            "alpha_target": 0.1,
+            "eta": 0.1,
+            "KI": 2.0,
+            "Csat": 7.0,
+            "window": 50,
+            "step": "fixed",
+            "decay_eps": 0.1
+          },
+          "per_output": {
+            "dep_rate_A_per_s": {
+              "unit": "angstrom/second",
+              "picp": 0.8833333333333333,
+              "k_covered": 106,
+              "n_test": 120,
+              "ci95": [
+                0.8120049096131917,
+                0.9347278494900572
+              ],
+              "nominal_in_ci": true,
+              "mean_width": 0.3997536081694048,
+              "n_infinite_width": 0,
+              "q_final": 1.7691788632411607,
+              "q_late_stream_std": 0.06355901298487387,
+              "q_late_stream_mean_abs_delta": 0.022347590294194353,
+              "q_first_half_std": 0.06355901298487387,
+              "q_first_half_mean_abs_delta": 0.022347590294194353,
+              "rolling_coverage": {
+                "window": 50,
+                "min_full_window": 0.88,
+                "final": 0.88,
+                "detector_fires": true
+              }
+            },
+            "Ipk (A)": {
+              "unit": "A",
+              "picp": 0.8916666666666667,
+              "k_covered": 107,
+              "n_test": 120,
+              "ci95": [
+                0.8218725616110573,
+                0.941041693770915
+              ],
+              "nominal_in_ci": true,
+              "mean_width": 0.05195651686154923,
+              "n_infinite_width": 0,
+              "q_final": 0.7079922601817027,
+              "q_late_stream_std": 0.08267835779572688,
+              "q_late_stream_mean_abs_delta": 0.0209508451595573,
+              "q_first_half_std": 0.08267835779572688,
+              "q_first_half_mean_abs_delta": 0.0209508451595573,
+              "rolling_coverage": {
+                "window": 50,
+                "min_full_window": 0.84,
+                "final": 0.92,
+                "detector_fires": true
+              }
+            }
+          },
+          "pooled": {
+            "picp": 0.8875,
+            "k_covered": 213,
+            "n_trials": 240,
+            "ci95": [
+              0.840550857927553,
+              0.9245394007031613
+            ],
+            "nominal_in_ci": true
+          }
+        },
+        "decaying": {
+          "step": "decaying",
+          "hyperparameters": {
+            "alpha_target": 0.1,
+            "eta": 0.1,
+            "KI": 2.0,
+            "Csat": 7.0,
+            "window": 50,
+            "step": "decaying",
+            "decay_eps": 0.1
+          },
+          "per_output": {
+            "dep_rate_A_per_s": {
+              "unit": "angstrom/second",
+              "picp": 0.8666666666666667,
+              "k_covered": 104,
+              "n_test": 120,
+              "ci95": [
+                0.7925216366655645,
+                0.9218271851338226
+              ],
+              "nominal_in_ci": true,
+              "mean_width": 0.39212604049897165,
+              "n_infinite_width": 0,
+              "q_final": 1.625617986238799,
+              "q_late_stream_std": 0.010899393920793523,
+              "q_late_stream_mean_abs_delta": 0.004539281113737689,
+              "q_first_half_std": 0.010899393920793523,
+              "q_first_half_mean_abs_delta": 0.004539281113737689,
+              "rolling_coverage": {
+                "window": 50,
+                "min_full_window": 0.86,
+                "final": 0.86,
+                "detector_fires": true
+              }
+            },
+            "Ipk (A)": {
+              "unit": "A",
+              "picp": 0.8916666666666667,
+              "k_covered": 107,
+              "n_test": 120,
+              "ci95": [
+                0.8218725616110573,
+                0.941041693770915
+              ],
+              "nominal_in_ci": true,
+              "mean_width": 0.05248708551765806,
+              "n_infinite_width": 0,
+              "q_final": 0.6722380383341947,
+              "q_late_stream_std": 0.01740564106975397,
+              "q_late_stream_mean_abs_delta": 0.004067633076235517,
+              "q_first_half_std": 0.01740564106975397,
+              "q_first_half_mean_abs_delta": 0.004067633076235517,
+              "rolling_coverage": {
+                "window": 50,
+                "min_full_window": 0.84,
+                "final": 0.92,
+                "detector_fires": true
+              }
+            }
+          },
+          "pooled": {
+            "picp": 0.8791666666666667,
+            "k_covered": 211,
+            "n_trials": 240,
+            "ci95": [
+              0.8310915679121382,
+              0.9175628599318794
+            ],
+            "nominal_in_ci": true
+          }
+        },
+        "delta": {
+          "pooled_picp_delta": -0.008333333333333304,
+          "pooled_gate_flip": false,
+          "per_output": {
+            "dep_rate_A_per_s": {
+              "picp_delta": -0.016666666666666607,
+              "late_std_delta": -0.05265961906408035,
+              "late_mad_delta": -0.017808309180456665,
+              "gate_flip": false,
+              "detector_flip": false
+            },
+            "Ipk (A)": {
+              "picp_delta": 0.0,
+              "late_std_delta": -0.06527271672597292,
+              "late_mad_delta": -0.01688321208332178,
+              "gate_flip": false,
+              "detector_flip": false
+            }
+          }
+        }
+      },
+      "random": {
+        "degenerate_order": false,
+        "n_test": 120,
+        "output_keys": [
+          "dep_rate_A_per_s",
+          "Ipk (A)"
+        ],
+        "units": [
+          "angstrom/second",
+          "A"
+        ],
+        "recorded_form_fixed": {
+          "protocol": "online section 20.2 conformal-PID (endpoint): fresh split calibrator on the SAME calibration slice; test rows streamed in split order; interval at the current threshold q_t scored BEFORE observe(x, y); q_t tracked directly (finite by construction, so n_infinite_width is 0)",
+          "hyperparameters": {
+            "alpha_target": 0.1,
+            "eta": 0.1,
+            "KI": 2.0,
+            "Csat": 7.0,
+            "window": 50,
+            "step": "fixed",
+            "integrate": true,
+            "scorecaster": false,
+            "provenance": "ConformalPIDController library defaults (P+I quantile-tracker + log-time tan integrator; decaying-step OFF, scorecaster OFF), uniform across all campaigns and splits, fixed before any per-campaign outcome was seen"
+          },
+          "per_output": {
+            "dep_rate_A_per_s": {
+              "unit": "angstrom/second",
+              "picp": 0.8833333333333333,
+              "k_covered": 106,
+              "n_test": 120,
+              "ci95": [
+                0.8120049096131917,
+                0.9347278494900572
+              ],
+              "nominal_in_ci": true,
+              "mean_width": 0.4380246992937983,
+              "n_infinite_width": 0,
+              "q_threshold": {
+                "used_min": 1.4911221720432075,
+                "used_max": 2.2187944312912857,
+                "used_mean": 1.8591425604037795,
+                "final": 1.9966630632135014
+              },
+              "effective_alpha": {
+                "used_min": 0.016666666666666666,
+                "used_max": 0.21666666666666667,
+                "used_mean": 0.09145833333333332,
+                "final": 0.06666666666666667
+              },
+              "rolling_coverage": {
+                "window": 50,
+                "min_full_window": 0.8,
+                "final": 0.88
+              }
+            },
+            "Ipk (A)": {
+              "unit": "A",
+              "picp": 0.9333333333333333,
+              "k_covered": 112,
+              "n_test": 120,
+              "ci95": [
+                0.8728632517607872,
+                0.9707808156862037
+              ],
+              "nominal_in_ci": true,
+              "mean_width": 0.08535831317052035,
+              "n_infinite_width": 0,
+              "q_threshold": {
+                "used_min": 1.454724331601757,
+                "used_max": 2.2246832116209823,
+                "used_mean": 1.8865092859985662,
+                "final": 1.4438824652990228
+              },
+              "effective_alpha": {
+                "used_min": 0.06666666666666667,
+                "used_max": 0.13333333333333333,
+                "used_mean": 0.09409722222222225,
+                "final": 0.13333333333333333
+              },
+              "rolling_coverage": {
+                "window": 50,
+                "min_full_window": 0.86,
+                "final": 0.98
+              }
+            }
+          },
+          "pooled": {
+            "picp": 0.9083333333333333,
+            "k_covered": 218,
+            "n_trials": 240,
+            "ci95": [
+              0.8645061244714324,
+              0.941659001897254
+            ],
+            "nominal_in_ci": true
+          }
+        },
+        "fixed": {
+          "step": "fixed",
+          "hyperparameters": {
+            "alpha_target": 0.1,
+            "eta": 0.1,
+            "KI": 2.0,
+            "Csat": 7.0,
+            "window": 50,
+            "step": "fixed",
+            "decay_eps": 0.1
+          },
+          "per_output": {
+            "dep_rate_A_per_s": {
+              "unit": "angstrom/second",
+              "picp": 0.8833333333333333,
+              "k_covered": 106,
+              "n_test": 120,
+              "ci95": [
+                0.8120049096131917,
+                0.9347278494900572
+              ],
+              "nominal_in_ci": true,
+              "mean_width": 0.4380246992937983,
+              "n_infinite_width": 0,
+              "q_final": 1.9966630632135014,
+              "q_late_stream_std": 0.12763223964008358,
+              "q_late_stream_mean_abs_delta": 0.024183171773535402,
+              "q_first_half_std": 0.12763223964008358,
+              "q_first_half_mean_abs_delta": 0.024183171773535402,
+              "rolling_coverage": {
+                "window": 50,
+                "min_full_window": 0.8,
+                "final": 0.88,
+                "detector_fires": true
+              }
+            },
+            "Ipk (A)": {
+              "unit": "A",
+              "picp": 0.9333333333333333,
+              "k_covered": 112,
+              "n_test": 120,
+              "ci95": [
+                0.8728632517607872,
+                0.9707808156862037
+              ],
+              "nominal_in_ci": true,
+              "mean_width": 0.08535831317052035,
+              "n_infinite_width": 0,
+              "q_final": 1.4438824652990228,
+              "q_late_stream_std": 0.14992892432359892,
+              "q_late_stream_mean_abs_delta": 0.01286265891469971,
+              "q_first_half_std": 0.14992892432359892,
+              "q_first_half_mean_abs_delta": 0.01286265891469971,
+              "rolling_coverage": {
+                "window": 50,
+                "min_full_window": 0.86,
+                "final": 0.98,
+                "detector_fires": true
+              }
+            }
+          },
+          "pooled": {
+            "picp": 0.9083333333333333,
+            "k_covered": 218,
+            "n_trials": 240,
+            "ci95": [
+              0.8645061244714324,
+              0.941659001897254
+            ],
+            "nominal_in_ci": true
+          }
+        },
+        "decaying": {
+          "step": "decaying",
+          "hyperparameters": {
+            "alpha_target": 0.1,
+            "eta": 0.1,
+            "KI": 2.0,
+            "Csat": 7.0,
+            "window": 50,
+            "step": "decaying",
+            "decay_eps": 0.1
+          },
+          "per_output": {
+            "dep_rate_A_per_s": {
+              "unit": "angstrom/second",
+              "picp": 0.8833333333333333,
+              "k_covered": 106,
+              "n_test": 120,
+              "ci95": [
+                0.8120049096131917,
+                0.9347278494900572
+              ],
+              "nominal_in_ci": true,
+              "mean_width": 0.4120381575143368,
+              "n_infinite_width": 0,
+              "q_final": 1.7792939216329697,
+              "q_late_stream_std": 0.02289816416625736,
+              "q_late_stream_mean_abs_delta": 0.0048032161071290425,
+              "q_first_half_std": 0.02289816416625736,
+              "q_first_half_mean_abs_delta": 0.0048032161071290425,
+              "rolling_coverage": {
+                "window": 50,
+                "min_full_window": 0.8,
+                "final": 0.88,
+                "detector_fires": true
+              }
+            },
+            "Ipk (A)": {
+              "unit": "A",
+              "picp": 0.9333333333333333,
+              "k_covered": 112,
+              "n_test": 120,
+              "ci95": [
+                0.8728632517607872,
+                0.9707808156862037
+              ],
+              "nominal_in_ci": true,
+              "mean_width": 0.08660362500117838,
+              "n_infinite_width": 0,
+              "q_final": 1.8347874879429724,
+              "q_late_stream_std": 0.026191331017562422,
+              "q_late_stream_mean_abs_delta": 0.0022798204350382785,
+              "q_first_half_std": 0.026191331017562422,
+              "q_first_half_mean_abs_delta": 0.0022798204350382785,
+              "rolling_coverage": {
+                "window": 50,
+                "min_full_window": 0.86,
+                "final": 0.98,
+                "detector_fires": true
+              }
+            }
+          },
+          "pooled": {
+            "picp": 0.9083333333333333,
+            "k_covered": 218,
+            "n_trials": 240,
+            "ci95": [
+              0.8645061244714324,
+              0.941659001897254
+            ],
+            "nominal_in_ci": true
+          }
+        },
+        "delta": {
+          "pooled_picp_delta": 0.0,
+          "pooled_gate_flip": false,
+          "per_output": {
+            "dep_rate_A_per_s": {
+              "picp_delta": 0.0,
+              "late_std_delta": -0.10473407547382621,
+              "late_mad_delta": -0.019379955666406358,
+              "gate_flip": false,
+              "detector_flip": false
+            },
+            "Ipk (A)": {
+              "picp_delta": 0.0,
+              "late_std_delta": -0.1237375933060365,
+              "late_mad_delta": -0.010582838479661433,
+              "gate_flip": false,
+              "detector_flip": false
+            }
+          }
+        }
+      }
+    },
+    "al_200w_high_pw": {
+      "temporal": {
+        "degenerate_order": false,
+        "n_test": 130,
+        "output_keys": [
+          "dep_rate_A_per_s",
+          "Ipk (A)"
+        ],
+        "units": [
+          "angstrom/second",
+          "A"
+        ],
+        "recorded_form_fixed": {
+          "protocol": "online section 20.2 conformal-PID (endpoint): fresh split calibrator on the SAME calibration slice; test rows streamed in split order; interval at the current threshold q_t scored BEFORE observe(x, y); q_t tracked directly (finite by construction, so n_infinite_width is 0)",
+          "hyperparameters": {
+            "alpha_target": 0.1,
+            "eta": 0.1,
+            "KI": 2.0,
+            "Csat": 7.0,
+            "window": 50,
+            "step": "fixed",
+            "integrate": true,
+            "scorecaster": false,
+            "provenance": "ConformalPIDController library defaults (P+I quantile-tracker + log-time tan integrator; decaying-step OFF, scorecaster OFF), uniform across all campaigns and splits, fixed before any per-campaign outcome was seen"
+          },
+          "per_output": {
+            "dep_rate_A_per_s": {
+              "unit": "angstrom/second",
+              "picp": 0.8923076923076924,
+              "k_covered": 116,
+              "n_test": 130,
+              "ci95": [
+                0.825914479386931,
+                0.9398593128963649
+              ],
+              "nominal_in_ci": true,
+              "mean_width": 0.19171878698565392,
+              "n_infinite_width": 0,
+              "q_threshold": {
+                "used_min": 1.5219341426529198,
+                "used_max": 1.9292425314795905,
+                "used_mean": 1.6972103492901092,
+                "final": 1.7782524115381908
+              },
+              "effective_alpha": {
+                "used_min": 0.06153846153846154,
+                "used_max": 0.15384615384615385,
+                "used_mean": 0.10295857988165681,
+                "final": 0.09230769230769231
+              },
+              "rolling_coverage": {
+                "window": 50,
+                "min_full_window": 0.88,
+                "final": 0.9
+              }
+            },
+            "Ipk (A)": {
+              "unit": "A",
+              "picp": 0.9,
+              "k_covered": 117,
+              "n_test": 130,
+              "ci95": [
+                0.8350683267206863,
+                0.9456713071727957
+              ],
+              "nominal_in_ci": true,
+              "mean_width": 0.009420223519372314,
+              "n_infinite_width": 0,
+              "q_threshold": {
+                "used_min": 1.2078342165837845,
+                "used_max": 1.8097975677716758,
+                "used_mean": 1.5189778833909529,
+                "final": 1.7202351428084868
+              },
+              "effective_alpha": {
+                "used_min": 0.07692307692307693,
+                "used_max": 0.17692307692307693,
+                "used_mean": 0.1291715976331361,
+                "final": 0.09230769230769231
+              },
+              "rolling_coverage": {
+                "window": 50,
+                "min_full_window": 0.8200000000000001,
+                "final": 0.84
+              }
+            }
+          },
+          "pooled": {
+            "picp": 0.8961538461538462,
+            "k_covered": 233,
+            "n_trials": 260,
+            "ci95": [
+              0.8525125391488944,
+              0.9304417618232222
+            ],
+            "nominal_in_ci": true
+          }
+        },
+        "fixed": {
+          "step": "fixed",
+          "hyperparameters": {
+            "alpha_target": 0.1,
+            "eta": 0.1,
+            "KI": 2.0,
+            "Csat": 7.0,
+            "window": 50,
+            "step": "fixed",
+            "decay_eps": 0.1
+          },
+          "per_output": {
+            "dep_rate_A_per_s": {
+              "unit": "angstrom/second",
+              "picp": 0.8923076923076924,
+              "k_covered": 116,
+              "n_test": 130,
+              "ci95": [
+                0.825914479386931,
+                0.9398593128963649
+              ],
+              "nominal_in_ci": true,
+              "mean_width": 0.19171878698565392,
+              "n_infinite_width": 0,
+              "q_final": 1.7782524115381908,
+              "q_late_stream_std": 0.08007612407508188,
+              "q_late_stream_mean_abs_delta": 0.021312001729360323,
+              "q_first_half_std": 0.08007612407508188,
+              "q_first_half_mean_abs_delta": 0.021312001729360323,
+              "rolling_coverage": {
+                "window": 50,
+                "min_full_window": 0.88,
+                "final": 0.9,
+                "detector_fires": true
+              }
+            },
+            "Ipk (A)": {
+              "unit": "A",
+              "picp": 0.9,
+              "k_covered": 117,
+              "n_test": 130,
+              "ci95": [
+                0.8350683267206863,
+                0.9456713071727957
+              ],
+              "nominal_in_ci": true,
+              "mean_width": 0.009420223519372314,
+              "n_infinite_width": 0,
+              "q_final": 1.7202351428084868,
+              "q_late_stream_std": 0.19358274246742058,
+              "q_late_stream_mean_abs_delta": 0.025343844978858415,
+              "q_first_half_std": 0.19358274246742058,
+              "q_first_half_mean_abs_delta": 0.025343844978858415,
+              "rolling_coverage": {
+                "window": 50,
+                "min_full_window": 0.8200000000000001,
+                "final": 0.84,
+                "detector_fires": true
+              }
+            }
+          },
+          "pooled": {
+            "picp": 0.8961538461538462,
+            "k_covered": 233,
+            "n_trials": 260,
+            "ci95": [
+              0.8525125391488944,
+              0.9304417618232222
+            ],
+            "nominal_in_ci": true
+          }
+        },
+        "decaying": {
+          "step": "decaying",
+          "hyperparameters": {
+            "alpha_target": 0.1,
+            "eta": 0.1,
+            "KI": 2.0,
+            "Csat": 7.0,
+            "window": 50,
+            "step": "decaying",
+            "decay_eps": 0.1
+          },
+          "per_output": {
+            "dep_rate_A_per_s": {
+              "unit": "angstrom/second",
+              "picp": 0.8923076923076924,
+              "k_covered": 116,
+              "n_test": 130,
+              "ci95": [
+                0.825914479386931,
+                0.9398593128963649
+              ],
+              "nominal_in_ci": true,
+              "mean_width": 0.18993694748976575,
+              "n_infinite_width": 0,
+              "q_final": 1.6885876049305126,
+              "q_late_stream_std": 0.014820953760157367,
+              "q_late_stream_mean_abs_delta": 0.0037707989632003204,
+              "q_first_half_std": 0.014820953760157367,
+              "q_first_half_mean_abs_delta": 0.0037707989632003204,
+              "rolling_coverage": {
+                "window": 50,
+                "min_full_window": 0.88,
+                "final": 0.9,
+                "detector_fires": true
+              }
+            },
+            "Ipk (A)": {
+              "unit": "A",
+              "picp": 0.9384615384615385,
+              "k_covered": 122,
+              "n_test": 130,
+              "ci95": [
+                0.8823447665861507,
+                0.9730603038740709
+              ],
+              "nominal_in_ci": true,
+              "mean_width": 0.009787580336914972,
+              "n_infinite_width": 0,
+              "q_final": 1.5817192797157087,
+              "q_late_stream_std": 0.02405908838094411,
+              "q_late_stream_mean_abs_delta": 0.0031520258388739765,
+              "q_first_half_std": 0.02405908838094411,
+              "q_first_half_mean_abs_delta": 0.0031520258388739765,
+              "rolling_coverage": {
+                "window": 50,
+                "min_full_window": 0.86,
+                "final": 0.88,
+                "detector_fires": true
+              }
+            }
+          },
+          "pooled": {
+            "picp": 0.9153846153846154,
+            "k_covered": 238,
+            "n_trials": 260,
+            "ci95": [
+              0.8746935930911707,
+              0.9462123600999673
+            ],
+            "nominal_in_ci": true
+          }
+        },
+        "delta": {
+          "pooled_picp_delta": 0.019230769230769162,
+          "pooled_gate_flip": false,
+          "per_output": {
+            "dep_rate_A_per_s": {
+              "picp_delta": 0.0,
+              "late_std_delta": -0.06525517031492452,
+              "late_mad_delta": -0.017541202766160002,
+              "gate_flip": false,
+              "detector_flip": false
+            },
+            "Ipk (A)": {
+              "picp_delta": 0.038461538461538436,
+              "late_std_delta": -0.16952365408647646,
+              "late_mad_delta": -0.02219181913998444,
+              "gate_flip": false,
+              "detector_flip": false
+            }
+          }
+        }
+      },
+      "random": {
+        "degenerate_order": false,
+        "n_test": 130,
+        "output_keys": [
+          "dep_rate_A_per_s",
+          "Ipk (A)"
+        ],
+        "units": [
+          "angstrom/second",
+          "A"
+        ],
+        "recorded_form_fixed": {
+          "protocol": "online section 20.2 conformal-PID (endpoint): fresh split calibrator on the SAME calibration slice; test rows streamed in split order; interval at the current threshold q_t scored BEFORE observe(x, y); q_t tracked directly (finite by construction, so n_infinite_width is 0)",
+          "hyperparameters": {
+            "alpha_target": 0.1,
+            "eta": 0.1,
+            "KI": 2.0,
+            "Csat": 7.0,
+            "window": 50,
+            "step": "fixed",
+            "integrate": true,
+            "scorecaster": false,
+            "provenance": "ConformalPIDController library defaults (P+I quantile-tracker + log-time tan integrator; decaying-step OFF, scorecaster OFF), uniform across all campaigns and splits, fixed before any per-campaign outcome was seen"
+          },
+          "per_output": {
+            "dep_rate_A_per_s": {
+              "unit": "angstrom/second",
+              "picp": 0.8923076923076924,
+              "k_covered": 116,
+              "n_test": 130,
+              "ci95": [
+                0.825914479386931,
+                0.9398593128963649
+              ],
+              "nominal_in_ci": true,
+              "mean_width": 0.19993787949633016,
+              "n_infinite_width": 0,
+              "q_threshold": {
+                "used_min": 1.5886702278077602,
+                "used_max": 1.9164114141015056,
+                "used_mean": 1.775684326854936,
+                "final": 1.7931058401254425
+              },
+              "effective_alpha": {
+                "used_min": 0.07692307692307693,
+                "used_max": 0.1076923076923077,
+                "used_mean": 0.09266272189349112,
+                "final": 0.09230769230769231
+              },
+              "rolling_coverage": {
+                "window": 50,
+                "min_full_window": 0.86,
+                "final": 0.9
+              }
+            },
+            "Ipk (A)": {
+              "unit": "A",
+              "picp": 0.9,
+              "k_covered": 117,
+              "n_test": 130,
+              "ci95": [
+                0.8350683267206863,
+                0.9456713071727957
+              ],
+              "nominal_in_ci": true,
+              "mean_width": 0.009664245649623673,
+              "n_infinite_width": 0,
+              "q_threshold": {
+                "used_min": 1.075261053101511,
+                "used_max": 1.557310394299885,
+                "used_mean": 1.3749034487631255,
+                "final": 1.2503649222433684
+              },
+              "effective_alpha": {
+                "used_min": 0.038461538461538464,
+                "used_max": 0.1076923076923077,
+                "used_mean": 0.07201183431952662,
+                "final": 0.09230769230769231
+              },
+              "rolling_coverage": {
+                "window": 50,
+                "min_full_window": 0.84,
+                "final": 0.92
+              }
+            }
+          },
+          "pooled": {
+            "picp": 0.8961538461538462,
+            "k_covered": 233,
+            "n_trials": 260,
+            "ci95": [
+              0.8525125391488944,
+              0.9304417618232222
+            ],
+            "nominal_in_ci": true
+          }
+        },
+        "fixed": {
+          "step": "fixed",
+          "hyperparameters": {
+            "alpha_target": 0.1,
+            "eta": 0.1,
+            "KI": 2.0,
+            "Csat": 7.0,
+            "window": 50,
+            "step": "fixed",
+            "decay_eps": 0.1
+          },
+          "per_output": {
+            "dep_rate_A_per_s": {
+              "unit": "angstrom/second",
+              "picp": 0.8923076923076924,
+              "k_covered": 116,
+              "n_test": 130,
+              "ci95": [
+                0.825914479386931,
+                0.9398593128963649
+              ],
+              "nominal_in_ci": true,
+              "mean_width": 0.19993787949633016,
+              "n_infinite_width": 0,
+              "q_final": 1.7931058401254425,
+              "q_late_stream_std": 0.0464582934001109,
+              "q_late_stream_mean_abs_delta": 0.02000069677789974,
+              "q_first_half_std": 0.0464582934001109,
+              "q_first_half_mean_abs_delta": 0.02000069677789974,
+              "rolling_coverage": {
+                "window": 50,
+                "min_full_window": 0.86,
+                "final": 0.9,
+                "detector_fires": true
+              }
+            },
+            "Ipk (A)": {
+              "unit": "A",
+              "picp": 0.9,
+              "k_covered": 117,
+              "n_test": 130,
+              "ci95": [
+                0.8350683267206863,
+                0.9456713071727957
+              ],
+              "nominal_in_ci": true,
+              "mean_width": 0.009664245649623673,
+              "n_infinite_width": 0,
+              "q_final": 1.2503649222433684,
+              "q_late_stream_std": 0.06898424273925943,
+              "q_late_stream_mean_abs_delta": 0.01721586180456682,
+              "q_first_half_std": 0.06898424273925943,
+              "q_first_half_mean_abs_delta": 0.01721586180456682,
+              "rolling_coverage": {
+                "window": 50,
+                "min_full_window": 0.84,
+                "final": 0.92,
+                "detector_fires": true
+              }
+            }
+          },
+          "pooled": {
+            "picp": 0.8961538461538462,
+            "k_covered": 233,
+            "n_trials": 260,
+            "ci95": [
+              0.8525125391488944,
+              0.9304417618232222
+            ],
+            "nominal_in_ci": true
+          }
+        },
+        "decaying": {
+          "step": "decaying",
+          "hyperparameters": {
+            "alpha_target": 0.1,
+            "eta": 0.1,
+            "KI": 2.0,
+            "Csat": 7.0,
+            "window": 50,
+            "step": "decaying",
+            "decay_eps": 0.1
+          },
+          "per_output": {
+            "dep_rate_A_per_s": {
+              "unit": "angstrom/second",
+              "picp": 0.8923076923076924,
+              "k_covered": 116,
+              "n_test": 130,
+              "ci95": [
+                0.825914479386931,
+                0.9398593128963649
+              ],
+              "nominal_in_ci": true,
+              "mean_width": 0.19504727859764395,
+              "n_infinite_width": 0,
+              "q_final": 1.7232923225503232,
+              "q_late_stream_std": 0.007920926922323664,
+              "q_late_stream_mean_abs_delta": 0.0036377414405161686,
+              "q_first_half_std": 0.007920926922323664,
+              "q_first_half_mean_abs_delta": 0.0036377414405161686,
+              "rolling_coverage": {
+                "window": 50,
+                "min_full_window": 0.86,
+                "final": 0.9,
+                "detector_fires": true
+              }
+            },
+            "Ipk (A)": {
+              "unit": "A",
+              "picp": 0.8769230769230769,
+              "k_covered": 114,
+              "n_test": 130,
+              "ci95": [
+                0.807835887591724,
+                0.9279869124984215
+              ],
+              "nominal_in_ci": true,
+              "mean_width": 0.008922586002639414,
+              "n_infinite_width": 0,
+              "q_final": 1.2885369992315074,
+              "q_late_stream_std": 0.017993811134963133,
+              "q_late_stream_mean_abs_delta": 0.0040066090958067214,
+              "q_first_half_std": 0.017993811134963133,
+              "q_first_half_mean_abs_delta": 0.0040066090958067214,
+              "rolling_coverage": {
+                "window": 50,
+                "min_full_window": 0.84,
+                "final": 0.86,
+                "detector_fires": true
+              }
+            }
+          },
+          "pooled": {
+            "picp": 0.8846153846153846,
+            "k_covered": 230,
+            "n_trials": 260,
+            "ci95": [
+              0.8393926798705639,
+              0.9207815899967124
+            ],
+            "nominal_in_ci": true
+          }
+        },
+        "delta": {
+          "pooled_picp_delta": -0.011538461538461608,
+          "pooled_gate_flip": false,
+          "per_output": {
+            "dep_rate_A_per_s": {
+              "picp_delta": 0.0,
+              "late_std_delta": -0.03853736647778724,
+              "late_mad_delta": -0.01636295533738357,
+              "gate_flip": false,
+              "detector_flip": false
+            },
+            "Ipk (A)": {
+              "picp_delta": -0.023076923076923106,
+              "late_std_delta": -0.050990431604296296,
+              "late_mad_delta": -0.013209252708760097,
+              "gate_flip": false,
+              "detector_flip": false
+            }
+          }
+        }
+      }
+    },
+    "al_250w_low_duty": {
+      "temporal": {
+        "degenerate_order": false,
+        "n_test": 80,
+        "output_keys": [
+          "dep_rate_A_per_s",
+          "Ipk (A)"
+        ],
+        "units": [
+          "angstrom/second",
+          "A"
+        ],
+        "recorded_form_fixed": {
+          "protocol": "online section 20.2 conformal-PID (endpoint): fresh split calibrator on the SAME calibration slice; test rows streamed in split order; interval at the current threshold q_t scored BEFORE observe(x, y); q_t tracked directly (finite by construction, so n_infinite_width is 0)",
+          "hyperparameters": {
+            "alpha_target": 0.1,
+            "eta": 0.1,
+            "KI": 2.0,
+            "Csat": 7.0,
+            "window": 50,
+            "step": "fixed",
+            "integrate": true,
+            "scorecaster": false,
+            "provenance": "ConformalPIDController library defaults (P+I quantile-tracker + log-time tan integrator; decaying-step OFF, scorecaster OFF), uniform across all campaigns and splits, fixed before any per-campaign outcome was seen"
+          },
+          "per_output": {
+            "dep_rate_A_per_s": {
+              "unit": "angstrom/second",
+              "picp": 0.8875,
+              "k_covered": 71,
+              "n_test": 80,
+              "ci95": [
+                0.7971534080830098,
+                0.9472484868543125
+              ],
+              "nominal_in_ci": true,
+              "mean_width": 1.0785043422882303,
+              "n_infinite_width": 0,
+              "q_threshold": {
+                "used_min": 1.535986981402001,
+                "used_max": 1.7899214554706173,
+                "used_mean": 1.6590199674506843,
+                "final": 1.7262445150015386
+              },
+              "effective_alpha": {
+                "used_min": 0.05,
+                "used_max": 0.1,
+                "used_mean": 0.076875,
+                "final": 0.0625
+              },
+              "rolling_coverage": {
+                "window": 50,
+                "min_full_window": 0.88,
+                "final": 0.9
+              }
+            },
+            "Ipk (A)": {
+              "unit": "A",
+              "picp": 0.8875,
+              "k_covered": 71,
+              "n_test": 80,
+              "ci95": [
+                0.7971534080830098,
+                0.9472484868543125
+              ],
+              "nominal_in_ci": true,
+              "mean_width": 0.08517836181471229,
+              "n_infinite_width": 0,
+              "q_threshold": {
+                "used_min": 1.3833883551246926,
+                "used_max": 1.7679148543738554,
+                "used_mean": 1.5565724370563903,
+                "final": 1.679698067481702
+              },
+              "effective_alpha": {
+                "used_min": 0.0375,
+                "used_max": 0.1375,
+                "used_mean": 0.09609375,
+                "final": 0.0625
+              },
+              "rolling_coverage": {
+                "window": 50,
+                "min_full_window": 0.88,
+                "final": 0.9
+              }
+            }
+          },
+          "pooled": {
+            "picp": 0.8875,
+            "k_covered": 142,
+            "n_trials": 160,
+            "ci95": [
+              0.8280375288321168,
+              0.9319463455364979
+            ],
+            "nominal_in_ci": true
+          }
+        },
+        "fixed": {
+          "step": "fixed",
+          "hyperparameters": {
+            "alpha_target": 0.1,
+            "eta": 0.1,
+            "KI": 2.0,
+            "Csat": 7.0,
+            "window": 50,
+            "step": "fixed",
+            "decay_eps": 0.1
+          },
+          "per_output": {
+            "dep_rate_A_per_s": {
+              "unit": "angstrom/second",
+              "picp": 0.8875,
+              "k_covered": 71,
+              "n_test": 80,
+              "ci95": [
+                0.7971534080830098,
+                0.9472484868543125
+              ],
+              "nominal_in_ci": true,
+              "mean_width": 1.0785043422882303,
+              "n_infinite_width": 0,
+              "q_final": 1.7262445150015386,
+              "q_late_stream_std": 0.061630919455238145,
+              "q_late_stream_mean_abs_delta": 0.024282409828470637,
+              "q_first_half_std": 0.061630919455238145,
+              "q_first_half_mean_abs_delta": 0.024282409828470637,
+              "rolling_coverage": {
+                "window": 50,
+                "min_full_window": 0.88,
+                "final": 0.9,
+                "detector_fires": true
+              }
+            },
+            "Ipk (A)": {
+              "unit": "A",
+              "picp": 0.8875,
+              "k_covered": 71,
+              "n_test": 80,
+              "ci95": [
+                0.7971534080830098,
+                0.9472484868543125
+              ],
+              "nominal_in_ci": true,
+              "mean_width": 0.08517836181471229,
+              "n_infinite_width": 0,
+              "q_final": 1.679698067481702,
+              "q_late_stream_std": 0.08983834852127318,
+              "q_late_stream_mean_abs_delta": 0.023974672088664748,
+              "q_first_half_std": 0.08983834852127318,
+              "q_first_half_mean_abs_delta": 0.023974672088664748,
+              "rolling_coverage": {
+                "window": 50,
+                "min_full_window": 0.88,
+                "final": 0.9,
+                "detector_fires": true
+              }
+            }
+          },
+          "pooled": {
+            "picp": 0.8875,
+            "k_covered": 142,
+            "n_trials": 160,
+            "ci95": [
+              0.8280375288321168,
+              0.9319463455364979
+            ],
+            "nominal_in_ci": true
+          }
+        },
+        "decaying": {
+          "step": "decaying",
+          "hyperparameters": {
+            "alpha_target": 0.1,
+            "eta": 0.1,
+            "KI": 2.0,
+            "Csat": 7.0,
+            "window": 50,
+            "step": "decaying",
+            "decay_eps": 0.1
+          },
+          "per_output": {
+            "dep_rate_A_per_s": {
+              "unit": "angstrom/second",
+              "picp": 0.8875,
+              "k_covered": 71,
+              "n_test": 80,
+              "ci95": [
+                0.7971534080830098,
+                0.9472484868543125
+              ],
+              "nominal_in_ci": true,
+              "mean_width": 1.0944438635878533,
+              "n_infinite_width": 0,
+              "q_final": 1.6919622584714231,
+              "q_late_stream_std": 0.013710934534282924,
+              "q_late_stream_mean_abs_delta": 0.0057797917908829575,
+              "q_first_half_std": 0.013710934534282924,
+              "q_first_half_mean_abs_delta": 0.0057797917908829575,
+              "rolling_coverage": {
+                "window": 50,
+                "min_full_window": 0.88,
+                "final": 0.9,
+                "detector_fires": true
+              }
+            },
+            "Ipk (A)": {
+              "unit": "A",
+              "picp": 0.875,
+              "k_covered": 70,
+              "n_test": 80,
+              "ci95": [
+                0.7821108659305637,
+                0.9383979034415657
+              ],
+              "nominal_in_ci": true,
+              "mean_width": 0.0845091448625632,
+              "n_infinite_width": 0,
+              "q_final": 1.5921723435832786,
+              "q_late_stream_std": 0.023848614463507122,
+              "q_late_stream_mean_abs_delta": 0.005893482615071781,
+              "q_first_half_std": 0.023848614463507122,
+              "q_first_half_mean_abs_delta": 0.005893482615071781,
+              "rolling_coverage": {
+                "window": 50,
+                "min_full_window": 0.88,
+                "final": 0.88,
+                "detector_fires": true
+              }
+            }
+          },
+          "pooled": {
+            "picp": 0.88125,
+            "k_covered": 141,
+            "n_trials": 160,
+            "ci95": [
+              0.8207811796690598,
+              0.9269690866558834
+            ],
+            "nominal_in_ci": true
+          }
+        },
+        "delta": {
+          "pooled_picp_delta": -0.006249999999999978,
+          "pooled_gate_flip": false,
+          "per_output": {
+            "dep_rate_A_per_s": {
+              "picp_delta": 0.0,
+              "late_std_delta": -0.04791998492095522,
+              "late_mad_delta": -0.01850261803758768,
+              "gate_flip": false,
+              "detector_flip": false
+            },
+            "Ipk (A)": {
+              "picp_delta": -0.012499999999999956,
+              "late_std_delta": -0.06598973405776605,
+              "late_mad_delta": -0.018081189473592968,
+              "gate_flip": false,
+              "detector_flip": false
+            }
+          }
+        }
+      },
+      "random": {
+        "degenerate_order": false,
+        "n_test": 80,
+        "output_keys": [
+          "dep_rate_A_per_s",
+          "Ipk (A)"
+        ],
+        "units": [
+          "angstrom/second",
+          "A"
+        ],
+        "recorded_form_fixed": {
+          "protocol": "online section 20.2 conformal-PID (endpoint): fresh split calibrator on the SAME calibration slice; test rows streamed in split order; interval at the current threshold q_t scored BEFORE observe(x, y); q_t tracked directly (finite by construction, so n_infinite_width is 0)",
+          "hyperparameters": {
+            "alpha_target": 0.1,
+            "eta": 0.1,
+            "KI": 2.0,
+            "Csat": 7.0,
+            "window": 50,
+            "step": "fixed",
+            "integrate": true,
+            "scorecaster": false,
+            "provenance": "ConformalPIDController library defaults (P+I quantile-tracker + log-time tan integrator; decaying-step OFF, scorecaster OFF), uniform across all campaigns and splits, fixed before any per-campaign outcome was seen"
+          },
+          "per_output": {
+            "dep_rate_A_per_s": {
+              "unit": "angstrom/second",
+              "picp": 0.85,
+              "k_covered": 68,
+              "n_test": 80,
+              "ci95": [
+                0.7526358884071024,
+                0.9200184386902862
+              ],
+              "nominal_in_ci": true,
+              "mean_width": 1.0028020519375225,
+              "n_infinite_width": 0,
+              "q_threshold": {
+                "used_min": 1.1830271242163524,
+                "used_max": 1.9026479542193209,
+                "used_mean": 1.4642038527507248,
+                "final": 1.807352940944317
+              },
+              "effective_alpha": {
+                "used_min": 0.0375,
+                "used_max": 0.1375,
+                "used_mean": 0.08625000000000001,
+                "final": 0.05
+              },
+              "rolling_coverage": {
+                "window": 50,
+                "min_full_window": 0.8,
+                "final": 0.8200000000000001
+              }
+            },
+            "Ipk (A)": {
+              "unit": "A",
+              "picp": 0.9125,
+              "k_covered": 73,
+              "n_test": 80,
+              "ci95": [
+                0.8279916615801152,
+                0.9640936410104413
+              ],
+              "nominal_in_ci": true,
+              "mean_width": 0.08737021038057262,
+              "n_infinite_width": 0,
+              "q_threshold": {
+                "used_min": 1.607277724491481,
+                "used_max": 1.8759593499031642,
+                "used_mean": 1.7163972320812761,
+                "final": 1.6343253389272525
+              },
+              "effective_alpha": {
+                "used_min": 0.075,
+                "used_max": 0.1125,
+                "used_mean": 0.10125000000000002,
+                "final": 0.1125
+              },
+              "rolling_coverage": {
+                "window": 50,
+                "min_full_window": 0.9,
+                "final": 0.92
+              }
+            }
+          },
+          "pooled": {
+            "picp": 0.88125,
+            "k_covered": 141,
+            "n_trials": 160,
+            "ci95": [
+              0.8207811796690598,
+              0.9269690866558834
+            ],
+            "nominal_in_ci": true
+          }
+        },
+        "fixed": {
+          "step": "fixed",
+          "hyperparameters": {
+            "alpha_target": 0.1,
+            "eta": 0.1,
+            "KI": 2.0,
+            "Csat": 7.0,
+            "window": 50,
+            "step": "fixed",
+            "decay_eps": 0.1
+          },
+          "per_output": {
+            "dep_rate_A_per_s": {
+              "unit": "angstrom/second",
+              "picp": 0.85,
+              "k_covered": 68,
+              "n_test": 80,
+              "ci95": [
+                0.7526358884071024,
+                0.9200184386902862
+              ],
+              "nominal_in_ci": true,
+              "mean_width": 1.0028020519375225,
+              "n_infinite_width": 0,
+              "q_final": 1.807352940944317,
+              "q_late_stream_std": 0.21644092891801836,
+              "q_late_stream_mean_abs_delta": 0.03197254191822515,
+              "q_first_half_std": 0.21644092891801836,
+              "q_first_half_mean_abs_delta": 0.03197254191822515,
+              "rolling_coverage": {
+                "window": 50,
+                "min_full_window": 0.8,
+                "final": 0.8200000000000001,
+                "detector_fires": true
+              }
+            },
+            "Ipk (A)": {
+              "unit": "A",
+              "picp": 0.9125,
+              "k_covered": 73,
+              "n_test": 80,
+              "ci95": [
+                0.8279916615801152,
+                0.9640936410104413
+              ],
+              "nominal_in_ci": true,
+              "mean_width": 0.08737021038057262,
+              "n_infinite_width": 0,
+              "q_final": 1.6343253389272525,
+              "q_late_stream_std": 0.03662170860382787,
+              "q_late_stream_mean_abs_delta": 0.02179463227167367,
+              "q_first_half_std": 0.03662170860382787,
+              "q_first_half_mean_abs_delta": 0.02179463227167367,
+              "rolling_coverage": {
+                "window": 50,
+                "min_full_window": 0.9,
+                "final": 0.92,
+                "detector_fires": false
+              }
+            }
+          },
+          "pooled": {
+            "picp": 0.88125,
+            "k_covered": 141,
+            "n_trials": 160,
+            "ci95": [
+              0.8207811796690598,
+              0.9269690866558834
+            ],
+            "nominal_in_ci": true
+          }
+        },
+        "decaying": {
+          "step": "decaying",
+          "hyperparameters": {
+            "alpha_target": 0.1,
+            "eta": 0.1,
+            "KI": 2.0,
+            "Csat": 7.0,
+            "window": 50,
+            "step": "decaying",
+            "decay_eps": 0.1
+          },
+          "per_output": {
+            "dep_rate_A_per_s": {
+              "unit": "angstrom/second",
+              "picp": 0.825,
+              "k_covered": 66,
+              "n_test": 80,
+              "ci95": [
+                0.7238459604789865,
+                0.9008894901605713
+              ],
+              "nominal_in_ci": true,
+              "mean_width": 0.9341624115936152,
+              "n_infinite_width": 0,
+              "q_final": 1.4691155432778693,
+              "q_late_stream_std": 0.05256120124673277,
+              "q_late_stream_mean_abs_delta": 0.008548100530818389,
+              "q_first_half_std": 0.05256120124673277,
+              "q_first_half_mean_abs_delta": 0.008548100530818389,
+              "rolling_coverage": {
+                "window": 50,
+                "min_full_window": 0.76,
+                "final": 0.78,
+                "detector_fires": true
+              }
+            },
+            "Ipk (A)": {
+              "unit": "A",
+              "picp": 0.9125,
+              "k_covered": 73,
+              "n_test": 80,
+              "ci95": [
+                0.8279916615801152,
+                0.9640936410104413
+              ],
+              "nominal_in_ci": true,
+              "mean_width": 0.08860252368294524,
+              "n_infinite_width": 0,
+              "q_final": 1.7235236576468338,
+              "q_late_stream_std": 0.008799433652179667,
+              "q_late_stream_mean_abs_delta": 0.005208883304573603,
+              "q_first_half_std": 0.008799433652179667,
+              "q_first_half_mean_abs_delta": 0.005208883304573603,
+              "rolling_coverage": {
+                "window": 50,
+                "min_full_window": 0.9,
+                "final": 0.92,
+                "detector_fires": false
+              }
+            }
+          },
+          "pooled": {
+            "picp": 0.86875,
+            "k_covered": 139,
+            "n_trials": 160,
+            "ci95": [
+              0.8063918442358302,
+              0.9168835344641213
+            ],
+            "nominal_in_ci": true
+          }
+        },
+        "delta": {
+          "pooled_picp_delta": -0.012499999999999956,
+          "pooled_gate_flip": false,
+          "per_output": {
+            "dep_rate_A_per_s": {
+              "picp_delta": -0.025000000000000022,
+              "late_std_delta": -0.16387972767128559,
+              "late_mad_delta": -0.02342444138740676,
+              "gate_flip": false,
+              "detector_flip": false
+            },
+            "Ipk (A)": {
+              "picp_delta": 0.0,
+              "late_std_delta": -0.027822274951648206,
+              "late_mad_delta": -0.016585748967100068,
+              "gate_flip": false,
+              "detector_flip": false
+            }
+          }
+        }
+      }
+    },
+    "ti_120w_short_pw": {
+      "temporal": {
+        "degenerate_order": true,
+        "n_test": 98,
+        "output_keys": [
+          "dep_rate_A_per_s",
+          "Ipk (A)"
+        ],
+        "units": [
+          "angstrom/second",
+          "A"
+        ],
+        "recorded_form_fixed": {
+          "protocol": "online section 20.2 conformal-PID (endpoint): fresh split calibrator on the SAME calibration slice; test rows streamed in split order; interval at the current threshold q_t scored BEFORE observe(x, y); q_t tracked directly (finite by construction, so n_infinite_width is 0)",
+          "hyperparameters": {
+            "alpha_target": 0.1,
+            "eta": 0.1,
+            "KI": 2.0,
+            "Csat": 7.0,
+            "window": 50,
+            "step": "fixed",
+            "integrate": true,
+            "scorecaster": false,
+            "provenance": "ConformalPIDController library defaults (P+I quantile-tracker + log-time tan integrator; decaying-step OFF, scorecaster OFF), uniform across all campaigns and splits, fixed before any per-campaign outcome was seen"
+          },
+          "per_output": {
+            "dep_rate_A_per_s": {
+              "unit": "angstrom/second",
+              "picp": 0.9387755102040817,
+              "k_covered": 92,
+              "n_test": 98,
+              "ci95": [
+                0.8714921557405245,
+                0.9772025473957623
+              ],
+              "nominal_in_ci": true,
+              "mean_width": 0.21429982207043777,
+              "n_infinite_width": 0,
+              "q_threshold": {
+                "used_min": 1.555575687829202,
+                "used_max": 1.9989937991814581,
+                "used_mean": 1.796982191931183,
+                "final": 1.544640127023749
+              },
+              "effective_alpha": {
+                "used_min": 0.08163265306122448,
+                "used_max": 0.17346938775510204,
+                "used_mean": 0.12005414410662223,
+                "final": 0.17346938775510204
+              },
+              "rolling_coverage": {
+                "window": 50,
+                "min_full_window": 0.88,
+                "final": 0.94
+              }
+            },
+            "Ipk (A)": {
+              "unit": "A",
+              "picp": 0.9081632653061225,
+              "k_covered": 89,
+              "n_test": 98,
+              "ci95": [
+                0.8328133504122911,
+                0.9571416325975936
+              ],
+              "nominal_in_ci": true,
+              "mean_width": 0.035350827716461225,
+              "n_infinite_width": 0,
+              "q_threshold": {
+                "used_min": 0.4973768716425857,
+                "used_max": 0.8104011138905163,
+                "used_mean": 0.6468024678672148,
+                "final": 0.5425845626649815
+              },
+              "effective_alpha": {
+                "used_min": 0.061224489795918366,
+                "used_max": 0.12244897959183673,
+                "used_mean": 0.0851728446480633,
+                "final": 0.10204081632653061
+              },
+              "rolling_coverage": {
+                "window": 50,
+                "min_full_window": 0.86,
+                "final": 0.9
+              }
+            }
+          },
+          "pooled": {
+            "picp": 0.923469387755102,
+            "k_covered": 181,
+            "n_trials": 196,
+            "ci95": [
+              0.8769157778670484,
+              0.9565351500313333
+            ],
+            "nominal_in_ci": true
+          }
+        },
+        "fixed": {
+          "step": "fixed",
+          "hyperparameters": {
+            "alpha_target": 0.1,
+            "eta": 0.1,
+            "KI": 2.0,
+            "Csat": 7.0,
+            "window": 50,
+            "step": "fixed",
+            "decay_eps": 0.1
+          },
+          "per_output": {
+            "dep_rate_A_per_s": {
+              "unit": "angstrom/second",
+              "picp": 0.9387755102040817,
+              "k_covered": 92,
+              "n_test": 98,
+              "ci95": [
+                0.8714921557405245,
+                0.9772025473957623
+              ],
+              "nominal_in_ci": true,
+              "mean_width": 0.21429982207043777,
+              "n_infinite_width": 0,
+              "q_final": 1.544640127023749,
+              "q_late_stream_std": 0.12857046089360724,
+              "q_late_stream_mean_abs_delta": 0.017562458630468018,
+              "q_first_half_std": 0.12857046089360724,
+              "q_first_half_mean_abs_delta": 0.017562458630468018,
+              "rolling_coverage": {
+                "window": 50,
+                "min_full_window": 0.88,
+                "final": 0.94,
+                "detector_fires": true
+              }
+            },
+            "Ipk (A)": {
+              "unit": "A",
+              "picp": 0.9081632653061225,
+              "k_covered": 89,
+              "n_test": 98,
+              "ci95": [
+                0.8328133504122911,
+                0.9571416325975936
+              ],
+              "nominal_in_ci": true,
+              "mean_width": 0.035350827716461225,
+              "n_infinite_width": 0,
+              "q_final": 0.5425845626649815,
+              "q_late_stream_std": 0.07551282129840575,
+              "q_late_stream_mean_abs_delta": 0.01965005463878208,
+              "q_first_half_std": 0.07551282129840575,
+              "q_first_half_mean_abs_delta": 0.01965005463878208,
+              "rolling_coverage": {
+                "window": 50,
+                "min_full_window": 0.86,
+                "final": 0.9,
+                "detector_fires": true
+              }
+            }
+          },
+          "pooled": {
+            "picp": 0.923469387755102,
+            "k_covered": 181,
+            "n_trials": 196,
+            "ci95": [
+              0.8769157778670484,
+              0.9565351500313333
+            ],
+            "nominal_in_ci": true
+          }
+        },
+        "decaying": {
+          "step": "decaying",
+          "hyperparameters": {
+            "alpha_target": 0.1,
+            "eta": 0.1,
+            "KI": 2.0,
+            "Csat": 7.0,
+            "window": 50,
+            "step": "decaying",
+            "decay_eps": 0.1
+          },
+          "per_output": {
+            "dep_rate_A_per_s": {
+              "unit": "angstrom/second",
+              "picp": 0.9387755102040817,
+              "k_covered": 92,
+              "n_test": 98,
+              "ci95": [
+                0.8714921557405245,
+                0.9772025473957623
+              ],
+              "nominal_in_ci": true,
+              "mean_width": 0.22520337308931748,
+              "n_infinite_width": 0,
+              "q_final": 1.855816168955114,
+              "q_late_stream_std": 0.023782557998186193,
+              "q_late_stream_mean_abs_delta": 0.0037959553112241057,
+              "q_first_half_std": 0.023782557998186193,
+              "q_first_half_mean_abs_delta": 0.0037959553112241057,
+              "rolling_coverage": {
+                "window": 50,
+                "min_full_window": 0.88,
+                "final": 0.94,
+                "detector_fires": true
+              }
+            },
+            "Ipk (A)": {
+              "unit": "A",
+              "picp": 0.9081632653061225,
+              "k_covered": 89,
+              "n_test": 98,
+              "ci95": [
+                0.8328133504122911,
+                0.9571416325975936
+              ],
+              "nominal_in_ci": true,
+              "mean_width": 0.03370251916668098,
+              "n_infinite_width": 0,
+              "q_final": 0.6010213685505035,
+              "q_late_stream_std": 0.015835203920574633,
+              "q_late_stream_mean_abs_delta": 0.004303921418691595,
+              "q_first_half_std": 0.015835203920574633,
+              "q_first_half_mean_abs_delta": 0.004303921418691595,
+              "rolling_coverage": {
+                "window": 50,
+                "min_full_window": 0.86,
+                "final": 0.9,
+                "detector_fires": true
+              }
+            }
+          },
+          "pooled": {
+            "picp": 0.923469387755102,
+            "k_covered": 181,
+            "n_trials": 196,
+            "ci95": [
+              0.8769157778670484,
+              0.9565351500313333
+            ],
+            "nominal_in_ci": true
+          }
+        },
+        "delta": {
+          "pooled_picp_delta": 0.0,
+          "pooled_gate_flip": false,
+          "per_output": {
+            "dep_rate_A_per_s": {
+              "picp_delta": 0.0,
+              "late_std_delta": -0.10478790289542105,
+              "late_mad_delta": -0.013766503319243912,
+              "gate_flip": false,
+              "detector_flip": false
+            },
+            "Ipk (A)": {
+              "picp_delta": 0.0,
+              "late_std_delta": -0.059677617377831116,
+              "late_mad_delta": -0.015346133220090485,
+              "gate_flip": false,
+              "detector_flip": false
+            }
+          }
+        }
+      },
+      "random": {
+        "degenerate_order": true,
+        "n_test": 98,
+        "output_keys": [
+          "dep_rate_A_per_s",
+          "Ipk (A)"
+        ],
+        "units": [
+          "angstrom/second",
+          "A"
+        ],
+        "recorded_form_fixed": {
+          "protocol": "online section 20.2 conformal-PID (endpoint): fresh split calibrator on the SAME calibration slice; test rows streamed in split order; interval at the current threshold q_t scored BEFORE observe(x, y); q_t tracked directly (finite by construction, so n_infinite_width is 0)",
+          "hyperparameters": {
+            "alpha_target": 0.1,
+            "eta": 0.1,
+            "KI": 2.0,
+            "Csat": 7.0,
+            "window": 50,
+            "step": "fixed",
+            "integrate": true,
+            "scorecaster": false,
+            "provenance": "ConformalPIDController library defaults (P+I quantile-tracker + log-time tan integrator; decaying-step OFF, scorecaster OFF), uniform across all campaigns and splits, fixed before any per-campaign outcome was seen"
+          },
+          "per_output": {
+            "dep_rate_A_per_s": {
+              "unit": "angstrom/second",
+              "picp": 0.9183673469387755,
+              "k_covered": 90,
+              "n_test": 98,
+              "ci95": [
+                0.8454749494815671,
+                0.964097000470202
+              ],
+              "nominal_in_ci": true,
+              "mean_width": 0.21104276120105622,
+              "n_infinite_width": 0,
+              "q_threshold": {
+                "used_min": 1.5158508398639992,
+                "used_max": 1.8583457055384642,
+                "used_mean": 1.703412828578605,
+                "final": 1.654473819517236
+              },
+              "effective_alpha": {
+                "used_min": 0.08163265306122448,
+                "used_max": 0.15306122448979592,
+                "used_mean": 0.10266555601832568,
+                "final": 0.10204081632653061
+              },
+              "rolling_coverage": {
+                "window": 50,
+                "min_full_window": 0.9,
+                "final": 0.92
+              }
+            },
+            "Ipk (A)": {
+              "unit": "A",
+              "picp": 0.8979591836734694,
+              "k_covered": 88,
+              "n_test": 98,
+              "ci95": [
+                0.82034034493393,
+                0.949972373679884
+              ],
+              "nominal_in_ci": true,
+              "mean_width": 0.05426853955287467,
+              "n_infinite_width": 0,
+              "q_threshold": {
+                "used_min": 0.8967156076569984,
+                "used_max": 1.2604268778603618,
+                "used_mean": 1.0705837643293559,
+                "final": 1.2034125253284138
+              },
+              "effective_alpha": {
+                "used_min": 0.08163265306122448,
+                "used_max": 0.10204081632653061,
+                "used_mean": 0.09902124114952102,
+                "final": 0.08163265306122448
+              },
+              "rolling_coverage": {
+                "window": 50,
+                "min_full_window": 0.88,
+                "final": 0.88
+              }
+            }
+          },
+          "pooled": {
+            "picp": 0.9081632653061225,
+            "k_covered": 178,
+            "n_trials": 196,
+            "ci95": [
+              0.8587431511561691,
+              0.9446604458204912
+            ],
+            "nominal_in_ci": true
+          }
+        },
+        "fixed": {
+          "step": "fixed",
+          "hyperparameters": {
+            "alpha_target": 0.1,
+            "eta": 0.1,
+            "KI": 2.0,
+            "Csat": 7.0,
+            "window": 50,
+            "step": "fixed",
+            "decay_eps": 0.1
+          },
+          "per_output": {
+            "dep_rate_A_per_s": {
+              "unit": "angstrom/second",
+              "picp": 0.9183673469387755,
+              "k_covered": 90,
+              "n_test": 98,
+              "ci95": [
+                0.8454749494815671,
+                0.964097000470202
+              ],
+              "nominal_in_ci": true,
+              "mean_width": 0.21104276120105622,
+              "n_infinite_width": 0,
+              "q_final": 1.654473819517236,
+              "q_late_stream_std": 0.08065129791009973,
+              "q_late_stream_mean_abs_delta": 0.019252726698185008,
+              "q_first_half_std": 0.08065129791009973,
+              "q_first_half_mean_abs_delta": 0.019252726698185008,
+              "rolling_coverage": {
+                "window": 50,
+                "min_full_window": 0.9,
+                "final": 0.92,
+                "detector_fires": false
+              }
+            },
+            "Ipk (A)": {
+              "unit": "A",
+              "picp": 0.8979591836734694,
+              "k_covered": 88,
+              "n_test": 98,
+              "ci95": [
+                0.82034034493393,
+                0.949972373679884
+              ],
+              "nominal_in_ci": true,
+              "mean_width": 0.05426853955287467,
+              "n_infinite_width": 0,
+              "q_final": 1.2034125253284138,
+              "q_late_stream_std": 0.09102462476855556,
+              "q_late_stream_mean_abs_delta": 0.02307579223683277,
+              "q_first_half_std": 0.09102462476855556,
+              "q_first_half_mean_abs_delta": 0.02307579223683277,
+              "rolling_coverage": {
+                "window": 50,
+                "min_full_window": 0.88,
+                "final": 0.88,
+                "detector_fires": true
+              }
+            }
+          },
+          "pooled": {
+            "picp": 0.9081632653061225,
+            "k_covered": 178,
+            "n_trials": 196,
+            "ci95": [
+              0.8587431511561691,
+              0.9446604458204912
+            ],
+            "nominal_in_ci": true
+          }
+        },
+        "decaying": {
+          "step": "decaying",
+          "hyperparameters": {
+            "alpha_target": 0.1,
+            "eta": 0.1,
+            "KI": 2.0,
+            "Csat": 7.0,
+            "window": 50,
+            "step": "decaying",
+            "decay_eps": 0.1
+          },
+          "per_output": {
+            "dep_rate_A_per_s": {
+              "unit": "angstrom/second",
+              "picp": 0.9183673469387755,
+              "k_covered": 90,
+              "n_test": 98,
+              "ci95": [
+                0.8454749494815671,
+                0.964097000470202
+              ],
+              "nominal_in_ci": true,
+              "mean_width": 0.22125138775934117,
+              "n_infinite_width": 0,
+              "q_final": 1.7857828436740055,
+              "q_late_stream_std": 0.014162621749259858,
+              "q_late_stream_mean_abs_delta": 0.003863411773069564,
+              "q_first_half_std": 0.014162621749259858,
+              "q_first_half_mean_abs_delta": 0.003863411773069564,
+              "rolling_coverage": {
+                "window": 50,
+                "min_full_window": 0.9,
+                "final": 0.92,
+                "detector_fires": false
+              }
+            },
+            "Ipk (A)": {
+              "unit": "A",
+              "picp": 0.9081632653061225,
+              "k_covered": 89,
+              "n_test": 98,
+              "ci95": [
+                0.8328133504122911,
+                0.9571416325975936
+              ],
+              "nominal_in_ci": true,
+              "mean_width": 0.05581475561083958,
+              "n_infinite_width": 0,
+              "q_final": 1.125631385810192,
+              "q_late_stream_std": 0.020944436501285763,
+              "q_late_stream_mean_abs_delta": 0.004426344262154269,
+              "q_first_half_std": 0.020944436501285763,
+              "q_first_half_mean_abs_delta": 0.004426344262154269,
+              "rolling_coverage": {
+                "window": 50,
+                "min_full_window": 0.88,
+                "final": 0.88,
+                "detector_fires": true
+              }
+            }
+          },
+          "pooled": {
+            "picp": 0.9132653061224489,
+            "k_covered": 179,
+            "n_trials": 196,
+            "ci95": [
+              0.8647615195453305,
+              0.9486608154531861
+            ],
+            "nominal_in_ci": true
+          }
+        },
+        "delta": {
+          "pooled_picp_delta": 0.005102040816326481,
+          "pooled_gate_flip": false,
+          "per_output": {
+            "dep_rate_A_per_s": {
+              "picp_delta": 0.0,
+              "late_std_delta": -0.06648867616083987,
+              "late_mad_delta": -0.015389314925115444,
+              "gate_flip": false,
+              "detector_flip": false
+            },
+            "Ipk (A)": {
+              "picp_delta": 0.010204081632653073,
+              "late_std_delta": -0.0700801882672698,
+              "late_mad_delta": -0.0186494479746785,
+              "gate_flip": false,
+              "detector_flip": false
+            }
+          }
+        }
+      }
+    },
+    "ti_200w_high_pw": {
+      "temporal": {
+        "degenerate_order": false,
+        "n_test": 120,
+        "output_keys": [
+          "dep_rate_A_per_s",
+          "Ipk (A)"
+        ],
+        "units": [
+          "angstrom/second",
+          "A"
+        ],
+        "recorded_form_fixed": {
+          "protocol": "online section 20.2 conformal-PID (endpoint): fresh split calibrator on the SAME calibration slice; test rows streamed in split order; interval at the current threshold q_t scored BEFORE observe(x, y); q_t tracked directly (finite by construction, so n_infinite_width is 0)",
+          "hyperparameters": {
+            "alpha_target": 0.1,
+            "eta": 0.1,
+            "KI": 2.0,
+            "Csat": 7.0,
+            "window": 50,
+            "step": "fixed",
+            "integrate": true,
+            "scorecaster": false,
+            "provenance": "ConformalPIDController library defaults (P+I quantile-tracker + log-time tan integrator; decaying-step OFF, scorecaster OFF), uniform across all campaigns and splits, fixed before any per-campaign outcome was seen"
+          },
+          "per_output": {
+            "dep_rate_A_per_s": {
+              "unit": "angstrom/second",
+              "picp": 0.875,
+              "k_covered": 105,
+              "n_test": 120,
+              "ci95": [
+                0.8022235896481744,
+                0.9283203231112479
+              ],
+              "nominal_in_ci": true,
+              "mean_width": 0.18855991145404272,
+              "n_infinite_width": 0,
+              "q_threshold": {
+                "used_min": 1.5869495772442204,
+                "used_max": 2.270854999249871,
+                "used_mean": 2.008895197867965,
+                "final": 2.1331714587109056
+              },
+              "effective_alpha": {
+                "used_min": 0.008333333333333333,
+                "used_max": 0.15833333333333333,
+                "used_mean": 0.0470138888888889,
+                "final": 0.025
+              },
+              "rolling_coverage": {
+                "window": 50,
+                "min_full_window": 0.8200000000000001,
+                "final": 0.88
+              }
+            },
+            "Ipk (A)": {
+              "unit": "A",
+              "picp": 0.875,
+              "k_covered": 105,
+              "n_test": 120,
+              "ci95": [
+                0.8022235896481744,
+                0.9283203231112479
+              ],
+              "nominal_in_ci": true,
+              "mean_width": 0.010368853467952847,
+              "n_infinite_width": 0,
+              "q_threshold": {
+                "used_min": 1.3869538814705245,
+                "used_max": 1.8539608613719212,
+                "used_mean": 1.6381901871331752,
+                "final": 1.7618564034913335
+              },
+              "effective_alpha": {
+                "used_min": 0.05,
+                "used_max": 0.10833333333333334,
+                "used_mean": 0.06645833333333333,
+                "final": 0.058333333333333334
+              },
+              "rolling_coverage": {
+                "window": 50,
+                "min_full_window": 0.84,
+                "final": 0.9
+              }
+            }
+          },
+          "pooled": {
+            "picp": 0.875,
+            "k_covered": 210,
+            "n_trials": 240,
+            "ci95": [
+              0.8263850821261609,
+              0.914050444623906
+            ],
+            "nominal_in_ci": true
+          }
+        },
+        "fixed": {
+          "step": "fixed",
+          "hyperparameters": {
+            "alpha_target": 0.1,
+            "eta": 0.1,
+            "KI": 2.0,
+            "Csat": 7.0,
+            "window": 50,
+            "step": "fixed",
+            "decay_eps": 0.1
+          },
+          "per_output": {
+            "dep_rate_A_per_s": {
+              "unit": "angstrom/second",
+              "picp": 0.875,
+              "k_covered": 105,
+              "n_test": 120,
+              "ci95": [
+                0.8022235896481744,
+                0.9283203231112479
+              ],
+              "nominal_in_ci": true,
+              "mean_width": 0.18855991145404272,
+              "n_infinite_width": 0,
+              "q_final": 2.1331714587109056,
+              "q_late_stream_std": 0.0707742261869327,
+              "q_late_stream_mean_abs_delta": 0.021027833274330696,
+              "q_first_half_std": 0.0707742261869327,
+              "q_first_half_mean_abs_delta": 0.021027833274330696,
+              "rolling_coverage": {
+                "window": 50,
+                "min_full_window": 0.8200000000000001,
+                "final": 0.88,
+                "detector_fires": true
+              }
+            },
+            "Ipk (A)": {
+              "unit": "A",
+              "picp": 0.875,
+              "k_covered": 105,
+              "n_test": 120,
+              "ci95": [
+                0.8022235896481744,
+                0.9283203231112479
+              ],
+              "nominal_in_ci": true,
+              "mean_width": 0.010368853467952847,
+              "n_infinite_width": 0,
+              "q_final": 1.7618564034913335,
+              "q_late_stream_std": 0.08831824684469299,
+              "q_late_stream_mean_abs_delta": 0.021011221572820205,
+              "q_first_half_std": 0.08831824684469299,
+              "q_first_half_mean_abs_delta": 0.021011221572820205,
+              "rolling_coverage": {
+                "window": 50,
+                "min_full_window": 0.84,
+                "final": 0.9,
+                "detector_fires": true
+              }
+            }
+          },
+          "pooled": {
+            "picp": 0.875,
+            "k_covered": 210,
+            "n_trials": 240,
+            "ci95": [
+              0.8263850821261609,
+              0.914050444623906
+            ],
+            "nominal_in_ci": true
+          }
+        },
+        "decaying": {
+          "step": "decaying",
+          "hyperparameters": {
+            "alpha_target": 0.1,
+            "eta": 0.1,
+            "KI": 2.0,
+            "Csat": 7.0,
+            "window": 50,
+            "step": "decaying",
+            "decay_eps": 0.1
+          },
+          "per_output": {
+            "dep_rate_A_per_s": {
+              "unit": "angstrom/second",
+              "picp": 0.825,
+              "k_covered": 99,
+              "n_test": 120,
+              "ci95": [
+                0.7450199724342718,
+                0.8882856569062535
+              ],
+              "nominal_in_ci": false,
+              "mean_width": 0.17756593426612152,
+              "n_infinite_width": 0,
+              "q_final": 1.9607417202385662,
+              "q_late_stream_std": 0.015478678103556315,
+              "q_late_stream_mean_abs_delta": 0.005169698516724126,
+              "q_first_half_std": 0.015478678103556315,
+              "q_first_half_mean_abs_delta": 0.005169698516724126,
+              "rolling_coverage": {
+                "window": 50,
+                "min_full_window": 0.74,
+                "final": 0.84,
+                "detector_fires": true
+              }
+            },
+            "Ipk (A)": {
+              "unit": "A",
+              "picp": 0.8583333333333333,
+              "k_covered": 103,
+              "n_test": 120,
+              "ci95": [
+                0.7828931017566235,
+                0.9152552705054843
+              ],
+              "nominal_in_ci": true,
+              "mean_width": 0.009639110810441142,
+              "n_infinite_width": 0,
+              "q_final": 1.5502596648074403,
+              "q_late_stream_std": 0.022109400724883946,
+              "q_late_stream_mean_abs_delta": 0.004648538791387047,
+              "q_first_half_std": 0.022109400724883946,
+              "q_first_half_mean_abs_delta": 0.004648538791387047,
+              "rolling_coverage": {
+                "window": 50,
+                "min_full_window": 0.8,
+                "final": 0.9,
+                "detector_fires": true
+              }
+            }
+          },
+          "pooled": {
+            "picp": 0.8416666666666667,
+            "k_covered": 202,
+            "n_trials": 240,
+            "ci95": [
+              0.7892140812551869,
+              0.885452304695002
+            ],
+            "nominal_in_ci": false
+          }
+        },
+        "delta": {
+          "pooled_picp_delta": -0.033333333333333326,
+          "pooled_gate_flip": true,
+          "per_output": {
+            "dep_rate_A_per_s": {
+              "picp_delta": -0.050000000000000044,
+              "late_std_delta": -0.05529554808337639,
+              "late_mad_delta": -0.01585813475760657,
+              "gate_flip": true,
+              "detector_flip": false
+            },
+            "Ipk (A)": {
+              "picp_delta": -0.01666666666666672,
+              "late_std_delta": -0.06620884611980904,
+              "late_mad_delta": -0.016362682781433158,
+              "gate_flip": false,
+              "detector_flip": false
+            }
+          }
+        }
+      },
+      "random": {
+        "degenerate_order": false,
+        "n_test": 120,
+        "output_keys": [
+          "dep_rate_A_per_s",
+          "Ipk (A)"
+        ],
+        "units": [
+          "angstrom/second",
+          "A"
+        ],
+        "recorded_form_fixed": {
+          "protocol": "online section 20.2 conformal-PID (endpoint): fresh split calibrator on the SAME calibration slice; test rows streamed in split order; interval at the current threshold q_t scored BEFORE observe(x, y); q_t tracked directly (finite by construction, so n_infinite_width is 0)",
+          "hyperparameters": {
+            "alpha_target": 0.1,
+            "eta": 0.1,
+            "KI": 2.0,
+            "Csat": 7.0,
+            "window": 50,
+            "step": "fixed",
+            "integrate": true,
+            "scorecaster": false,
+            "provenance": "ConformalPIDController library defaults (P+I quantile-tracker + log-time tan integrator; decaying-step OFF, scorecaster OFF), uniform across all campaigns and splits, fixed before any per-campaign outcome was seen"
+          },
+          "per_output": {
+            "dep_rate_A_per_s": {
+              "unit": "angstrom/second",
+              "picp": 0.9166666666666666,
+              "k_covered": 110,
+              "n_test": 120,
+              "ci95": [
+                0.8520845706626649,
+                0.9593138711319835
+              ],
+              "nominal_in_ci": true,
+              "mean_width": 0.15778219608761665,
+              "n_infinite_width": 0,
+              "q_threshold": {
+                "used_min": 1.2831112889161715,
+                "used_max": 1.8179338375628395,
+                "used_mean": 1.5392900697863383,
+                "final": 1.3748972724698247
+              },
+              "effective_alpha": {
+                "used_min": 0.058333333333333334,
+                "used_max": 0.23333333333333334,
+                "used_mean": 0.1276388888888889,
+                "final": 0.2
+              },
+              "rolling_coverage": {
+                "window": 50,
+                "min_full_window": 0.88,
+                "final": 0.92
+              }
+            },
+            "Ipk (A)": {
+              "unit": "A",
+              "picp": 0.9416666666666667,
+              "k_covered": 113,
+              "n_test": 120,
+              "ci95": [
+                0.8835016203543854,
+                0.9762279762094809
+              ],
+              "nominal_in_ci": true,
+              "mean_width": 0.013036678040323353,
+              "n_infinite_width": 0,
+              "q_threshold": {
+                "used_min": 2.0470330436130455,
+                "used_max": 2.6292083502601793,
+                "used_mean": 2.3331088756660976,
+                "final": 2.072572314810575
+              },
+              "effective_alpha": {
+                "used_min": 0.09166666666666666,
+                "used_max": 0.125,
+                "used_mean": 0.10562500000000002,
+                "final": 0.125
+              },
+              "rolling_coverage": {
+                "window": 50,
+                "min_full_window": 0.9,
+                "final": 0.94
+              }
+            }
+          },
+          "pooled": {
+            "picp": 0.9291666666666667,
+            "k_covered": 223,
+            "n_trials": 240,
+            "ci95": [
+              0.889009776887031,
+              0.9581981815037065
+            ],
+            "nominal_in_ci": true
+          }
+        },
+        "fixed": {
+          "step": "fixed",
+          "hyperparameters": {
+            "alpha_target": 0.1,
+            "eta": 0.1,
+            "KI": 2.0,
+            "Csat": 7.0,
+            "window": 50,
+            "step": "fixed",
+            "decay_eps": 0.1
+          },
+          "per_output": {
+            "dep_rate_A_per_s": {
+              "unit": "angstrom/second",
+              "picp": 0.9166666666666666,
+              "k_covered": 110,
+              "n_test": 120,
+              "ci95": [
+                0.8520845706626649,
+                0.9593138711319835
+              ],
+              "nominal_in_ci": true,
+              "mean_width": 0.15778219608761665,
+              "n_infinite_width": 0,
+              "q_final": 1.3748972724698247,
+              "q_late_stream_std": 0.07740998622353228,
+              "q_late_stream_mean_abs_delta": 0.017484866492567277,
+              "q_first_half_std": 0.07740998622353228,
+              "q_first_half_mean_abs_delta": 0.017484866492567277,
+              "rolling_coverage": {
+                "window": 50,
+                "min_full_window": 0.88,
+                "final": 0.92,
+                "detector_fires": true
+              }
+            },
+            "Ipk (A)": {
+              "unit": "A",
+              "picp": 0.9416666666666667,
+              "k_covered": 113,
+              "n_test": 120,
+              "ci95": [
+                0.8835016203543854,
+                0.9762279762094809
+              ],
+              "nominal_in_ci": true,
+              "mean_width": 0.013036678040323353,
+              "n_infinite_width": 0,
+              "q_final": 2.072572314810575,
+              "q_late_stream_std": 0.10282663909978994,
+              "q_late_stream_mean_abs_delta": 0.017344186969107566,
+              "q_first_half_std": 0.10282663909978994,
+              "q_first_half_mean_abs_delta": 0.017344186969107566,
+              "rolling_coverage": {
+                "window": 50,
+                "min_full_window": 0.9,
+                "final": 0.94,
+                "detector_fires": false
+              }
+            }
+          },
+          "pooled": {
+            "picp": 0.9291666666666667,
+            "k_covered": 223,
+            "n_trials": 240,
+            "ci95": [
+              0.889009776887031,
+              0.9581981815037065
+            ],
+            "nominal_in_ci": true
+          }
+        },
+        "decaying": {
+          "step": "decaying",
+          "hyperparameters": {
+            "alpha_target": 0.1,
+            "eta": 0.1,
+            "KI": 2.0,
+            "Csat": 7.0,
+            "window": 50,
+            "step": "decaying",
+            "decay_eps": 0.1
+          },
+          "per_output": {
+            "dep_rate_A_per_s": {
+              "unit": "angstrom/second",
+              "picp": 0.9333333333333333,
+              "k_covered": 112,
+              "n_test": 120,
+              "ci95": [
+                0.8728632517607872,
+                0.9707808156862037
+              ],
+              "nominal_in_ci": true,
+              "mean_width": 0.1628275875087956,
+              "n_infinite_width": 0,
+              "q_final": 1.5191075573792923,
+              "q_late_stream_std": 0.027950308445521363,
+              "q_late_stream_mean_abs_delta": 0.0023702891445331734,
+              "q_first_half_std": 0.027950308445521363,
+              "q_first_half_mean_abs_delta": 0.0023702891445331734,
+              "rolling_coverage": {
+                "window": 50,
+                "min_full_window": 0.86,
+                "final": 0.98,
+                "detector_fires": true
+              }
+            },
+            "Ipk (A)": {
+              "unit": "A",
+              "picp": 0.95,
+              "k_covered": 114,
+              "n_test": 120,
+              "ci95": [
+                0.8943461454812878,
+                0.9814324132173309
+              ],
+              "nominal_in_ci": true,
+              "mean_width": 0.014026653805218229,
+              "n_infinite_width": 0,
+              "q_final": 2.472699488053028,
+              "q_late_stream_std": 0.013757443588577686,
+              "q_late_stream_mean_abs_delta": 0.002547183612610485,
+              "q_first_half_std": 0.013757443588577686,
+              "q_first_half_mean_abs_delta": 0.002547183612610485,
+              "rolling_coverage": {
+                "window": 50,
+                "min_full_window": 0.92,
+                "final": 0.94,
+                "detector_fires": false
+              }
+            }
+          },
+          "pooled": {
+            "picp": 0.9416666666666667,
+            "k_covered": 226,
+            "n_trials": 240,
+            "ci95": [
+              0.9040626376071992,
+              0.967745126753807
+            ],
+            "nominal_in_ci": false
+          }
+        },
+        "delta": {
+          "pooled_picp_delta": 0.012499999999999956,
+          "pooled_gate_flip": true,
+          "per_output": {
+            "dep_rate_A_per_s": {
+              "picp_delta": 0.01666666666666672,
+              "late_std_delta": -0.04945967777801091,
+              "late_mad_delta": -0.015114577348034104,
+              "gate_flip": false,
+              "detector_flip": false
+            },
+            "Ipk (A)": {
+              "picp_delta": 0.008333333333333304,
+              "late_std_delta": -0.08906919551121226,
+              "late_mad_delta": -0.014797003356497081,
+              "gate_flip": false,
+              "detector_flip": false
+            }
+          }
+        }
+      }
+    },
+    "ti_250w_low_duty": {
+      "temporal": {
+        "degenerate_order": false,
+        "n_test": 80,
+        "output_keys": [
+          "dep_rate_A_per_s",
+          "Ipk (A)"
+        ],
+        "units": [
+          "angstrom/second",
+          "A"
+        ],
+        "recorded_form_fixed": {
+          "protocol": "online section 20.2 conformal-PID (endpoint): fresh split calibrator on the SAME calibration slice; test rows streamed in split order; interval at the current threshold q_t scored BEFORE observe(x, y); q_t tracked directly (finite by construction, so n_infinite_width is 0)",
+          "hyperparameters": {
+            "alpha_target": 0.1,
+            "eta": 0.1,
+            "KI": 2.0,
+            "Csat": 7.0,
+            "window": 50,
+            "step": "fixed",
+            "integrate": true,
+            "scorecaster": false,
+            "provenance": "ConformalPIDController library defaults (P+I quantile-tracker + log-time tan integrator; decaying-step OFF, scorecaster OFF), uniform across all campaigns and splits, fixed before any per-campaign outcome was seen"
+          },
+          "per_output": {
+            "dep_rate_A_per_s": {
+              "unit": "angstrom/second",
+              "picp": 0.9,
+              "k_covered": 72,
+              "n_test": 80,
+              "ci95": [
+                0.8124348925365684,
+                0.9558290598463709
+              ],
+              "nominal_in_ci": true,
+              "mean_width": 0.5069467674885146,
+              "n_infinite_width": 0,
+              "q_threshold": {
+                "used_min": 1.741421213497962,
+                "used_max": 2.2963733318151065,
+                "used_mean": 2.060046545645816,
+                "final": 1.903724349277181
+              },
+              "effective_alpha": {
+                "used_min": 0.0625,
+                "used_max": 0.1125,
+                "used_mean": 0.08203125,
+                "final": 0.0875
+              },
+              "rolling_coverage": {
+                "window": 50,
+                "min_full_window": 0.84,
+                "final": 0.92
+              }
+            },
+            "Ipk (A)": {
+              "unit": "A",
+              "picp": 0.875,
+              "k_covered": 70,
+              "n_test": 80,
+              "ci95": [
+                0.7821108659305637,
+                0.9383979034415657
+              ],
+              "nominal_in_ci": true,
+              "mean_width": 0.11200904279619958,
+              "n_infinite_width": 0,
+              "q_threshold": {
+                "used_min": 1.688715790256314,
+                "used_max": 2.1650435341840533,
+                "used_mean": 1.9099233135586133,
+                "final": 1.961069992490715
+              },
+              "effective_alpha": {
+                "used_min": 0.0625,
+                "used_max": 0.1,
+                "used_mean": 0.07390624999999999,
+                "final": 0.0625
+              },
+              "rolling_coverage": {
+                "window": 50,
+                "min_full_window": 0.84,
+                "final": 0.86
+              }
+            }
+          },
+          "pooled": {
+            "picp": 0.8875,
+            "k_covered": 142,
+            "n_trials": 160,
+            "ci95": [
+              0.8280375288321168,
+              0.9319463455364979
+            ],
+            "nominal_in_ci": true
+          }
+        },
+        "fixed": {
+          "step": "fixed",
+          "hyperparameters": {
+            "alpha_target": 0.1,
+            "eta": 0.1,
+            "KI": 2.0,
+            "Csat": 7.0,
+            "window": 50,
+            "step": "fixed",
+            "decay_eps": 0.1
+          },
+          "per_output": {
+            "dep_rate_A_per_s": {
+              "unit": "angstrom/second",
+              "picp": 0.9,
+              "k_covered": 72,
+              "n_test": 80,
+              "ci95": [
+                0.8124348925365684,
+                0.9558290598463709
+              ],
+              "nominal_in_ci": true,
+              "mean_width": 0.5069467674885146,
+              "n_infinite_width": 0,
+              "q_final": 1.903724349277181,
+              "q_late_stream_std": 0.11252290498491155,
+              "q_late_stream_mean_abs_delta": 0.017525175412424748,
+              "q_first_half_std": 0.11252290498491155,
+              "q_first_half_mean_abs_delta": 0.017525175412424748,
+              "rolling_coverage": {
+                "window": 50,
+                "min_full_window": 0.84,
+                "final": 0.92,
+                "detector_fires": true
+              }
+            },
+            "Ipk (A)": {
+              "unit": "A",
+              "picp": 0.875,
+              "k_covered": 70,
+              "n_test": 80,
+              "ci95": [
+                0.7821108659305637,
+                0.9383979034415657
+              ],
+              "nominal_in_ci": true,
+              "mean_width": 0.11200904279619958,
+              "n_infinite_width": 0,
+              "q_final": 1.961069992490715,
+              "q_late_stream_std": 0.07751935152492037,
+              "q_late_stream_mean_abs_delta": 0.024882578297442122,
+              "q_first_half_std": 0.07751935152492037,
+              "q_first_half_mean_abs_delta": 0.024882578297442122,
+              "rolling_coverage": {
+                "window": 50,
+                "min_full_window": 0.84,
+                "final": 0.86,
+                "detector_fires": true
+              }
+            }
+          },
+          "pooled": {
+            "picp": 0.8875,
+            "k_covered": 142,
+            "n_trials": 160,
+            "ci95": [
+              0.8280375288321168,
+              0.9319463455364979
+            ],
+            "nominal_in_ci": true
+          }
+        },
+        "decaying": {
+          "step": "decaying",
+          "hyperparameters": {
+            "alpha_target": 0.1,
+            "eta": 0.1,
+            "KI": 2.0,
+            "Csat": 7.0,
+            "window": 50,
+            "step": "decaying",
+            "decay_eps": 0.1
+          },
+          "per_output": {
+            "dep_rate_A_per_s": {
+              "unit": "angstrom/second",
+              "picp": 0.9,
+              "k_covered": 72,
+              "n_test": 80,
+              "ci95": [
+                0.8124348925365684,
+                0.9558290598463709
+              ],
+              "nominal_in_ci": true,
+              "mean_width": 0.4762789725685149,
+              "n_infinite_width": 0,
+              "q_final": 1.9018256593279066,
+              "q_late_stream_std": 0.029704668510994573,
+              "q_late_stream_mean_abs_delta": 0.004717127499902502,
+              "q_first_half_std": 0.029704668510994573,
+              "q_first_half_mean_abs_delta": 0.004717127499902502,
+              "rolling_coverage": {
+                "window": 50,
+                "min_full_window": 0.84,
+                "final": 0.92,
+                "detector_fires": true
+              }
+            },
+            "Ipk (A)": {
+              "unit": "A",
+              "picp": 0.875,
+              "k_covered": 70,
+              "n_test": 80,
+              "ci95": [
+                0.7821108659305637,
+                0.9383979034415657
+              ],
+              "nominal_in_ci": true,
+              "mean_width": 0.10857487853204133,
+              "n_infinite_width": 0,
+              "q_final": 1.8526105572178473,
+              "q_late_stream_std": 0.019381940337062746,
+              "q_late_stream_mean_abs_delta": 0.006455801509085697,
+              "q_first_half_std": 0.019381940337062746,
+              "q_first_half_mean_abs_delta": 0.006455801509085697,
+              "rolling_coverage": {
+                "window": 50,
+                "min_full_window": 0.84,
+                "final": 0.86,
+                "detector_fires": true
+              }
+            }
+          },
+          "pooled": {
+            "picp": 0.8875,
+            "k_covered": 142,
+            "n_trials": 160,
+            "ci95": [
+              0.8280375288321168,
+              0.9319463455364979
+            ],
+            "nominal_in_ci": true
+          }
+        },
+        "delta": {
+          "pooled_picp_delta": 0.0,
+          "pooled_gate_flip": false,
+          "per_output": {
+            "dep_rate_A_per_s": {
+              "picp_delta": 0.0,
+              "late_std_delta": -0.08281823647391698,
+              "late_mad_delta": -0.012808047912522245,
+              "gate_flip": false,
+              "detector_flip": false
+            },
+            "Ipk (A)": {
+              "picp_delta": 0.0,
+              "late_std_delta": -0.058137411187857625,
+              "late_mad_delta": -0.018426776788356424,
+              "gate_flip": false,
+              "detector_flip": false
+            }
+          }
+        }
+      },
+      "random": {
+        "degenerate_order": false,
+        "n_test": 80,
+        "output_keys": [
+          "dep_rate_A_per_s",
+          "Ipk (A)"
+        ],
+        "units": [
+          "angstrom/second",
+          "A"
+        ],
+        "recorded_form_fixed": {
+          "protocol": "online section 20.2 conformal-PID (endpoint): fresh split calibrator on the SAME calibration slice; test rows streamed in split order; interval at the current threshold q_t scored BEFORE observe(x, y); q_t tracked directly (finite by construction, so n_infinite_width is 0)",
+          "hyperparameters": {
+            "alpha_target": 0.1,
+            "eta": 0.1,
+            "KI": 2.0,
+            "Csat": 7.0,
+            "window": 50,
+            "step": "fixed",
+            "integrate": true,
+            "scorecaster": false,
+            "provenance": "ConformalPIDController library defaults (P+I quantile-tracker + log-time tan integrator; decaying-step OFF, scorecaster OFF), uniform across all campaigns and splits, fixed before any per-campaign outcome was seen"
+          },
+          "per_output": {
+            "dep_rate_A_per_s": {
+              "unit": "angstrom/second",
+              "picp": 0.9125,
+              "k_covered": 73,
+              "n_test": 80,
+              "ci95": [
+                0.8279916615801152,
+                0.9640936410104413
+              ],
+              "nominal_in_ci": true,
+              "mean_width": 0.42746766356746935,
+              "n_infinite_width": 0,
+              "q_threshold": {
+                "used_min": 1.425213353592934,
+                "used_max": 1.8981908638978149,
+                "used_mean": 1.6568500040780865,
+                "final": 1.4137976592120711
+              },
+              "effective_alpha": {
+                "used_min": 0.0625,
+                "used_max": 0.125,
+                "used_mean": 0.0878125,
+                "final": 0.1375
+              },
+              "rolling_coverage": {
+                "window": 50,
+                "min_full_window": 0.88,
+                "final": 0.96
+              }
+            },
+            "Ipk (A)": {
+              "unit": "A",
+              "picp": 0.9,
+              "k_covered": 72,
+              "n_test": 80,
+              "ci95": [
+                0.8124348925365684,
+                0.9558290598463709
+              ],
+              "nominal_in_ci": true,
+              "mean_width": 0.08914575974805086,
+              "n_infinite_width": 0,
+              "q_threshold": {
+                "used_min": 1.282049848967117,
+                "used_max": 1.667479607385583,
+                "used_mean": 1.4936200550056415,
+                "final": 1.48667090788676
+              },
+              "effective_alpha": {
+                "used_min": 0.0625,
+                "used_max": 0.1,
+                "used_mean": 0.08703124999999999,
+                "final": 0.0875
+              },
+              "rolling_coverage": {
+                "window": 50,
+                "min_full_window": 0.86,
+                "final": 0.88
+              }
+            }
+          },
+          "pooled": {
+            "picp": 0.90625,
+            "k_covered": 145,
+            "n_trials": 160,
+            "ci95": [
+              0.8500898173450577,
+              0.9465748779900249
+            ],
+            "nominal_in_ci": true
+          }
+        },
+        "fixed": {
+          "step": "fixed",
+          "hyperparameters": {
+            "alpha_target": 0.1,
+            "eta": 0.1,
+            "KI": 2.0,
+            "Csat": 7.0,
+            "window": 50,
+            "step": "fixed",
+            "decay_eps": 0.1
+          },
+          "per_output": {
+            "dep_rate_A_per_s": {
+              "unit": "angstrom/second",
+              "picp": 0.9125,
+              "k_covered": 73,
+              "n_test": 80,
+              "ci95": [
+                0.8279916615801152,
+                0.9640936410104413
+              ],
+              "nominal_in_ci": true,
+              "mean_width": 0.42746766356746935,
+              "n_infinite_width": 0,
+              "q_final": 1.4137976592120711,
+              "q_late_stream_std": 0.09340298353062339,
+              "q_late_stream_mean_abs_delta": 0.014627311468720903,
+              "q_first_half_std": 0.09340298353062339,
+              "q_first_half_mean_abs_delta": 0.014627311468720903,
+              "rolling_coverage": {
+                "window": 50,
+                "min_full_window": 0.88,
+                "final": 0.96,
+                "detector_fires": true
+              }
+            },
+            "Ipk (A)": {
+              "unit": "A",
+              "picp": 0.9,
+              "k_covered": 72,
+              "n_test": 80,
+              "ci95": [
+                0.8124348925365684,
+                0.9558290598463709
+              ],
+              "nominal_in_ci": true,
+              "mean_width": 0.08914575974805086,
+              "n_infinite_width": 0,
+              "q_final": 1.48667090788676,
+              "q_late_stream_std": 0.07508424461207752,
+              "q_late_stream_mean_abs_delta": 0.024616329009034387,
+              "q_first_half_std": 0.07508424461207752,
+              "q_first_half_mean_abs_delta": 0.024616329009034387,
+              "rolling_coverage": {
+                "window": 50,
+                "min_full_window": 0.86,
+                "final": 0.88,
+                "detector_fires": true
+              }
+            }
+          },
+          "pooled": {
+            "picp": 0.90625,
+            "k_covered": 145,
+            "n_trials": 160,
+            "ci95": [
+              0.8500898173450577,
+              0.9465748779900249
+            ],
+            "nominal_in_ci": true
+          }
+        },
+        "decaying": {
+          "step": "decaying",
+          "hyperparameters": {
+            "alpha_target": 0.1,
+            "eta": 0.1,
+            "KI": 2.0,
+            "Csat": 7.0,
+            "window": 50,
+            "step": "decaying",
+            "decay_eps": 0.1
+          },
+          "per_output": {
+            "dep_rate_A_per_s": {
+              "unit": "angstrom/second",
+              "picp": 0.9125,
+              "k_covered": 73,
+              "n_test": 80,
+              "ci95": [
+                0.8279916615801152,
+                0.9640936410104413
+              ],
+              "nominal_in_ci": true,
+              "mean_width": 0.43566253256003024,
+              "n_infinite_width": 0,
+              "q_final": 1.6218792130419997,
+              "q_late_stream_std": 0.02391430608698706,
+              "q_late_stream_mean_abs_delta": 0.003624372256323405,
+              "q_first_half_std": 0.02391430608698706,
+              "q_first_half_mean_abs_delta": 0.003624372256323405,
+              "rolling_coverage": {
+                "window": 50,
+                "min_full_window": 0.88,
+                "final": 0.96,
+                "detector_fires": true
+              }
+            },
+            "Ipk (A)": {
+              "unit": "A",
+              "picp": 0.9,
+              "k_covered": 72,
+              "n_test": 80,
+              "ci95": [
+                0.8124348925365684,
+                0.9558290598463709
+              ],
+              "nominal_in_ci": true,
+              "mean_width": 0.08691935255740058,
+              "n_infinite_width": 0,
+              "q_final": 1.4698565771810217,
+              "q_late_stream_std": 0.022998870930898127,
+              "q_late_stream_mean_abs_delta": 0.006561754561265219,
+              "q_first_half_std": 0.022998870930898127,
+              "q_first_half_mean_abs_delta": 0.006561754561265219,
+              "rolling_coverage": {
+                "window": 50,
+                "min_full_window": 0.88,
+                "final": 0.88,
+                "detector_fires": true
+              }
+            }
+          },
+          "pooled": {
+            "picp": 0.90625,
+            "k_covered": 145,
+            "n_trials": 160,
+            "ci95": [
+              0.8500898173450577,
+              0.9465748779900249
+            ],
+            "nominal_in_ci": true
+          }
+        },
+        "delta": {
+          "pooled_picp_delta": 0.0,
+          "pooled_gate_flip": false,
+          "per_output": {
+            "dep_rate_A_per_s": {
+              "picp_delta": 0.0,
+              "late_std_delta": -0.06948867744363632,
+              "late_mad_delta": -0.011002939212397499,
+              "gate_flip": false,
+              "detector_flip": false
+            },
+            "Ipk (A)": {
+              "picp_delta": 0.0,
+              "late_std_delta": -0.052085373681179395,
+              "late_mad_delta": -0.01805457444776917,
+              "gate_flip": false,
+              "detector_flip": false
+            }
+          }
+        }
+      }
+    }
+  }
+}

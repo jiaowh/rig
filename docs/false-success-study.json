@@ -1,0 +1,415 @@
+{
+  "study": "false-success-rate-vs-dimension",
+  "date": "2026-07-23",
+  "design": {
+    "cells": [
+      {
+        "d": 2,
+        "n": 24,
+        "tag": "12d"
+      },
+      {
+        "d": 8,
+        "n": 96,
+        "tag": "12d"
+      },
+      {
+        "d": 15,
+        "n": 180,
+        "tag": "12d"
+      },
+      {
+        "d": 20,
+        "n": 240,
+        "tag": "12d"
+      },
+      {
+        "d": 20,
+        "n": 800,
+        "tag": "crime-scene"
+      }
+    ],
+    "nseeds": 20,
+    "arms": {
+      "raw": "unwrapped GP (gate inert, model-feasible)",
+      "wrapped": "split-conformal wrapped GP (\u00a713.2 gate default-on)"
+    },
+    "solver_policy": {
+      "kappa": 2.0,
+      "z_epi": 2.0,
+      "delta_frac": 0.02
+    },
+    "n_restarts": 48,
+    "analytic_grad": true,
+    "gp_fit_restarts": 3,
+    "cal_frac": 0.3333333333333333,
+    "spec_tol": [
+      0.8,
+      0.8
+    ],
+    "ci": "Clopper-Pearson 95%"
+  },
+  "results": {
+    "d2_n24": {
+      "raw": {
+        "n_seeds": 20,
+        "n_feasible": 19,
+        "n_infeasible": 1,
+        "n_crash": 0,
+        "abstention_rate": 0.05,
+        "n_candidates": 33,
+        "n_hits": 33,
+        "n_false_success": 0,
+        "n_seeds_with_false_success": 0,
+        "false_success_rate_per_candidate": 0.0,
+        "fsr_per_candidate_ci95": [
+          0.0,
+          0.10576281007457927
+        ],
+        "false_success_rate_per_seed": 0.0,
+        "fsr_per_seed_ci95": [
+          0.0,
+          0.16843347098308528
+        ],
+        "genuine_hit_rate_per_candidate": 1.0,
+        "worst_miss_excursion": 0.0,
+        "abstention_reasons": {
+          "epistemic": 1
+        },
+        "eff_train_n": 24,
+        "n_cal": 0,
+        "n_band_infinite": 0,
+        "mean_t_solve": 2.150037479400635
+      },
+      "wrapped": {
+        "n_seeds": 20,
+        "n_feasible": 0,
+        "n_infeasible": 20,
+        "n_crash": 0,
+        "abstention_rate": 1.0,
+        "n_candidates": 0,
+        "n_hits": 0,
+        "n_false_success": 0,
+        "n_seeds_with_false_success": 0,
+        "false_success_rate_per_candidate": NaN,
+        "fsr_per_candidate_ci95": [
+          NaN,
+          NaN
+        ],
+        "false_success_rate_per_seed": 0.0,
+        "fsr_per_seed_ci95": [
+          0.0,
+          0.16843347098308528
+        ],
+        "genuine_hit_rate_per_candidate": NaN,
+        "worst_miss_excursion": 0.0,
+        "abstention_reasons": {
+          "conformal": 17,
+          "epistemic": 3
+        },
+        "eff_train_n": 16,
+        "n_cal": 8,
+        "n_band_infinite": 20,
+        "mean_t_solve": 2.1688568234443664
+      }
+    },
+    "d8_n96": {
+      "raw": {
+        "n_seeds": 20,
+        "n_feasible": 15,
+        "n_infeasible": 5,
+        "n_crash": 0,
+        "abstention_rate": 0.25,
+        "n_candidates": 40,
+        "n_hits": 40,
+        "n_false_success": 0,
+        "n_seeds_with_false_success": 0,
+        "false_success_rate_per_candidate": 0.0,
+        "fsr_per_candidate_ci95": [
+          0.0,
+          0.08809730287880237
+        ],
+        "false_success_rate_per_seed": 0.0,
+        "fsr_per_seed_ci95": [
+          0.0,
+          0.16843347098308528
+        ],
+        "genuine_hit_rate_per_candidate": 1.0,
+        "worst_miss_excursion": 0.0,
+        "abstention_reasons": {
+          "epistemic": 5
+        },
+        "eff_train_n": 96,
+        "n_cal": 0,
+        "n_band_infinite": 0,
+        "mean_t_solve": 9.314619195461272
+      },
+      "wrapped": {
+        "n_seeds": 20,
+        "n_feasible": 11,
+        "n_infeasible": 9,
+        "n_crash": 0,
+        "abstention_rate": 0.45,
+        "n_candidates": 33,
+        "n_hits": 32,
+        "n_false_success": 1,
+        "n_seeds_with_false_success": 1,
+        "false_success_rate_per_candidate": 0.030303030303030304,
+        "fsr_per_candidate_ci95": [
+          0.0007669120750481087,
+          0.15759397227249683
+        ],
+        "false_success_rate_per_seed": 0.05,
+        "fsr_per_seed_ci95": [
+          0.0012650894979498038,
+          0.24873276277202777
+        ],
+        "genuine_hit_rate_per_candidate": 0.9696969696969697,
+        "worst_miss_excursion": 0.23681490919016168,
+        "abstention_reasons": {
+          "epistemic": 9
+        },
+        "eff_train_n": 64,
+        "n_cal": 32,
+        "n_band_infinite": 0,
+        "mean_t_solve": 9.41985868215561
+      }
+    },
+    "d15_n180": {
+      "raw": {
+        "n_seeds": 20,
+        "n_feasible": 7,
+        "n_infeasible": 13,
+        "n_crash": 0,
+        "abstention_rate": 0.65,
+        "n_candidates": 20,
+        "n_hits": 20,
+        "n_false_success": 0,
+        "n_seeds_with_false_success": 0,
+        "false_success_rate_per_candidate": 0.0,
+        "fsr_per_candidate_ci95": [
+          0.0,
+          0.16843347098308528
+        ],
+        "false_success_rate_per_seed": 0.0,
+        "fsr_per_seed_ci95": [
+          0.0,
+          0.16843347098308528
+        ],
+        "genuine_hit_rate_per_candidate": 1.0,
+        "worst_miss_excursion": 0.0,
+        "abstention_reasons": {
+          "epistemic": 13
+        },
+        "eff_train_n": 180,
+        "n_cal": 0,
+        "n_band_infinite": 0,
+        "mean_t_solve": 13.389976167678833
+      },
+      "wrapped": {
+        "n_seeds": 20,
+        "n_feasible": 8,
+        "n_infeasible": 12,
+        "n_crash": 0,
+        "abstention_rate": 0.6,
+        "n_candidates": 24,
+        "n_hits": 24,
+        "n_false_success": 0,
+        "n_seeds_with_false_success": 0,
+        "false_success_rate_per_candidate": 0.0,
+        "fsr_per_candidate_ci95": [
+          0.0,
+          0.14247359772252563
+        ],
+        "false_success_rate_per_seed": 0.0,
+        "fsr_per_seed_ci95": [
+          0.0,
+          0.16843347098308528
+        ],
+        "genuine_hit_rate_per_candidate": 1.0,
+        "worst_miss_excursion": 0.0,
+        "abstention_reasons": {
+          "epistemic": 12
+        },
+        "eff_train_n": 120,
+        "n_cal": 60,
+        "n_band_infinite": 0,
+        "mean_t_solve": 10.980415558815002
+      }
+    },
+    "d20_n240": {
+      "raw": {
+        "n_seeds": 20,
+        "n_feasible": 3,
+        "n_infeasible": 17,
+        "n_crash": 0,
+        "abstention_rate": 0.85,
+        "n_candidates": 7,
+        "n_hits": 7,
+        "n_false_success": 0,
+        "n_seeds_with_false_success": 0,
+        "false_success_rate_per_candidate": 0.0,
+        "fsr_per_candidate_ci95": [
+          0.0,
+          0.40961639722500337
+        ],
+        "false_success_rate_per_seed": 0.0,
+        "fsr_per_seed_ci95": [
+          0.0,
+          0.16843347098308528
+        ],
+        "genuine_hit_rate_per_candidate": 1.0,
+        "worst_miss_excursion": 0.0,
+        "abstention_reasons": {
+          "epistemic": 17
+        },
+        "eff_train_n": 240,
+        "n_cal": 0,
+        "n_band_infinite": 0,
+        "mean_t_solve": 16.706412041187285
+      },
+      "wrapped": {
+        "n_seeds": 20,
+        "n_feasible": 4,
+        "n_infeasible": 16,
+        "n_crash": 0,
+        "abstention_rate": 0.8,
+        "n_candidates": 9,
+        "n_hits": 9,
+        "n_false_success": 0,
+        "n_seeds_with_false_success": 0,
+        "false_success_rate_per_candidate": 0.0,
+        "fsr_per_candidate_ci95": [
+          0.0,
+          0.3362671168799428
+        ],
+        "false_success_rate_per_seed": 0.0,
+        "fsr_per_seed_ci95": [
+          0.0,
+          0.16843347098308528
+        ],
+        "genuine_hit_rate_per_candidate": 1.0,
+        "worst_miss_excursion": 0.0,
+        "abstention_reasons": {
+          "epistemic": 16
+        },
+        "eff_train_n": 160,
+        "n_cal": 80,
+        "n_band_infinite": 0,
+        "mean_t_solve": 13.109816205501556
+      }
+    },
+    "d20_n800": {
+      "raw": {
+        "n_seeds": 20,
+        "n_feasible": 9,
+        "n_infeasible": 11,
+        "n_crash": 0,
+        "abstention_rate": 0.55,
+        "n_candidates": 22,
+        "n_hits": 22,
+        "n_false_success": 0,
+        "n_seeds_with_false_success": 0,
+        "false_success_rate_per_candidate": 0.0,
+        "fsr_per_candidate_ci95": [
+          0.0,
+          0.15437251281557454
+        ],
+        "false_success_rate_per_seed": 0.0,
+        "fsr_per_seed_ci95": [
+          0.0,
+          0.16843347098308528
+        ],
+        "genuine_hit_rate_per_candidate": 1.0,
+        "worst_miss_excursion": 0.0,
+        "abstention_reasons": {
+          "epistemic": 11
+        },
+        "eff_train_n": 800,
+        "n_cal": 0,
+        "n_band_infinite": 0,
+        "mean_t_solve": 53.34770263433457
+      },
+      "wrapped": {
+        "n_seeds": 20,
+        "n_feasible": 8,
+        "n_infeasible": 12,
+        "n_crash": 0,
+        "abstention_rate": 0.6,
+        "n_candidates": 18,
+        "n_hits": 18,
+        "n_false_success": 0,
+        "n_seeds_with_false_success": 0,
+        "false_success_rate_per_candidate": 0.0,
+        "fsr_per_candidate_ci95": [
+          0.0,
+          0.1853019681378522
+        ],
+        "false_success_rate_per_seed": 0.0,
+        "fsr_per_seed_ci95": [
+          0.0,
+          0.16843347098308528
+        ],
+        "genuine_hit_rate_per_candidate": 1.0,
+        "worst_miss_excursion": 0.0,
+        "abstention_reasons": {
+          "epistemic": 11,
+          "unreachable": 1
+        },
+        "eff_train_n": 533,
+        "n_cal": 267,
+        "n_band_infinite": 0,
+        "mean_t_solve": 25.80779187679291
+      }
+    }
+  },
+  "crime_scene": {
+    "config": "d=20 n=800 seed=0 FD restarts=48 GP_restarts=3",
+    "raw": {
+      "status": "FEASIBLE",
+      "n_cand": 3,
+      "n_hit": 2,
+      "n_false_success": 1,
+      "worst_miss_excursion": 0.24610895056298343,
+      "calibration_status": "model-feasible",
+      "per_cand": [
+        {
+          "inbox": true,
+          "excursion": 0.0,
+          "status": "model-feasible"
+        },
+        {
+          "inbox": true,
+          "excursion": 0.0,
+          "status": "model-feasible"
+        },
+        {
+          "inbox": false,
+          "excursion": 0.24610895056298343,
+          "status": "model-feasible"
+        }
+      ],
+      "eff_train_n": 800,
+      "n_cal": 0
+    },
+    "wrapped": {
+      "status": "FEASIBLE",
+      "n_cand": 1,
+      "n_hit": 1,
+      "n_false_success": 0,
+      "worst_miss_excursion": 0.0,
+      "calibration_status": "conformal-checked",
+      "per_cand": [
+        {
+          "inbox": true,
+          "excursion": 0.0,
+          "status": "conformal-checked"
+        }
+      ],
+      "eff_train_n": 533,
+      "n_cal": 267,
+      "band_finite": true
+    }
+  },
+  "wall_seconds": 5574.272931337357
+}

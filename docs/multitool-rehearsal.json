@@ -1,0 +1,544 @@
+{
+  "meta": {
+    "title": "in-silico multi-tool M4 dress rehearsal",
+    "provenance": "physics_sim",
+    "REHEARSAL": true,
+    "headline_eligible": false,
+    "caveat": "Every number is produced by the in-silico MBE machine (physics_sim) and is a MACHINERY PROOF only. NOT headline evidence; the scientific claim stays gated on M0 real data.",
+    "seed": 0,
+    "mode": "full",
+    "config": {
+      "n_train_per_tool": 24,
+      "n_test": 16,
+      "n_restarts": 2,
+      "max_iter": 100,
+      "onboard_budget": 24,
+      "q": 4,
+      "pool": 64,
+      "fewshot_K": [
+        10,
+        20
+      ],
+      "gate_n_runs": 29,
+      "gate_min_in_spec_rate": 0.9,
+      "gate_confidence": 0.95,
+      "loop_n_runs": 5
+    },
+    "feasibility_policy": {
+      "kappa": 2.0,
+      "z_epi": 2.0,
+      "delta_frac": 0.02
+    },
+    "fleet": {
+      "toolA": {},
+      "toolB": {
+        "gap": 0.012960000000000001,
+        "source_height": 0.19,
+        "heater_radius": 0.0189
+      },
+      "toolC": {
+        "gap": 0.011040000000000001,
+        "source_height": 0.21000000000000002,
+        "heater_radius": 0.017099999999999997
+      }
+    },
+    "held_out_tool": "toolC",
+    "timings": {
+      "phase1_fleet": 0.31,
+      "phase2_pooling": 1.86,
+      "phase3_onboarding": 5.15,
+      "phase4_solve_qualify": 8.27,
+      "phase4b_conformal_wrap": 22.23,
+      "total": 37.83
+    }
+  },
+  "phase1_fleet": {
+    "provenance": "physics_sim",
+    "caveat": "REHEARSAL / machinery proof; not headline evidence (M0 real data owed)",
+    "held_out_tool": "toolC",
+    "known_fleet": [
+      "toolA",
+      "toolB"
+    ],
+    "n_train_per_tool": 24,
+    "tools": {
+      "toolA": {
+        "geometry": {},
+        "hidden_factors_emissivity_cosine_flux": [
+          0.971915710519539,
+          0.9803518863071308,
+          0.9741275483240408
+        ]
+      },
+      "toolB": {
+        "geometry": {
+          "gap": 0.012960000000000001,
+          "source_height": 0.19,
+          "heater_radius": 0.0189
+        },
+        "hidden_factors_emissivity_cosine_flux": [
+          0.9753961596417001,
+          1.0084193942202762,
+          1.0259561234450367
+        ]
+      },
+      "toolC": {
+        "geometry": {
+          "gap": 0.011040000000000001,
+          "source_height": 0.21000000000000002,
+          "heater_radius": 0.017099999999999997
+        },
+        "hidden_factors_emissivity_cosine_flux": [
+          0.9990524122327925,
+          0.9805076587798346,
+          0.9823740971891413
+        ]
+      }
+    },
+    "fixed_recipe_signal": {
+      "reference_recipe": {
+        "T_heater": 1325.0,
+        "film_thickness": 2.5e-06
+      },
+      "clean_outputs_per_tool": {
+        "toolA": [
+          2.435318870810102e-06,
+          965.6568034699394
+        ],
+        "toolB": [
+          2.5648903086125922e-06,
+          971.4213756257138
+        ],
+        "toolC": [
+          2.4559352429728536e-06,
+          959.1559793142436
+        ]
+      },
+      "metrology_noise_std_mean": {
+        "thickness_grown": 5.592536524555751e-09,
+        "T_center": 1.948557688113449
+      },
+      "B_minus_C_gap": {
+        "thickness_grown": 1.0895506563973866e-07,
+        "T_center": 12.265396311470226
+      },
+      "signal_to_noise": {
+        "thickness_grown": 19.482226921780118,
+        "T_center": 6.294602611096065
+      }
+    },
+    "verdict": "3 tools built; the tool-to-tool signal is well above the metrology-noise floor on both outputs -> the perturbations are learnable (and NOT so large as to be a different process). Not tuned: symmetric round offsets inside the sim's own bounds."
+  },
+  "phase2_pooling": {
+    "protocol": "pooled ICM multi-task GP (tool as task); (a) 3-fold leave-one-tool-out zero-shot \u00a75.8 domination; (b) few-shot pooled vs from-scratch single-tool at equal n, RMSE vs the held-out tool's noise-free machine ground truth",
+    "n_test": 16,
+    "loto_zero_shot_domination": {
+      "all_folds_dominate": true,
+      "folds": {
+        "toolA": {
+          "known_fleet": [
+            "toolB",
+            "toolC"
+          ],
+          "mean_epi_unknown": [
+            1.0457200566178149e-07,
+            12.424830040905146
+          ],
+          "per_known_tool": {
+            "toolB": {
+              "mean_epi_known": [
+                2.327187791079944e-09,
+                0.6275907462913815
+              ],
+              "unknown_dominates_elementwise": true
+            },
+            "toolC": {
+              "mean_epi_known": [
+                2.2664951794284025e-09,
+                0.6257618000058385
+              ],
+              "unknown_dominates_elementwise": true
+            }
+          },
+          "dominates_all": true
+        },
+        "toolB": {
+          "known_fleet": [
+            "toolA",
+            "toolC"
+          ],
+          "mean_epi_unknown": [
+            2.4968540908017482e-08,
+            6.928288400110242
+          ],
+          "per_known_tool": {
+            "toolA": {
+              "mean_epi_known": [
+                2.0904000426960177e-09,
+                0.5851050656351853
+              ],
+              "unknown_dominates_elementwise": true
+            },
+            "toolC": {
+              "mean_epi_known": [
+                2.102821665801596e-09,
+                0.5884951966625988
+              ],
+              "unknown_dominates_elementwise": true
+            }
+          },
+          "dominates_all": true
+        },
+        "toolC": {
+          "known_fleet": [
+            "toolA",
+            "toolB"
+          ],
+          "mean_epi_unknown": [
+            1.3324233838436283e-07,
+            6.250610769067183
+          ],
+          "per_known_tool": {
+            "toolA": {
+              "mean_epi_known": [
+                2.1166436482396097e-09,
+                0.5912882516878545
+              ],
+              "unknown_dominates_elementwise": true
+            },
+            "toolB": {
+              "mean_epi_known": [
+                2.1736971808443445e-09,
+                0.5958147019164497
+              ],
+              "unknown_dominates_elementwise": true
+            }
+          },
+          "dominates_all": true
+        }
+      }
+    },
+    "few_shot": {
+      "zero_shot_pooled_rmse": {
+        "thickness_grown": 5.4487003922857e-08,
+        "T_center": 9.362288843054646
+      },
+      "K=10": {
+        "pooled_rmse": {
+          "thickness_grown": 3.776048834838825e-09,
+          "T_center": 0.1555103728657679
+        },
+        "scratch_rmse": {
+          "thickness_grown": 4.5481416554894055e-09,
+          "T_center": 1.0920670256093945
+        },
+        "pooled_minus_scratch_thk": -7.720928206505806e-10,
+        "pooling_helps_thk": true
+      },
+      "K=20": {
+        "pooled_rmse": {
+          "thickness_grown": 2.3921381343693406e-09,
+          "T_center": 0.3098154323342766
+        },
+        "scratch_rmse": {
+          "thickness_grown": 3.283857243540487e-09,
+          "T_center": 0.9944778800945472
+        },
+        "pooled_minus_scratch_thk": -8.917191091711463e-10,
+        "pooling_helps_thk": true
+      }
+    },
+    "pooling_verdict": "HELPS",
+    "pooling_mean_scratch_minus_pooled_thk": 8.319059649108634e-10,
+    "verdict": "\u00a75.8 domination holds on all folds: True. Pooling on this fleet HELPS on the thickness KPI (measured, not assumed) \u2014 any answer is a legitimate finding."
+  },
+  "phase3_onboarding": {
+    "protocol": "\u00a710.4 chamber onboarding: EPIG-driven active selection (cost_cooled_acquisition, lam=0.7 EPIG-heavy) warm-started from the pooled {A,B} model vs a cold single-tool GP, same C-machine budget; held-out thickness RMSE vs ground truth after each batch",
+    "onboard_budget_C_runs": 24,
+    "batch_q": 4,
+    "full_data_ceiling_thk_rmse": 2.6226665294096896e-09,
+    "target_threshold_thk_rmse": 3.9339997941145345e-09,
+    "epig_unknown_tool_max_nats": 2.9665026151790514,
+    "epig_positive_on_unknown_tool": true,
+    "warm_trajectory": [
+      {
+        "n_C_runs": 0,
+        "thk_rmse": 5.4487003922857e-08
+      },
+      {
+        "n_C_runs": 4,
+        "thk_rmse": 4.274841839986706e-08
+      },
+      {
+        "n_C_runs": 8,
+        "thk_rmse": 2.2805810225588704e-09
+      },
+      {
+        "n_C_runs": 12,
+        "thk_rmse": 1.965342122674105e-09
+      },
+      {
+        "n_C_runs": 16,
+        "thk_rmse": 6.019736572127961e-10
+      },
+      {
+        "n_C_runs": 20,
+        "thk_rmse": 1.0095781830693398e-09
+      },
+      {
+        "n_C_runs": 24,
+        "thk_rmse": 7.725415593035589e-10
+      }
+    ],
+    "cold_trajectory": [
+      {
+        "n_C_runs": 4,
+        "thk_rmse": 5.0489687514384954e-09
+      },
+      {
+        "n_C_runs": 8,
+        "thk_rmse": 3.6881501948840045e-09
+      },
+      {
+        "n_C_runs": 12,
+        "thk_rmse": 4.432439025710953e-09
+      },
+      {
+        "n_C_runs": 16,
+        "thk_rmse": 4.332299903408276e-09
+      },
+      {
+        "n_C_runs": 20,
+        "thk_rmse": 2.9973755323014377e-09
+      },
+      {
+        "n_C_runs": 24,
+        "thk_rmse": 3.4451796296482238e-09
+      }
+    ],
+    "warm_runs_to_threshold": 8,
+    "cold_runs_to_threshold": 8,
+    "onboarding_verdict": "TIE (both reached threshold at the same budget, or neither did)",
+    "warm_final_model_C_runs": 24,
+    "verdict": "EPIG > 0 on the unknown-tool path: True (max 2.9665026151790514). TIE (both reached threshold at the same budget, or neither did)."
+  },
+  "phase4_solve_qualify": {
+    "protocol": "bind onboarded tool; \u00a78 solve (binding 2.0/2.0/0.02); (i) DIRECT ConfirmationCampaign on the reachable solve output (real confirmation runs on tool C); (ii) unreachable solve -> Infeasible -> NothingToQualify, zero machine calls; (iii) ActiveLearningLoop qualification= hook (in-loop auto-invocation, confirmation runs charged to budget)",
+    "flow_choice_justification": "DIRECT ConfirmationCampaign.run(solver.solve(spec)) is the faithful 'solve -> qualify' runner flow AND the only one producing NothingToQualify (zero calls) on Infeasible; the ActiveLearningLoop hook is ALSO exercised to demonstrate in-loop auto-invocation + budget charging.",
+    "reachable_spec": {
+      "thickness_grown": {
+        "target": 2.5680654668854966e-06,
+        "tol": 3.6388437821123927e-07
+      },
+      "T_center": {
+        "target": 841.8182879939992,
+        "tol": 19.796678790434207
+      }
+    },
+    "reachable": {
+      "solve": "FEASIBLE",
+      "n_candidates": 2,
+      "first_candidate_calibration_status": "model-feasible",
+      "campaign": {
+        "n_candidates": 2,
+        "n_certified": 2,
+        "n_rejected": 0,
+        "n_machine_calls": 58,
+        "provenance_source": "physics_sim",
+        "headline_eligible": false,
+        "confidence_per_candidate": 0.95,
+        "per_candidate": [
+          {
+            "passed": true,
+            "n_in_spec": 29,
+            "n_runs": 29,
+            "binomial_lower_bound": 0.9018553723227043,
+            "min_in_spec_rate": 0.9
+          },
+          {
+            "passed": true,
+            "n_in_spec": 29,
+            "n_runs": 29,
+            "binomial_lower_bound": 0.9018553723227043,
+            "min_in_spec_rate": 0.9
+          }
+        ],
+        "caveats": [
+          "multiplicity: NO correction was applied across n_candidates candidates each certified independently at the same per-candidate confidence -- the aggregate/family-wise error rate across this campaign is NOT controlled (rig.qualification module docstring, honest limit 2). Set bonferroni=True at construction for a conservative alpha/q correction.",
+          "serial correlation: each confirmation batch assumes i.i.d. Bernoulli runs; real tools violate this (first-wafer effects, within-batch drift), and the Clopper-Pearson bound is optimistic under positive serial correlation -- not repaired here (rig.qualification module docstring, honest limit 1).",
+          "no Cpk / process-window / SPC is computed anywhere in this campaign; a pass is an in-spec PROPORTION, a weaker and different claim than a capability index over a characterized process window (rig.qualification module docstring, honest limit 3).",
+          "this campaign is one rung of the implementation-plan \u00a711.4 staged qualification ladder (in-silico independent-solver gate -> single-wafer confirmation -> small pilot lot -> qualification lot with Cpk acceptance), not the whole ladder (rig.qualification module docstring, honest limit 4).",
+          "provenance_source='physics_sim': every certification in this campaign is an IN-SILICO REHEARSAL, not production tool qualification -- production promotion requires a campaign run with provenance_source='real_tool' (rig.qualification module docstring, honest limit 5)."
+        ]
+      }
+    },
+    "unreachable_spec": {
+      "thickness_grown": [
+        7.28203551269874e-06,
+        9.70938068359832e-06
+      ]
+    },
+    "unreachable": {
+      "solve": "INFEASIBLE",
+      "reason": "genuinely unreachable: the predicted mean itself is outside the spec box for thickness_grown (margin -401\u03c3). More data will not move it in \u2014 relax the target (not just the tolerance) or change the process. Required per-output relaxation: thickness_grown by 2.49e-06.",
+      "nothing_to_qualify": true,
+      "machine_calls_fired": 0
+    },
+    "loop_qualification_hook": {
+      "hit": true,
+      "stop_reason": "target met (proposal in-spec on machine, qualified)",
+      "qualification_fired": true,
+      "n_queries_total": 22,
+      "confirmation_runs_charged": 10,
+      "n_rejections": 0,
+      "qualification_outcome": {
+        "n_candidates": 2,
+        "n_certified": 2,
+        "n_rejected": 0,
+        "n_machine_calls": 10,
+        "provenance_source": "physics_sim",
+        "headline_eligible": false,
+        "confidence_per_candidate": 0.8,
+        "per_candidate": [
+          {
+            "passed": true,
+            "n_in_spec": 5,
+            "n_runs": 5,
+            "binomial_lower_bound": 0.7247796636776955,
+            "min_in_spec_rate": 0.5
+          },
+          {
+            "passed": true,
+            "n_in_spec": 5,
+            "n_runs": 5,
+            "binomial_lower_bound": 0.7247796636776955,
+            "min_in_spec_rate": 0.5
+          }
+        ],
+        "caveats": [
+          "multiplicity: NO correction was applied across n_candidates candidates each certified independently at the same per-candidate confidence -- the aggregate/family-wise error rate across this campaign is NOT controlled (rig.qualification module docstring, honest limit 2). Set bonferroni=True at construction for a conservative alpha/q correction.",
+          "serial correlation: each confirmation batch assumes i.i.d. Bernoulli runs; real tools violate this (first-wafer effects, within-batch drift), and the Clopper-Pearson bound is optimistic under positive serial correlation -- not repaired here (rig.qualification module docstring, honest limit 1).",
+          "no Cpk / process-window / SPC is computed anywhere in this campaign; a pass is an in-spec PROPORTION, a weaker and different claim than a capability index over a characterized process window (rig.qualification module docstring, honest limit 3).",
+          "this campaign is one rung of the implementation-plan \u00a711.4 staged qualification ladder (in-silico independent-solver gate -> single-wafer confirmation -> small pilot lot -> qualification lot with Cpk acceptance), not the whole ladder (rig.qualification module docstring, honest limit 4).",
+          "provenance_source='physics_sim': every certification in this campaign is an IN-SILICO REHEARSAL, not production tool qualification -- production promotion requires a campaign run with provenance_source='real_tool' (rig.qualification module docstring, honest limit 5)."
+        ]
+      }
+    },
+    "rehearsal_caveat": "provenance_source=physics_sim on every confirmation run -> headline_eligible=False; this is a \u00a711.4 pre-filter rung (in-silico independent-solver + confirmation), NOT tool qualification. Production promotion requires a real_tool campaign. The Clopper-Pearson bound also assumes i.i.d. Bernoulli runs (optimistic under the first-wafer/seasoning serial correlation this very sim can model), and no Cpk/process-window is computed.",
+    "qualification_ok": true,
+    "verdict": "solve -> ConfirmationCampaign auto-invocation demonstrated end-to-end: True"
+  },
+  "phase4b_conformal_wrap": {
+    "protocol": "carve a held-out calibration split from the onboarded tool's own accumulated runs (never the model's own fit rows -- the \u00a75.6 leakage guard); fit a SplitConformalCalibrator on it; wrap the tool view in ConformalForwardModel; re-solve the SAME reachable spec used by Phase 4. Reports the honest natural-split outcome AND a labelled extra-collection variant that charges the runs needed for a minimal viable n_cal at alpha=0.1.",
+    "reachable_spec": {
+      "thickness_grown": {
+        "target": 2.5680654668854966e-06,
+        "tol": 3.6388437821123927e-07
+      },
+      "T_center": {
+        "target": 841.8182879939992,
+        "tol": 19.796678790434207
+      }
+    },
+    "split_rule": "trailing 0.333 fraction of the 24 onboarded-tool runs (chronological -- most-recently-acquired onboarding batches held out)",
+    "alpha": 0.1,
+    "n_cal_min_for_finite_quantile": 9,
+    "raw_unwrapped_reduced_data_model": {
+      "n_fit": 16,
+      "n_candidates": 1,
+      "calibration_status": "model-feasible"
+    },
+    "honest_natural_split": {
+      "n_cal": 8,
+      "kappa_per_output": [
+        Infinity,
+        Infinity
+      ],
+      "finite_band": false,
+      "solve": "INFEASIBLE",
+      "reason": "conformal-infeasible (\u00a713.2): the pessimistic \u03ba\u00b7\u03c3 margins accept this recipe, but the model's calibrated conformal interval is wider than the spec box (C(x) \u2284 Z*) \u2014 the surrogate's raw \u03c3 is more optimistic than its own conformal coverage. Reduce process variation, relax \u03ba, or widen the spec tolerance; more data alone will not shrink an irreducible-aleatoric / coverage band.",
+      "n_raw_admitted_checked": 1,
+      "n_raw_admitted_rejected_by_gate": 1,
+      "campaign": {
+        "nothing_to_qualify": true,
+        "n_machine_calls": 0
+      }
+    },
+    "extra_collection_variant": {
+      "n_cal": 9,
+      "extra_runs_collected": 1,
+      "kappa_per_output": [
+        1.4624327778583832,
+        2.000404442377737
+      ],
+      "finite_band": true,
+      "solve": "FEASIBLE",
+      "n_candidates": 1,
+      "first_candidate_calibration_status": "conformal-checked",
+      "n_raw_admitted_checked": 1,
+      "n_raw_admitted_rejected_by_gate": 0,
+      "campaign": {
+        "nothing_to_qualify": false,
+        "n_candidates": 1,
+        "n_certified": 1,
+        "n_rejected": 0,
+        "n_machine_calls": 29,
+        "provenance_source": "physics_sim",
+        "headline_eligible": false,
+        "confidence_per_candidate": 0.95,
+        "per_candidate": [
+          {
+            "passed": true,
+            "n_in_spec": 29,
+            "n_runs": 29,
+            "binomial_lower_bound": 0.9018553723227043,
+            "min_in_spec_rate": 0.9
+          }
+        ],
+        "caveats": [
+          "multiplicity: NO correction was applied across n_candidates candidates each certified independently at the same per-candidate confidence -- the aggregate/family-wise error rate across this campaign is NOT controlled (rig.qualification module docstring, honest limit 2). Set bonferroni=True at construction for a conservative alpha/q correction.",
+          "serial correlation: each confirmation batch assumes i.i.d. Bernoulli runs; real tools violate this (first-wafer effects, within-batch drift), and the Clopper-Pearson bound is optimistic under positive serial correlation -- not repaired here (rig.qualification module docstring, honest limit 1).",
+          "no Cpk / process-window / SPC is computed anywhere in this campaign; a pass is an in-spec PROPORTION, a weaker and different claim than a capability index over a characterized process window (rig.qualification module docstring, honest limit 3).",
+          "this campaign is one rung of the implementation-plan \u00a711.4 staged qualification ladder (in-silico independent-solver gate -> single-wafer confirmation -> small pilot lot -> qualification lot with Cpk acceptance), not the whole ladder (rig.qualification module docstring, honest limit 4).",
+          "provenance_source='physics_sim': every certification in this campaign is an IN-SILICO REHEARSAL, not production tool qualification -- production promotion requires a campaign run with provenance_source='real_tool' (rig.qualification module docstring, honest limit 5)."
+        ]
+      }
+    },
+    "band_width_comparison": {
+      "probe_recipe": {
+        "T_heater": 1175.9538814850355,
+        "film_thickness": 2.407971299210187e-06
+      },
+      "raw_pessimistic_interval_width": {
+        "thickness_grown": 2.2365296122450102e-07,
+        "T_center": 20.829798669249158
+      },
+      "conformal_width_natural": {
+        "thickness_grown": Infinity,
+        "T_center": Infinity
+      },
+      "conformal_width_extended": {
+        "thickness_grown": 1.9826650135258572e-08,
+        "T_center": 7.921935102571297
+      }
+    },
+    "budget": {
+      "onboard_budget_runs_phase3": 24,
+      "n_total_C_runs_available": 24,
+      "n_fit": 16,
+      "n_cal_natural": 8,
+      "extra_collection_runs_charged": 1,
+      "total_new_machine_calls_this_phase": 1
+    },
+    "upgraded_to_conformal_checked": true,
+    "verdict": "n_cal_natural=8 < n_cal_min=9: honest branch band is INFINITE -> the \u00a713.2 gate rejects every candidate (0 conformal-checked). Extra-collection branch (n_cal=9) band is finite; candidates upgrade to calibration_status='conformal-checked': True."
+  },
+  "verdicts": {
+    "loto_domination_all_folds": true,
+    "pooling_verdict": "HELPS",
+    "epig_positive_on_unknown_tool": true,
+    "onboarding_verdict": "TIE (both reached threshold at the same budget, or neither did)",
+    "auto_qualification_ok": true,
+    "conformal_wrap_upgraded_to_conformal_checked": true
+  }
+}

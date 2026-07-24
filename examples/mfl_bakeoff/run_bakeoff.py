@@ -534,15 +534,11 @@ def run(cfg: BakeoffConfig) -> dict:
 
     arms: list[dict] = []
 
-    rig_res, rig_led = run_rig_arm(
-        harness, targets, X, Y_all, use_reval=False, seed=cfg.seed
-    )
+    rig_res, rig_led = run_rig_arm(harness, targets, X, Y_all, use_reval=False, seed=cfg.seed)
     score_under_noise(harness, rig_res, n_reps=cfg.n_reps, seed=cfg.seed + 1)
     arms.append(summarize_arm("rig", rig_res, rig_led))
 
-    reval_res, reval_led = run_rig_arm(
-        harness, targets, X, Y_all, use_reval=True, seed=cfg.seed
-    )
+    reval_res, reval_led = run_rig_arm(harness, targets, X, Y_all, use_reval=True, seed=cfg.seed)
     score_under_noise(harness, reval_res, n_reps=cfg.n_reps, seed=cfg.seed + 2)
     arms.append(summarize_arm("rig-reval", reval_res, reval_led))
 

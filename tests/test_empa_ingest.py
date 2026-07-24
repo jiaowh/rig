@@ -87,9 +87,7 @@ def ingest(slug: str, **kwargs):
     spec = load_spec(EX / "specs" / f"{slug}.toml")
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")  # unmatched y1/BatchNr/FitNr warning is expected
-        return spec, ingest_csv(
-            EX / "csv" / f"{slug}.csv", spec, source="real_tool", **kwargs
-        )
+        return spec, ingest_csv(EX / "csv" / f"{slug}.csv", spec, source="real_tool", **kwargs)
 
 
 # -- converter ---------------------------------------------------------------
