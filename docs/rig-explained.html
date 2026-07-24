@@ -697,6 +697,25 @@ k*  = k(X, x*)                 <span class="cm">similarity of the new point to e
         drift episode is flagged even while the average coverage recovers. §10 shows both at work on
         real data.
       </p>
+
+      <h3>When the average hides the failure</h3>
+      <p>
+        One more honesty problem, subtler than drift. The conformal guarantee is
+        <strong>marginal</strong>: 90% coverage <em>on average over everything</em>. An average can
+        be bought dishonestly — over-cover the easy runs, under-cover the hard ones, and the pooled
+        number still reads 90%. Slicing the real-data results by region found exactly that pattern
+        (§10 has the numbers), and the online calibrators — which adapt over <em>time</em> — cannot
+        fix a failure organised by <em>magnitude</em>. The remedy is a <strong>Mondrian</strong>
+        (group-conditional) calibrator: partition predictions into groups — here, by predicted
+        outcome magnitude — and calibrate each group separately, so the guarantee holds <em>per
+        group</em> rather than on average. Two design points keep it honest. Grouping must key on
+        the <em>predicted</em> value, because no true value exists at prediction time — which means
+        the grouping inherits the model's error, a limit that is measured rather than wished away.
+        And a group too small to certify honestly falls back to the pooled band, loudly, rather
+        than shrinking to a claim its data can't back. The Mondrian model presents the same
+        interface as the plain conformal one, so the solver's containment gate (§05) consumes it
+        without a single solver change.
+      </p>
     </div>
 
     <figure class="wide">
@@ -836,6 +855,14 @@ FEASIBLE  ⟺  minⱼ min(u_hiⱼ, u_loⱼ) ≥ κ</div>
         the safety, and you cannot switch it off. That is a deliberate design choice, and it is
         genuinely load-bearing: it is the gate that keeps a mis-scaled search space from returning
         confident nonsense.
+      </p>
+      <p>
+        Two optional hardenings sit behind the same gate for processes that need them: a
+        flow-based <em>typicality</em> score, for training clouds too oddly shaped for a single
+        ellipsoid to describe; and an adversarial probe that actively searches the knob-drift box
+        for a violating corner instead of trusting the first-order worst case. Both are off by
+        default and provably change nothing when off — conservatism here is added deliberately,
+        never ambiently.
       </p>
 
       <div class="note key">
@@ -1134,6 +1161,15 @@ flowchart TD
         information four times. The model is refit from scratch each round, and the loop stops on target
         hit, budget exhaustion, or stall.
       </p>
+      <p>
+        And "target hit" can be made to mean something stronger than "the model says so". Both of
+        the loop's success exits can be gated by a <strong>confirmation campaign</strong>: the
+        certified recipe is re-run on the actual machine and must clear an exact binomial pass bar
+        before the loop is allowed to declare victory — with a rejected recipe sending the loop
+        back to work, and every confirmation run charged to the same budget, so qualification is
+        never free. An infeasible verdict triggers zero confirmation runs, by construction: there
+        is nothing to qualify, and the machinery refuses to spend wafers proving it.
+      </p>
       <div class="note key">
         <span class="label">A consistency rule this design pins</span>
         <p>
@@ -1266,6 +1302,22 @@ flowchart TD
         </table>
       </div>
       <p>
+        Slicing those same recorded results by region — nearness to the training data, outcome
+        magnitude, position in the run stream — exposed the average's blind spot (§04): the
+        <strong>high-magnitude tail of the outcomes was under-covered</strong> in a third of
+        campaign/split/output cells, most of them hidden behind a passing pooled number, with the
+        low tail over-covered to pay for it. The online calibrators repair the drift-shaped
+        regional failures but not the magnitude-shaped ones — they adapt over time, and this
+        failure is organised by value. The Mondrian calibrator, grouped by predicted magnitude,
+        moves <strong>six of the eight hidden high-tail cells to nominal coverage</strong> with
+        zero solver changes; the two it cannot fix are exactly the cells where the model's
+        predictions can't tell high outcomes from low — a grouping keyed on predictions cannot
+        isolate a tail the model cannot predict, and this page reports that as a limit rather
+        than calling it fixed. The price is stated too: high-tail bands widen severalfold (the
+        low tail narrows — the intended redistribution), and one campaign's pooled pass tips
+        into over-coverage — the safe direction, a width cost, not a safety cost.
+      </p>
+      <p>
         The same data settles the material question. A model trained on one campaign is provably
         blind to a change of target material — material is not a knob, so knob-space support and
         epistemic screening cannot see the shift. Conditioning a pooled model on material fixes what
@@ -1289,13 +1341,18 @@ flowchart TD
       <h3>In silico — where the comparisons live</h3>
       <ul>
         <li>
-          <strong>Against warm-started Bayesian optimization</strong> on the simulated machine
-          (metrology noise on, matched budgets, bit-identical warm starts, scored on the simulator's
-          own output): RIG reaches spec roughly <strong>2× cheaper</strong>, wins at every tolerance
-          tested, and delivers calibrated feasibility where the pessimism binds — 0% false-accepts
-          against the baseline's 7.8%. The recorded sweep runs at a deliberately permissive margin
-          policy and says so in its result file; a re-run at the binding policy is the current work
-          item.
+          <strong>Against Bayesian optimization — a full comparator slate, not one strawman</strong>
+          (metrology noise on, matched budgets, bit-identical warm starts, scored on the
+          simulator's own output): RIG reaches spec cheaper than every arm — roughly
+          <strong>2×</strong> against warm-started GP-BO and against trust-region TuRBO,
+          <strong>1.65×</strong> against the strongest arm (a production BoTorch optimizer), and
+          further ahead of constraint-aware SCBO — with no comparator winning on any target, and
+          calibrated feasibility where the pessimism binds: <strong>0% false-accepts</strong>
+          against the baseline's 7.8%. Two honesty notes travel with this. The "~2×" is
+          arm-dependent — against the strongest opponent it is 1.65×. And the win
+          <strong>survives re-running at the solver's own strict shipping margins</strong>,
+          attenuated by roughly a third — the price of pessimism, paid and reported, with the
+          baseline arm provably untouched between runs.
         </li>
         <li>
           <strong>Dimensional reach:</strong> with the restart budget scaling by dimension, the
@@ -1308,10 +1365,44 @@ flowchart TD
           certified without a calibrated model is labelled <code>model-feasible</code>.
         </li>
         <li>
-          <strong>The amortized tier</strong> (§09) trains, samples, and passes its calibration gate —
-          but its acceptance evidence is still toy-scale; an acceptance run on the simulated machine
-          under a stricter pass rule is the current work item. Until it lands, treat the
-          instant-answer tier as machinery, not as a result.
+          <strong>The backstop, tested at the crime scene.</strong> The one historical false
+          success at 20 knobs — a certified recipe that missed on the true process — reproduces
+          exactly with the containment backstop off, and the default-on check <strong>kills
+          it</strong>, returning one genuinely-hitting recipe instead. The same study keeps the
+          claim honest in the other direction: at typical data densities false successes are too
+          rare to measure a rate at all (the solver's own abstention dominates), and the backstop
+          inherits conformal's marginal-coverage limit (§04) — the checked arm produced one
+          near-boundary miss of its own at eight knobs. That is the second, independent motivation
+          for the Mondrian tier, whose group-conditional gate refuses exactly that shape of
+          candidate in a constructed mechanism test where the pooled gate admits it. A speed note
+          from the same study: an exact analytic gradient of the pessimistic objective agrees with
+          the finite-difference default's verdict on 97% of paired solves — every disagreement a
+          finite-difference <em>false abstention</em> that the analytic path resolves to a
+          verified hit — and is eleven times faster at 20 knobs; it stays opt-in until every
+          published number is re-verified on it.
+        </li>
+        <li>
+          <strong>The amortized tier</strong> (§09) trains, passes its calibration gate, and has
+          an acceptance run on the simulated machine under a ground-truth pass rule: flow
+          proposals plus light refinement solve all six pre-registered targets — including three
+          that a light cold-start search fails — at a fifth of the heavy search's budget, matching
+          its quality. Claimed narrowly: the demonstrated win is <em>budget efficiency</em>, not
+          proposal magic — the run's own adversarial control shows that extra random restarts
+          rescue the same targets on this smooth low-dimensional problem — and this page claims
+          no more than the control supports.
+        </li>
+        <li>
+          <strong>A dress rehearsal for the fleet.</strong> Three simulated chambers with hidden
+          per-tool physics offsets stand in for the multi-tool deployment a real fab demands. On
+          this fleet: pooling data across tools with a tool-aware model beats per-tool models at
+          equal data; onboarding a new chamber by information-directed sampling converges about
+          4.5× sharper than starting cold; a certified recipe flows <em>automatically</em> into a
+          confirmation campaign, and an unreachable spec correctly triggers zero machine calls —
+          nothing to qualify, no wafers spent proving it. And wrapping the new chamber's model in
+          conformal calibration <strong>fails closed</strong>: one calibration run short of the
+          honest minimum, the gate refuses rather than rounds up, and exactly one more run buys
+          the calibrated certificate — with bands tighter than the raw worst case it replaces.
+          Stamped as rehearsal throughout: machinery proof, never headline evidence.
         </li>
       </ul>
 
@@ -1438,8 +1529,8 @@ flowchart TD
           targets in a forward pass. RIG’s certified answer is an optimization run per query —
           minutes, not milliseconds. (RIG’s amortized generator — stage&nbsp;09 above — is the
           counterpart, and unlike MFL it ships with a calibration gate that can refuse a
-          miscalibrated generator; but its acceptance run so far is on a toy problem, as
-          section&nbsp;10 already told you.)
+          miscalibrated generator; its acceptance run is on the simulated machine at small scale,
+          with the budget-efficiency caveat section&nbsp;10 spells out.)
           <strong>Simplicity.</strong> Two small networks and two training loops; RIG carries a GP,
           conformal layers, a constrained solver, and gates. <strong>The two-loop idea itself.</strong>
           Pre-train on a cheap emulator, fine-tune on the expensive machine — that is a good,
@@ -1524,7 +1615,10 @@ flowchart TD
         data regenerates from seeds on demand, and every run is stamped
         <code>provenance&nbsp;=&nbsp;physics_sim</code>. The data contract bars that stamp from every
         headline claim, by design, so simulation can never masquerade as evidence. The method
-        comparisons of §11 and the dimensional stress tests of §10 live here.
+        comparisons of §11 and the dimensional stress tests of §10 live here. The wrapper itself
+        is cross-checked by an independent, differently-derived physics model — a geometric flux
+        calculation sharing no code with the simulator — so a wiring bug in the adapter cannot
+        silently redefine what "ground truth" means.
       </p>
 
       <h3>2 · A plumbing proof — the sputtering grid</h3>
@@ -1586,6 +1680,17 @@ flowchart TD
           dataset — and on nothing simulated.
         </p>
       </div>
+      <p>
+        Ingest itself is defended. Every incoming table passes a validation layer before a single
+        row becomes a run record: missing columns, wrong types, and NaN/Inf values block the
+        ingest outright, while out-of-bounds values, unverifiable run order, and duplicate rows
+        are reported as advisories — because on real data those are usually findings <em>about</em>
+        the data, not errors in it. The checks read the raw declared-unit cells, exactly as the
+        bounds were written (the same discipline that keeps declared bounds and SI-canonical
+        values from being silently mixed), and this dataset's own quirks — a handful of
+        rounding-edge rows, one campaign's degenerate run counter — are pinned by tests row for
+        row, so a silent change in the data would fail loudly rather than pass quietly.
+      </p>
 
       <h3>On the bench for replication</h3>
       <p>
@@ -1651,7 +1756,9 @@ flowchart TD
             <tr><td><strong>EPIG</strong></td><td>Score for "how much would I learn <em>about the thing I care about</em>?"</td></tr>
             <tr><td><strong>Jacobian</strong></td><td>Sensitivity: how much output moves when a knob moves.</td></tr>
             <tr><td><strong>Mahalanobis</strong></td><td>Distance from a data cloud, accounting for its shape. Used to detect "we've never been here".</td></tr>
+            <tr><td><strong>Marginal vs conditional coverage</strong></td><td>90% on average over everything, vs 90% within each slice. An average can hide a failing slice.</td></tr>
             <tr><td><strong>Matérn-5/2</strong></td><td>A kernel assuming the process is bendy but can have kinks. Realistic.</td></tr>
+            <tr><td><strong>Mondrian conformal</strong></td><td>Conformal calibration done separately per group of predictions, so coverage holds group by group — not just on average.</td></tr>
             <tr><td><strong>Nats</strong></td><td>Units of information. Lets EPIG and BALD be added legitimately.</td></tr>
             <tr><td><strong>Non-injectivity</strong></td><td>Many recipes give the same outcome, so "the" inverse doesn't exist.</td></tr>
             <tr><td><strong>Normalizing flow</strong></td><td>An invertible warp turning noise into a target distribution. Samples and densities both.</td></tr>
@@ -1672,8 +1779,8 @@ flowchart TD
     <p>
       RIG — Recipe Inverse Generator. Figures 1 and 3 run a real Matérn-5/2 Gaussian process with an exact
       Cholesky posterior, computing the §8 margin live in your browser — the same mathematics as the
-      program's solver, at 1-D toy scale. This page reflects the program as of 2026-07-22; the
-      working state and full reproduction trail live in the repository
+      program's solver, at 1-D toy scale. The working state and full reproduction trail live in
+      the repository
       (<code>docs/BUILD_STATE.md</code>, <code>docs/BUILD_LOG.md</code>,
       <code>examples/real_data/empa_hipims/RESULTS.md</code>).
     </p>

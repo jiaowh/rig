@@ -2886,3 +2886,41 @@ Tests: 13/13 green (margin-formula units, all 4 disagreement shapes, gt_split ca
 tallying, the analytic+pgd construction-time raise, smoke determinism byte-identical);
 red-proof live: ground-truth-blind scorer → 3 tests red → restored. ruff clean. No src edits.
 Nothing committed.
+
+## 2026-07-24 — Explainer HTML brought current with the full build; page de-timestamped (user directive)
+
+User: "update but note that i dont want time stamped updates on the html, it should serve as a
+comprehensive explainer. include any detail it might have missed too." Verified first that
+`docs/rig-explained.html` reflected only the 2026-07-22 second-wave state (footer self-dated
+07-22; zero mentions of Mondrian/TuRBO/SCBO/conditional-coverage/rehearsal/false-success/E1;
+the M2 bullet still called the binding-policy re-run "the current work item" though it was DONE
+07-22 evening). Published artifact confirmed byte-identical to git HEAD modulo the injected
+mermaid runtime (WebFetch + diff), so the edits applied cleanly on top.
+
+Edits (all woven in as standing explanation, NO dates anywhere on the page):
+- §04: new "When the average hides the failure" subsection — marginal-vs-conditional coverage,
+  the Mondrian group-conditional calibrator, predicted-value grouping limit, pooled fallback,
+  interface parity with the §13.2 gate.
+- §05: opt-in support-gate hardenings (flow typicality, PGD drift-box probe; default-off,
+  byte-identical off).
+- §08: qualification hook — both loop success exits gateable by a ConfirmationCampaign, budget-
+  charged, Infeasible ⇒ zero machine calls.
+- §10 real data: conditional-coverage finding (high-magnitude-tail under-coverage hidden behind
+  pooled PASS; online endpoints repair drift- not magnitude-conditional) + Mondrian result
+  (6/8 hidden cells → nominal; 2 unfixable = low prediction-agreement cells; width cost stated).
+- §10 in-silico: M2 bullet rewritten to the full comparator slate (1.65× vs BoTorchBO strongest
+  arm, ~2× TuRBO, further vs SCBO; win survives binding policy attenuated ~⅓); new bullet for
+  the false-success study (crime-scene kill by the default-on gate; marginal-not-conditional
+  caveat; d=8 wrapped-arm miss; analytic-gradient 97% parity / 11× at d=20, stays opt-in); M3
+  bullet updated to the v2 acceptance run (6/6 at 0.19× budget, restart-budget caveat claimed
+  narrowly); new fleet dress-rehearsal bullet (pooling wins, 4.5× sharper onboarding,
+  auto-qualification incl. 0-call Infeasible, fail-closed conformal wrap of the onboarded tool).
+- §11: stale "toy problem" concession about the amortized tier updated to the v2 state.
+- §12: D7 independent-physics ROM cross-check of the sim wrapper; new ingest-validation
+  paragraph (E1 — blocking vs advisory checks, declared-unit cells, Empa quirks pinned).
+- §13: glossary rows for marginal-vs-conditional coverage and Mondrian conformal.
+- Footer: "as of 2026-07-22" removed entirely per the no-timestamps directive (the only date
+  left on the page is the MFL paper's citation date, which dates the paper, not the program).
+
+Republished to the SAME artifact URL (a1ab0c0e-…), label comprehensive-current-build. Files
+touched: docs/rig-explained.html only. Nothing committed.

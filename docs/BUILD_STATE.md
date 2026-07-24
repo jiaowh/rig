@@ -1,5 +1,16 @@
 # BUILD_STATE — single source of truth for the RIG build
 
+> **✅ 2026-07-24 — `docs/rig-explained.html` brought CURRENT with the full build and
+> DE-TIMESTAMPED (user directive: comprehensive standing explainer, no dated update notes).**
+> Now covers all third/fourth-wave results woven in as standing content: Mondrian conditional
+> coverage (§04 + §10, incl. the 6/8-fixed / 2-unfixable honesty), full M2 comparator slate +
+> binding-policy survival (the stale "current work item" line fixed), false-success study +
+> analytic-gradient parity, M3 v2 acceptance, fleet dress rehearsal + fail-closed conformal
+> wrap, E1 ingest validation, D7 ROM cross-check, PGD/typicality hardenings, loop
+> qualification hook. Republished to the SAME artifact URL. Keep it in sync content-wise on
+> future result changes, but never add dated status lines to the page itself. See BUILD_LOG
+> 2026-07-24.
+>
 > **✅ 2026-07-22 (evening) — SECOND WAVE: five more owed items closed** (5 parallel subagents +
 > orchestrator; suite **629 passed / 0 failed / 0 skipped STRICT**, repo ruff check+format exit
 > 0, import-linter 1 kept / 0 broken — final bar over the whole tree). (1) **M2 binding-policy
